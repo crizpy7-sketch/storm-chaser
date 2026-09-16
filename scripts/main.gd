@@ -2,6 +2,11 @@ extends Node2D
 
 enum Mode{MENU, RUNNING, PAUSED, UPGRADE, RESULTS, CELEBRATION, CRASH, CHECKPOINT, VORTEX, GARAGE}
 const STAGE_LENGTH: = 30.0
+## Progress is saved this often, silently, between the checkpoints. STAGE_LENGTH
+## must stay a whole number of these: a span that lands on a stage boundary
+## belongs to the upgrade screen, not to a flag. Keeping this at 30 is what lets
+## the stages get longer without a crash costing any more than it does today.
+const SAVE_SPAN: = 30.0
 const CRUISE_SPEEDS: = [146.0, 162.0, 178.0, 146.0, 122.0, 136.0, 148.0, 112.0]
 const TURBO_SPEED: = 240.0
 const DEBRIS_BASE_RATE: = 0.2
@@ -21,6 +26,8 @@ var clock: = 0.0
 var elapsed: = 0.0
 var stage: = 0
 var stage_seen: = 0
+## How many SAVE_SPAN boundaries have been marked this run.
+var saves_marked: = 0
 var player_x: = 0.0
 var steer: = 0.0
 ## The steering column itself. Raw input is a demand; a loaded truck's wheel
@@ -641,6 +648,12 @@ func _simulate(dt: float) -> void :
 		_clear_touch()
 		hud.rebuild()
 		return
+	var span_index: int = int(elapsed / SAVE_SPAN)
+	if span_index > saves_marked:
+		saves_marked = span_index
+		# A span that is also a stage boundary is the upgrade screen's moment.
+		# At STAGE_LENGTH 30 every span is one, so no flag ever fires.
+		if not is_zero_approx(fposmod(float(span_index) * SAVE_SPAN, STAGE_LENGTH)): _mark_save()
 	bend = sin(elapsed * 0.17) * 0.73 + sin(elapsed * 0.35) * 0.16
 	storm_offset = sin(elapsed * 0.155 + 0.6) * 0.34
 	wind = (sin(elapsed * 1.12) * 0.09 + sin(elapsed * 0.37) * 0.1) * (1.0 + mini(stage, 3) * 0.45)
@@ -765,6 +778,7 @@ func _update_fishtail(dt: float) -> void :
 func _reset_water() -> void:
 	puddles.clear()
 	steer_column = 0.0
+	saves_marked = 0
 	last_shift = powertrain.shifts
 	damage_side = 0.0
 	damage_pulse = 0.0
@@ -1111,8 +1125,16 @@ func finish(won: bool, reason: String, after_crash: bool = false) -> void :
 	hud.rebuild()
 
 func valid_checkpoint(data: Dictionary) -> bool:
-	if data.get("version", 0) not in [1,2]: return false
-	if data.get("stage", 0) not in ([1,2] if data.version == 1 else [1,2,3,4,5,6,7]): return false
+	var version: int = int(data.get("version", 0))
+	if version not in [1,2,3]: return false
+	# Version 3 adds mid-stage flags, so stage 0 becomes reachable. Versions 1
+	# and 2 keep exactly the ranges they always had.
+	var allowed: Array = [1,2] if version == 1 else ([1,2,3,4,5,6,7] if version == 2 else [0,1,2,3,4,5,6,7])
+	if data.get("stage", 0) not in allowed: return false
+	if version >= 3:
+		if not data.has("elapsed") or not (data.elapsed is float or data.elapsed is int): return false
+		if not is_finite(float(data.elapsed)): return false
+		if float(data.elapsed) < 0.0 or float(data.elapsed) > 8.0 * STAGE_LENGTH: return false
 	for key in ["score", "health", "boost", "boost_max", "charge", "probes", "hits", "near_misses", "tires", "distance"]:
 		if not data.has(key) or not (data[key] is float or data[key] is int): return false
 		if not is_finite(float(data[key])): return false
@@ -1121,15 +1143,29 @@ func valid_checkpoint(data: Dictionary) -> bool:
 func can_retry_checkpoint() -> bool:
 	return valid_checkpoint(checkpoint)
 
+## A silent mid-stage save. Deliberately grants no upgrade, so the boost_max and
+## tires bounds in valid_checkpoint() stay derived from exactly seven upgrades.
+func _mark_save() -> void:
+	save_checkpoint()
+	health = minf(100.0, health + 15.0)
+	score += 500.0
+	play_sound("pickup")
+	notify("SAVE FLAG  /  +15 HULL  /  +500 DATA", 2.5)
+
 func save_checkpoint() -> void :
-	checkpoint = {"version": 2, "stage": stage, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
+	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
 	save_settings()
 
 func retry_checkpoint() -> void :
 	if not can_retry_checkpoint(): return
 	var saved: = checkpoint.duplicate(true)
 	start_chase(false)
-	stage = int(saved.stage);stage_seen = stage;elapsed = stage * STAGE_LENGTH
+	stage = int(saved.stage);stage_seen = stage
+	# A version 2 snapshot has no elapsed and restores to the stage entrance,
+	# exactly as it always did. A version 3 one resumes at its flag, clamped
+	# into its own stage so a disagreeing snapshot cannot skip ahead.
+	elapsed = clampf(float(saved.get("elapsed", float(stage) * STAGE_LENGTH)), float(stage) * STAGE_LENGTH, float(stage + 1) * STAGE_LENGTH - 0.001)
+	saves_marked = int(elapsed / SAVE_SPAN)
 	for key in ["score", "health", "boost", "boost_max", "charge", "probes", "hits", "near_misses", "tires", "distance"]: set(key, saved[key])
 	run_id = str(saved.get("run_id", run_id))
 	checkpoint_retry = true
@@ -1143,7 +1179,8 @@ func retry_checkpoint() -> void :
 	dodges.last_play_time = float(saved.get("last_film", -1000.0))
 	dodges.last_kind_times = saved.get("film_times", {}).duplicate()
 	invulnerable = 2.0;spawn_timer = 1.25;sky_timer = 3.0;lens_timer = 7.0
-	notify("CHECKPOINT %02d RESTORED  /  %s" % [stage, STAGE_NAMES[stage]], 3.2)
+	if elapsed > float(stage) * STAGE_LENGTH + 0.001: notify("SAVE FLAG RESTORED  /  %s" % STAGE_NAMES[stage], 3.2)
+	else: notify("CHECKPOINT %02d RESTORED  /  %s" % [stage, STAGE_NAMES[stage]], 3.2)
 	hud.rebuild()
 
 func _record_score(won: bool) -> void :
@@ -1160,7 +1197,7 @@ func _record_score(won: bool) -> void :
 
 func is_breathing() -> bool:
 	if stage == 7 and route.orbit_progress() > 0.92: return true
-	var front_time := fposmod(elapsed, STAGE_LENGTH)
+	var front_time := fposmod(elapsed, SAVE_SPAN)
 	return (front_time >= 11.0 and front_time < 14.5) or (stage < 2 and front_time >= 25.0)
 
 ## True when a controller is attached, so on-screen hints can name pad buttons
