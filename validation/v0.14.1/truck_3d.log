@@ -1,0 +1,23 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: truck has full front-to-rear geometry
+PASS: all 51386 generated triangles survive mesh batching
+PASS: four independent wheels are outside the sprung-body transform
+PASS: front and rear axles preserve the 3.54 metre wheelbase
+PASS: original paint and panel art is reused on the 3D body
+PASS: Mateo is attached inside the actual truck bed
+PASS: right input visibly turns both front wheels right
+PASS: rear wheels do not steer like the stock monster truck
+PASS: distance rotates the actual wheel meshes
+PASS: zero-time updates freeze wheel articulation
+PASS: airborne wheels extend with bounded suspension droop
+PASS: landing compresses the rigid body within its suspension stops
+PASS: steering, pitch, landings and yaw never change any mesh vertices
+PASS: chassis lean is bounded and never stretches the body
+PASS: hull damage reaches the physical paint material
+PASS: restart resets steering, spin and droop together
+TRUCK_3D_TESTS 16 checks; 0 failures; 51386 triangles
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 7 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

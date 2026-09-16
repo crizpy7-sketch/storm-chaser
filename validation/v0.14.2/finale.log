@@ -1,0 +1,98 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+--Main Shader--
+    1 | shader_type spatial;
+    2 | render_mode diffuse_burley, specular_schlick_ggx;
+    3 | uniform sampler2D truck_art : source_color, filter_linear_mipmap;
+    4 | uniform vec3 paint_tint = vec3(.78,.80,.83);
+    5 | uniform float paint_roughness = .69;
+    6 | uniform float paint_metallic = .13;
+    7 | uniform float paint_clearcoat = 0.0;
+    8 | uniform float damage = 0.0;
+    9 | uniform float clock = 0.0;
+   10 | varying vec3 body_position;
+   11 | void vertex() {
+   12 |  body_position = VERTEX;
+   13 | }
+   14 | void fragment() {
+   15 |  vec3 paint = texture(truck_art, UV).rgb * paint_tint;
+   16 |  float speck = fract(sin(dot(floor(body_position*145.0),vec3(12.9898,78.233,37.719)))*43758.5453);
+   17 |  float chips = smoothstep(.84,.99,speck) * damage * .52;
+   18 |  ALBEDO = mix(paint,vec3(.10,.085,.065),chips);
+   19 |  ROUGHNESS = min(1.0, paint_roughness + damage*.17);
+   20 |  METALLIC = paint_metallic * (1.0-chips);
+   21 |  CLEARCOAT = paint_clearcoat;
+E  22->  CLEARCOAT_GLOSS = .75;
+   23 | }
+   24 | 
+PASS: approved finale is packaged for replay
+PASS: finale is locked before completing the lap
+PASS: finale replay retains the full approved edit
+PASS: finale cannot start before completing the actual tornado lap
+PASS: completed lap starts the approved finale in the game
+PASS: finale selects the approved movie
+PASS: film preserves truck and Mateo proportions
+PASS: entire film stays inside the viewport
+PASS: approved movie retains its accepted color grade
+PASS: completing the lap earns final footage
+PASS: game loops pause beneath the movie soundtrack
+PASS: final movie freezes mission, collision and probe scoring
+PASS: old eleven-second finale timer does not cut off the eighteen-second movie
+PASS: final transmission awards two thousand data once
+PASS: controller Start pauses film and exposes pause controls
+PASS: paused movie freezes its watchdog and rewards
+PASS: earned final movie can replay from the paused chase
+PASS: replay watchdog allows the longer final film
+PASS: gallery returns to the paused finale
+PASS: finale replay cannot duplicate score, records or checkpoint progress
+PASS: nested replay preserves the finale audio pause
+PASS: controller Start resumes the same movie
+PASS: focus loss pauses the movie instead of consuming the reward
+PASS: movie completion opens the successful survey results
+PASS: successful survey adds final data and remaining hull bonus exactly once
+PASS: successful survey retires its checkpoint
+PASS: completed player releases its decoder
+PASS: movie completion restores game audio
+PASS: late completion and timer callbacks cannot duplicate rewards or records
+PASS: replay returns to results without recording another expedition
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: insufficient probes show incomplete survey without success hull bonus
+PASS: incomplete survey preserves the final checkpoint
+PASS: retry restores final level entrance without failed-attempt rewards
+PASS: earned film survives a clean checkpoint retry
+PASS: stopped decoder safely falls back to the native ending
+PASS: fallback restores live storm sound
+PASS: fallback completes without losing or repeating the final reward
+PASS: stalled decoder cannot trap the player
+PASS: disabled movie uses the existing native finale
+PASS: native finale still reaches results
+PASS: return to base cleans up a paused decoder and restores sound
+PASS: earned final film survives a save and reload
+PASS: an old level-seven checkpoint alone does not unlock the ending
+PASS: fifteen-film gallery fits across two pages
+PASS: controller can focus the gallery return control
+FINALE_TESTS 50 checks; 0 failures
+SHADER ERROR: Unknown identifier in expression: 'CLEARCOAT_GLOSS'.
+          at: (null) (:22)
+          GDScript backtrace (most recent call first):
+              [0] build (res://scripts/truck_rig.gd:40)
+              [1] _build_vehicles (res://scripts/world3d.gd:209)
+              [2] _ready (res://scripts/world3d.gd:81)
+              [3] _ready (res://scripts/main.gd:150)
+              [4] run (res://tools/verify_finale.gd:43)
+ERROR: Shader compilation failed.
+   at: shader_set_code (servers/rendering/dummy/storage/material_storage.cpp:190)
+   GDScript backtrace (most recent call first):
+       [0] build (res://scripts/truck_rig.gd:40)
+       [1] _build_vehicles (res://scripts/world3d.gd:209)
+       [2] _ready (res://scripts/world3d.gd:81)
+       [3] _ready (res://scripts/main.gd:150)
+       [4] run (res://tools/verify_finale.gd:43)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

@@ -1,0 +1,12 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: body is a single rigid plane, not camera-compensated depth strips
+PASS: sustained countersteering and airborne transitions never swap unmatched silhouettes
+PASS: straight body edges stay straight under lateral camera lag and both yaw extremes
+PASS: Mateo is seated between registered cab and tailgate layers
+PASS: Mateo shares rigid sprung parent
+RIGID_TRUCK_TESTS 5 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 7 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

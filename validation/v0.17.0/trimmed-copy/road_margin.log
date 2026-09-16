@@ -1,0 +1,27 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+WARNING: Storm Chaser: optional media is missing (first: res://assets/art/flying-cow.png). Built-in stand-ins are used; copy the full assets folders back to restore it.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _note_missing (res://scripts/media.gd:68)
+         [1] texture (res://scripts/media.gd:76)
+         [2] _ready (res://scripts/world3d.gd:72)
+         [3] _ready (res://scripts/main.gd:158)
+         [4] run (res://tools/verify_road_margin.gd:18)
+PASS: full steering, wind and slide keep body inside pavement at 30 fps / -1.0
+PASS: countersteering promptly leaves edge at 30 fps / -1.0
+PASS: full steering, wind and slide keep body inside pavement at 30 fps / 1.0
+PASS: countersteering promptly leaves edge at 30 fps / 1.0
+PASS: full steering, wind and slide keep body inside pavement at 60 fps / -1.0
+PASS: countersteering promptly leaves edge at 60 fps / -1.0
+PASS: full steering, wind and slide keep body inside pavement at 60 fps / 1.0
+PASS: countersteering promptly leaves edge at 60 fps / 1.0
+PASS: full steering, wind and slide keep body inside pavement at 120 fps / -1.0
+PASS: countersteering promptly leaves edge at 120 fps / -1.0
+PASS: full steering, wind and slide keep body inside pavement at 120 fps / 1.0
+PASS: countersteering promptly leaves edge at 120 fps / 1.0
+PASS: mud retains broad off-road driving range
+PASS: outward steering eases before reaching pavement margin
+ROAD_MARGIN_TESTS 14 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)

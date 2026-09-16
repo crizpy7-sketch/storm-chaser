@@ -1,0 +1,56 @@
+[
+  {
+    "suite": "truck_3d",
+    "exit": 0,
+    "passed": 16,
+    "failed": 0
+  },
+  {
+    "suite": "route",
+    "exit": 0,
+    "passed": 71,
+    "failed": 0
+  },
+  {
+    "suite": "weight",
+    "exit": 0,
+    "passed": 13,
+    "failed": 0
+  },
+  {
+    "suite": "polish",
+    "exit": 0,
+    "passed": 27,
+    "failed": 0
+  },
+  {
+    "suite": "storm_art",
+    "exit": 0,
+    "passed": 4,
+    "failed": 0
+  },
+  {
+    "suite": "road_margin",
+    "exit": 0,
+    "passed": 14,
+    "failed": 0
+  },
+  {
+    "suite": "finale",
+    "exit": 0,
+    "passed": 50,
+    "failed": 0
+  },
+  {
+    "suite": "checkpoints",
+    "exit": 0,
+    "passed": 176,
+    "failed": 0
+  },
+  {
+    "suite": "driving",
+    "exit": 0,
+    "passed": 21,
+    "failed": 0
+  }
+]

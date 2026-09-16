@@ -1,0 +1,153 @@
+{
+  "status": "Eight supplied films across seven checkpoints; new Ridgeline film added in v0.10.8, with the first version retained as an earned alternate replay.",
+  "provider": "User-supplied Grok videos",
+  "higgsfield_credits_used": 0,
+  "clips": [
+    {
+      "checkpoint": "barn",
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_61f15431-2943-48e3-a8d1-ec071f318437_generated_video.mp4",
+      "original_sha256": "20eafcd167820f8878e4fa54ab7f0ece9b903b6f577bcf533c06a9ea5d592dec",
+      "prepared_file": "assets/cinematics/checkpoints/barn.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        910,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "0.08-second fade in; 0.2-second picture and sound fade out; no speed change or upscaling",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "warehouse",
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_88b8f4a2-8263-41bb-95ad-a49a8e94c0d6_generated_video.mp4",
+      "original_sha256": "be0a7d1fb5232415daf75d35b96515d8a99eac8748febe640796e3557a542e82",
+      "prepared_file": "assets/cinematics/checkpoints/warehouse.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        910,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "0.08-second fade in; 0.2-second picture and sound fade out; no speed change or upscaling",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "crosswind_curves",
+      "checkpoint_number": 3,
+      "level_number": 4,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_5ceb65f7-186e-4143-9c87-4c306568e352_generated_video.mp4",
+      "original_sha256": "789f2671acc1599761e637daa12923d2e58dfd92fe2cec7e104d3bc66845a6a4",
+      "prepared_file": "assets/cinematics/checkpoints/crosswind_curves.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "dirt_shortcut",
+      "checkpoint_number": 4,
+      "level_number": 5,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_26e4cfd0-19a4-47a5-97cb-09ea390634b0_generated_video.mp4",
+      "original_sha256": "f8035bdab9914528fae0b29923e6f24b71405392528fbdd73f8b0f4a1dcddc10",
+      "prepared_file": "assets/cinematics/checkpoints/dirt_shortcut.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "ridgeline_jumps",
+      "checkpoint_number": 5,
+      "level_number": 6,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_76fe6696-31b1-4142-9998-a61f4c454cba_generated_video.mp4",
+      "original_library_file_id": "libfile_a204cae87f8c8191a3482d14c6abe890",
+      "original_sha256": "ebda5a76e6e98cc12c71720677a7cf63e7a064d25a2971bb8974301586669371",
+      "prepared_file": "assets/cinematics/checkpoints/ridgeline_jumps.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false,
+      "role": "Alternate checkpoint 05 replay; retained in v0.10.8."
+    },
+    {
+      "checkpoint": "wild_hills",
+      "checkpoint_number": 6,
+      "level_number": 7,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_845b63f3-8369-4028-ba2c-bb5f8e6c53d1_generated_video.mp4",
+      "original_library_file_id": "libfile_16fb4e7c93ec8191ab844f39666a469e",
+      "original_sha256": "d412c05502c693fbaa4ba0b3108d0233d050097b05449955d95d5ecf47d4b11d",
+      "prepared_file": "assets/cinematics/checkpoints/wild_hills.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "vortex_run",
+      "checkpoint_number": 7,
+      "level_number": 8,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_2d169e9c-b43a-4511-864a-4b5c28703150_generated_video.mp4",
+      "original_library_file_id": "libfile_75dfa8df46408191a587a28173555878",
+      "original_sha256": "0ccbfb4d5f0853603010b11459e1d0976da3ea40d0b9c4ec93df96e1591e4a8d",
+      "prepared_file": "assets/cinematics/checkpoints/vortex_run.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false
+    },
+    {
+      "checkpoint": "ridgeline_drift",
+      "checkpoint_number": 5,
+      "level_number": 6,
+      "original_file": "_users_bda3f1fb-6206-4efd-9c92-108de6a372e2_generated_f951c9b7-daf9-4021-b82a-26a263e98a54_generated_video.mp4",
+      "original_library_file_id": "libfile_c37714fb3e048191a0c0b358b9789367",
+      "original_sha256": "131a2a5a9887baa7d5bc56a1e5f2487d8751d4f07e57f124da051d06cfde5718",
+      "prepared_file": "assets/cinematics/checkpoints/ridgeline_drift.ogv",
+      "duration_seconds": 6,
+      "resolution": [
+        898,
+        512
+      ],
+      "fps": 30,
+      "video_codec": "Theora",
+      "audio_codec": "Vorbis",
+      "processing": "First 6.0 seconds, original resolution and speed; 0.08-second picture fade in, 0.04-second audio fade in, 0.2-second picture/audio fade out. Original sound retained. Aspect ratio preserved during playback.",
+      "contains_mateo": false,
+      "role": "Primary checkpoint 05 film since v0.10.8."
+    }
+  ]
+}

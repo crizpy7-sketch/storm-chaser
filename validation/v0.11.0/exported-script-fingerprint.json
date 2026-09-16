@@ -1,0 +1,15 @@
+{
+  "scripts/checkpoints.gd": "aba2834b702172eb8e966801f929ec2d01bd145d2998b883f3701da488d3d881",
+  "scripts/crashes.gd": "fdbe6b01042d18ac956a7565b0ac9eb69246772aebff7ccc3d65e934fce6f8cc",
+  "scripts/dodge_films.gd": "b72eb585e16875e5e048eae52f68afea088bddc14cb6b43d7db5458c049a7fb0",
+  "scripts/hud.gd": "1df564de4f31a8a47bb1d578d16d6f33fa92286a94dd0e1f90d8f7b30a278fd9",
+  "scripts/lens.gd": "18b0bf019925ee6a4c1c46704f8292c5879c34d09080750985ad3081bf95f3c9",
+  "scripts/main.gd": "415abf4c347b9aede11df37a392ff18cfc7bf748683629385011bea7b5bd5284",
+  "scripts/mateo.gd": "b665520c2f16d365d8fc215fcb40bbda4269a356ebf86b3d7abfb0b141f17bca",
+  "scripts/route.gd": "3a0faaa3c3f1ff3fee87b50253624debe3d024b8d4aa6d12f0631e3b795b772c",
+  "scripts/truck_rig.gd": "b7ea1871ec8c9cfd09991427b7abc491d60b817d301492165964bdb8f2f7f799",
+  "scripts/vortex_finale.gd": "d860043c212c3debd8f6eef3b5842486e937888256a92056989fe7f1fb695e0a",
+  "scripts/water_fx.gd": "a448fc0852db7f9df5b394ac950d454837685ab11cf5bbd883e774221a4681e7",
+  "scripts/world.gd": "05cb692909f08cb081723adeb0618335e039beb2f0333e004310a1f36f3cf2e3",
+  "scripts/world3d.gd": "5784e806909cf7b1727de421de89e3ec0bf6bbe3f9cbb2297346fd5da4f9253a"
+}

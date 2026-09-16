@@ -1,0 +1,7 @@
+{
+  "asset": "building-materials.png",
+  "method": "built-in image_gen.imagegen",
+  "date": "2026-09-14",
+  "prompt": "Use case: stylized-concept. Asset type: square 2 by 2 material texture atlas for the existing Storm Chaser Godot game. Create ONE perfectly edge-aligned 2048x2048 image containing four equally sized square diffuse texture tiles with NO spacing, NO labels, NO borders and NO perspective. Top-left quadrant: very detailed weathered deep muted red barn siding, vertical aged wooden planks, peeling faded red paint revealing gray brown wood grain, nail heads, streaks of rain, subtle chips. Top-right quadrant: storm-weathered silver-gray corrugated galvanized roofing, vertical narrow ribs, soft oxidation and rusty brown streaks. Bottom-left quadrant: aged cool gray industrial cast concrete wall, small aggregate flecks, chipped edges, shallow cracks and darker rainwater streaks. Bottom-right quadrant: worn dark blue-gray industrial sheet steel, scratches, bolts, rain streaks, limited orange rust at joins. Flat orthographic material swatches suitable for mapping onto 3D building panels and the matching flying debris, rich tactile game environment texture quality. Match a cinematic overcast storm game with dark desaturated teal ambient light and restrained warm highlights. Uniform diffuse illumination; no cast shadows, scenery, objects, words, logos or watermark. Exact clean four-quadrant layout filling canvas.",
+  "usage": "UV-quadrant sampling on destructible buildings and matching road fragments; no external image edits"
+}

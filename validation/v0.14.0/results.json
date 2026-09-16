@@ -1,0 +1,56 @@
+[
+  {
+    "suite": "verify_truck_3d",
+    "exit": 0,
+    "checks_passed": 16,
+    "failures": []
+  },
+  {
+    "suite": "verify_route",
+    "exit": 0,
+    "checks_passed": 71,
+    "failures": []
+  },
+  {
+    "suite": "verify_weight",
+    "exit": 0,
+    "checks_passed": 13,
+    "failures": []
+  },
+  {
+    "suite": "verify_polish",
+    "exit": 0,
+    "checks_passed": 27,
+    "failures": []
+  },
+  {
+    "suite": "verify_storm_art",
+    "exit": 0,
+    "checks_passed": 4,
+    "failures": []
+  },
+  {
+    "suite": "verify_road_margin",
+    "exit": 0,
+    "checks_passed": 14,
+    "failures": []
+  },
+  {
+    "suite": "verify_finale",
+    "exit": 0,
+    "checks_passed": 50,
+    "failures": []
+  },
+  {
+    "suite": "verify_checkpoints",
+    "exit": 0,
+    "checks_passed": 176,
+    "failures": []
+  },
+  {
+    "suite": "verify_driving",
+    "exit": 0,
+    "checks_passed": 21,
+    "failures": []
+  }
+]

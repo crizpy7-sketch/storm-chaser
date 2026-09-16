@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-15",
+  "tool": "OpenAI built-in image generation",
+  "assets": [
+    {
+      "file": "clay-ruts.png",
+      "prompt": "Square seamless orthographic photorealistic light tan storm-soaked clay mud, longitudinal shallow wheel ruts, grit, pebbles, straw, silver-gray puddles. No perspective, sky, objects, text or baked directional lighting. Light beige caramel midtones, not black. Tileable production road albedo."
+    },
+    {
+      "file": "prairie-storm.png",
+      "prompt": "Wide realistic prairie storm sky, horizon at 88 percent height, layered slate supercell clouds, silver gaps, warm right light, distant beige clay ridges, tawny grass and olive scrub. No road, truck, people, tornado, text or lens effects. Background for real game terrain."
+    }
+  ]
+}

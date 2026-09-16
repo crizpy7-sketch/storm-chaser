@@ -1,0 +1,62 @@
+Review stills from tools/capture_review.gd, 1280x720, Godot 4.5.2 GL Compatibility on Mesa llvmpipe under Xvfb, --fixed-fps 30.
+Counts are pixels whose largest channel differs by more than 3 and more than 30 (of 255). bbox is the region differing by more than 3.
+
+A. Hill grid on the GPU: v0.16 code (with only the media loader added) vs the build that moved the hill grid into a shader
+  00-menu.png                >3:       0  >30:      0  bbox=None
+  01-highway.png             >3:       0  >30:      0  bbox=None
+  02-highway-hazards.png     >3:       0  >30:      0  bbox=None
+  03-barn-semi.png           >3:       0  >30:      0  bbox=None
+  04-crosswind-curve.png     >3:      15  >30:      1  bbox=(151, 300, 1192, 526)
+  05-shortcut-junction.png   >3:       0  >30:      0  bbox=None
+  06-shortcut-drift.png      >3:       5  >30:      1  bbox=(614, 406, 747, 471)
+  07-ridgeline.png           >3:       5  >30:      0  bbox=(445, 329, 1271, 469)
+  08-wild-hills.png          >3:      11  >30:      2  bbox=(139, 350, 1151, 509)
+  09-vortex-approach.png     >3:       0  >30:      0  bbox=None
+  10-vortex-orbit.png        >3:       6  >30:      2  bbox=(463, 508, 627, 677)
+  11-pause.png               >3:       1  >30:      0  bbox=(626, 676, 627, 677)
+  12-upgrade.png             >3:       0  >30:      0  bbox=None
+  13-results.png             >3:       0  >30:      0  bbox=None
+  14-gallery.png             >3:       0  >30:      0  bbox=None
+
+B. Grass on the GPU: the v0.17 build before grass moved into a shader vs final v0.17.0
+  00-menu.png                >3:       0  >30:      0  bbox=None
+  01-highway.png             >3:       0  >30:      0  bbox=None
+  02-highway-hazards.png     >3:       0  >30:      0  bbox=None
+  03-barn-semi.png           >3:       0  >30:      0  bbox=None
+  04-crosswind-curve.png     >3:       0  >30:      0  bbox=None
+  05-shortcut-junction.png   >3:       0  >30:      0  bbox=None
+  06-shortcut-drift.png      >3:       0  >30:      0  bbox=None
+  07-ridgeline.png           >3:   18241  >30:  10555  bbox=(370, 126, 910, 450)
+  08-wild-hills.png          >3:       0  >30:      0  bbox=None
+  09-vortex-approach.png     >3:       0  >30:      0  bbox=None
+  10-vortex-orbit.png        >3:       0  >30:      0  bbox=None
+  11-pause.png               >3:       0  >30:      0  bbox=None
+  12-upgrade.png             >3:       0  >30:      0  bbox=None
+  13-results.png             >3:   33504  >30:   3396  bbox=(324, 594, 956, 669)
+  14-gallery.png             >3:  320815  >30:  99716  bbox=(56, 158, 1228, 567)
+
+C. Everything: v0.16 code (with only the media loader added) vs final v0.17.0
+  00-menu.png                >3:   19056  >30:  16746  bbox=(393, 478, 1238, 550)
+  01-highway.png             >3:    1404  >30:    240  bbox=(686, 414, 753, 487)
+  02-highway-hazards.png     >3:    1426  >30:    222  bbox=(688, 415, 755, 489)
+  03-barn-semi.png           >3:    1032  >30:     64  bbox=(653, 419, 713, 491)
+  04-crosswind-curve.png     >3:    2333  >30:    639  bbox=(1, 63, 1280, 687)
+  05-shortcut-junction.png   >3:    2021  >30:    549  bbox=(684, 474, 759, 586)
+  06-shortcut-drift.png      >3:    1745  >30:    399  bbox=(614, 406, 774, 536)
+  07-ridgeline.png           >3:  222121  >30:  33978  bbox=(0, 0, 1280, 720)
+  08-wild-hills.png          >3:   48788  >30:   4444  bbox=(0, 3, 1280, 720)
+  09-vortex-approach.png     >3:     875  >30:    310  bbox=(698, 474, 740, 522)
+  10-vortex-orbit.png        >3:   16113  >30:    847  bbox=(27, 1, 1280, 720)
+  11-pause.png               >3:     571  >30:      0  bbox=(327, 42, 1260, 720)
+  12-upgrade.png             >3:       0  >30:      0  bbox=None
+  13-results.png             >3:   33504  >30:   3396  bbox=(324, 594, 956, 669)
+  14-gallery.png             >3:  323437  >30: 101803  bbox=(56, 158, 1228, 600)
+
+Notes
+A: at most 15 pixels differ (04-crosswind-curve), so the terrain shader reproduces the CPU hill grid.
+B: gameplay frames are identical. 07 differs only where the duplicate AIRBORNE hint was removed (rows 126-159, plus
+   one pixel). 13 moves MATEO'S FOOTAGE inside the results panel. 14 marks the absent dodge films FILM NOT INSTALLED.
+C: 00 adds the garage button and its loadout label. In 01-06 and 09 the changed area is Mateo turning toward the
+   camera, plus a few rain pixels. 07, 08 and 10 are later in a level, where the 1/120 s route substeps also move
+   the truck slightly, so the road edges and camera shift; 11 is the pause overlay over the same moment as 10.
+   13 and 14 are as in B.

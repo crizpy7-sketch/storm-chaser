@@ -1,0 +1,34 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: truck uses the original detailed orange artwork
+PASS: steering preserves the original truck mesh without warping
+PASS: solid support model only renders the road shadow
+PASS: suspension stays bounded without rolling the body sideways
+PASS: low hull reveals wear on the original truck artwork
+PASS: hull repair also repairs visible damage
+PASS: optional recovery reduces lingering water slide
+PASS: reaction assist provides slower hazard arrival
+PASS: assisted score label remains after assists are switched off
+PASS: calm stretch holds new debris and water waves
+PASS: action resumes after the short calm stretch
+PASS: water plumes reuse a bounded pool
+PASS: reset clears all water plumes
+PASS: lighter graphics removes expensive shadow and MSAA passes
+PASS: standard graphics restores truck lighting shadows
+PASS: both checkpoint movies are available to the footage gallery
+PASS: unearned checkpoint footage cannot play
+PASS: reaching checkpoint one unlocks only its movie
+PASS: earned checkpoint footage replays from pause
+PASS: gallery playback preserves mission, score, checkpoint and pause
+PASS: all four new settings survive a save/load
+PASS: earned footage survives a save/load
+PASS: Mateo voice line and caption load together
+PASS: Mateo reactions respect their cooldown
+PASS: Escape closes settings without resuming the chase
+PASS: assisted chase reaches every checkpoint reward and the ending
+PASS: scoreboard records an assisted completion
+POLISH_TESTS 27 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 29 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

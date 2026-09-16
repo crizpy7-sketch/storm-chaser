@@ -1,0 +1,441 @@
+{
+  "provider": "ElevenLabs",
+  "effects_model": "eleven_text_to_sound_v2",
+  "music_model": "eleven_music_v2",
+  "processing": "44.1 kHz stereo PCM; -2 dBFS peak; loop seam crossfade; trimmed one-shot leading silence. Original MP3 takes preserved separately.",
+  "sounds": {
+    "engine": [
+      {
+        "generation_id": "NnolavxBSWeHk2CMobZt",
+        "files": [
+          "engine.wav"
+        ],
+        "seconds": 5.945,
+        "prompt": "Seamless steady engine loop of a powerful heavy diesel storm-chasing pickup accelerating under load on a wet highway, deep throaty mechanical engine texture, turbo whistle tucked behind the rumble, detailed realistic automotive game sound, constant energy and RPM for runtime pitch control, close exterior perspective. Isolated engine only, no speech, no music, no horns, no passing traffic."
+      }
+    ],
+    "wind": [
+      {
+        "generation_id": "cqCn1FublnD2GfkhuC5D",
+        "files": [
+          "wind.wav"
+        ],
+        "seconds": 7.945,
+        "prompt": "Seamless immersive thunderstorm ambience from a fast moving pickup: powerful turbulent low wind, detailed heavy rain hiss, distant rolling tornado rumble, subtly gusting. Consistent bed without dramatic cracks or sudden jumps. Cinematic natural weather recording, no music, no speech, no engine."
+      }
+    ],
+    "skid": [
+      {
+        "generation_id": "TajHTEi76YmEkCybLEXb",
+        "files": [
+          "skid.wav"
+        ],
+        "seconds": 3.945,
+        "prompt": "Seamless gritty wet tire slide texture, heavy off-road pickup tires scraping and hissing sideways over wet asphalt, rubber chirr and gritty friction with a watery undertone. Continuous skid for a racing game controlled in volume by drift, no engine, no speech, no music."
+      }
+    ],
+    "turbo_loop": [
+      {
+        "generation_id": "Koo81CW5Z4dM9OhsllaE",
+        "files": [
+          "turbo_loop.wav"
+        ],
+        "seconds": 3.945,
+        "prompt": "Seamless high energy turbo spool loop, taut mechanical turbine whine with low pressurized intake growl, steady pitch and strength, cinematic powerful pickup truck booster layer. No engine pistons, no music, no voices, no ending."
+      }
+    ],
+    "splash": [
+      {
+        "generation_id": "zlzvdNbUxSKZ1easzoBa",
+        "files": [
+          "splash.wav"
+        ],
+        "seconds": 1.6,
+        "prompt": "One immediate huge close-up splash: heavy off-road pickup wheels slam a deep highway puddle at high speed, a chunky bassy water slap followed by two broad fans of sparkling spray and a short wet rushing tail. Crisp detailed premium racing game effect. No music, no speech, no engine."
+      },
+      {
+        "generation_id": "6PNFNd7UPyvsziCyyPkQ",
+        "files": [
+          "splash_v2.wav"
+        ],
+        "seconds": 1.6,
+        "prompt": "One immediate huge close-up splash: heavy off-road pickup wheels slam a deep highway puddle at high speed, a chunky bassy water slap followed by two broad fans of sparkling spray and a short wet rushing tail. Crisp detailed premium racing game effect. No music, no speech, no engine."
+      },
+      {
+        "generation_id": "iZOzgmhYRNlMigaQKZlP",
+        "files": [
+          "splash_v3.wav"
+        ],
+        "seconds": 1.6,
+        "prompt": "One immediate huge close-up splash: heavy off-road pickup wheels slam a deep highway puddle at high speed, a chunky bassy water slap followed by two broad fans of sparkling spray and a short wet rushing tail. Crisp detailed premium racing game effect. No music, no speech, no engine."
+      },
+      {
+        "generation_id": "woQRQvjDqfBeus0Io21P",
+        "files": [
+          "splash_v4.wav"
+        ],
+        "seconds": 1.6,
+        "prompt": "One immediate huge close-up splash: heavy off-road pickup wheels slam a deep highway puddle at high speed, a chunky bassy water slap followed by two broad fans of sparkling spray and a short wet rushing tail. Crisp detailed premium racing game effect. No music, no speech, no engine."
+      }
+    ],
+    "pass": [
+      {
+        "generation_id": "3azkpl7slsmGn2eIF2ix",
+        "files": [
+          "pass_left.wav",
+          "pass_right.wav"
+        ],
+        "seconds": 0.84,
+        "prompt": "One extremely fast close debris flyby whoosh, a spinning sheet of metal tears past the camera, sharp air displacement then short resonant metallic flutter. Powerful cinematic near miss, begins immediately, clean isolated sound, no music or voices."
+      },
+      {
+        "generation_id": "ULggz8LNCoZefx7lkPus",
+        "files": [
+          "pass_left_v2.wav",
+          "pass_right_v2.wav"
+        ],
+        "seconds": 0.84,
+        "prompt": "One extremely fast close debris flyby whoosh, a spinning sheet of metal tears past the camera, sharp air displacement then short resonant metallic flutter. Powerful cinematic near miss, begins immediately, clean isolated sound, no music or voices."
+      },
+      {
+        "generation_id": "2RtmgRY0ra7ta13Mrpl0",
+        "files": [
+          "pass_left_v3.wav",
+          "pass_right_v3.wav"
+        ],
+        "seconds": 0.84,
+        "prompt": "One extremely fast close debris flyby whoosh, a spinning sheet of metal tears past the camera, sharp air displacement then short resonant metallic flutter. Powerful cinematic near miss, begins immediately, clean isolated sound, no music or voices."
+      }
+    ],
+    "heavy_pass": [
+      {
+        "generation_id": "DS6wESfP1rpQC2s4hr0u",
+        "files": [
+          "heavy_pass.wav"
+        ],
+        "seconds": 2.4,
+        "prompt": "A massive eighteen-wheeler trailer hurtling overhead in tornado wind, deep sudden pressure whoosh with rattling sheet metal and a low resonant groan, passes frighteningly close then disappears. One cinematic flying object, no crash, no speech, no music."
+      },
+      {
+        "generation_id": "m50GWIODIsROj3kH1wU8",
+        "files": [
+          "heavy_pass_v2.wav"
+        ],
+        "seconds": 2.4,
+        "prompt": "A massive eighteen-wheeler trailer hurtling overhead in tornado wind, deep sudden pressure whoosh with rattling sheet metal and a low resonant groan, passes frighteningly close then disappears. One cinematic flying object, no crash, no speech, no music."
+      },
+      {
+        "generation_id": "8BPzZNNoneNwERzd1RjR",
+        "files": [
+          "heavy_pass_v3.wav"
+        ],
+        "seconds": 2.3994,
+        "prompt": "A massive eighteen-wheeler trailer hurtling overhead in tornado wind, deep sudden pressure whoosh with rattling sheet metal and a low resonant groan, passes frighteningly close then disappears. One cinematic flying object, no crash, no speech, no music."
+      },
+      {
+        "generation_id": "MPQzpe9y1Onyak1BDq6g",
+        "files": [
+          "heavy_pass_v4.wav"
+        ],
+        "seconds": 2.3899,
+        "prompt": "A massive eighteen-wheeler trailer hurtling overhead in tornado wind, deep sudden pressure whoosh with rattling sheet metal and a low resonant groan, passes frighteningly close then disappears. One cinematic flying object, no crash, no speech, no music."
+      }
+    ],
+    "cow": [
+      {
+        "generation_id": "mqzXJzZKkBWwgehRqhCx",
+        "files": [
+          "cow.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "A single natural surprised cow moo, short realistic resonant bovine lowing with slight wind rush around it. Playful cinematic flying cow game cue, no human screams, no music, no other animals."
+      },
+      {
+        "generation_id": "5v2euYZ4tziBU77sqgES",
+        "files": [
+          "cow_v2.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "A single natural surprised cow moo, short realistic resonant bovine lowing with slight wind rush around it. Playful cinematic flying cow game cue, no human screams, no music, no other animals."
+      },
+      {
+        "generation_id": "wq30HdJzlZxh0mfqzzie",
+        "files": [
+          "cow_v3.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "A single natural surprised cow moo, short realistic resonant bovine lowing with slight wind rush around it. Playful cinematic flying cow game cue, no human screams, no music, no other animals."
+      }
+    ],
+    "thunder": [
+      {
+        "generation_id": "m0fBGUpRy8Nvi4I4l45t",
+        "files": [
+          "thunder.wav"
+        ],
+        "seconds": 5.0,
+        "prompt": "One enormous nearby lightning crack immediately, followed by a deep richly layered rolling thunder rumble decaying across open prairie. Realistic cinema storm sound with detailed air and bass, no music, no speech, no rain bed."
+      },
+      {
+        "generation_id": "1vnCRwnvYCeZPTmSCcIw",
+        "files": [
+          "thunder_v2.wav"
+        ],
+        "seconds": 5.0,
+        "prompt": "One enormous nearby lightning crack immediately, followed by a deep richly layered rolling thunder rumble decaying across open prairie. Realistic cinema storm sound with detailed air and bass, no music, no speech, no rain bed."
+      },
+      {
+        "generation_id": "zIaErWxuDTOnHHaJDXo9",
+        "files": [
+          "thunder_v3.wav"
+        ],
+        "seconds": 5.0,
+        "prompt": "One enormous nearby lightning crack immediately, followed by a deep richly layered rolling thunder rumble decaying across open prairie. Realistic cinema storm sound with detailed air and bass, no music, no speech, no rain bed."
+      }
+    ],
+    "hit": [
+      {
+        "generation_id": "glLziguCv8pzt6r47ZUG",
+        "files": [
+          "hit.wav"
+        ],
+        "seconds": 1.2,
+        "prompt": "One violent compact truck collision, a heavy thud of debris against steel bodywork, sharp metallic crunch and a few rattling fragments falling. Immediate transient with a short bassy tail, cinematic game action, no voices, no music, no explosion."
+      },
+      {
+        "generation_id": "FLrpYKzshsCeeQj8SIIa",
+        "files": [
+          "hit_v2.wav"
+        ],
+        "seconds": 1.2,
+        "prompt": "One violent compact truck collision, a heavy thud of debris against steel bodywork, sharp metallic crunch and a few rattling fragments falling. Immediate transient with a short bassy tail, cinematic game action, no voices, no music, no explosion."
+      },
+      {
+        "generation_id": "qudgRoU17gitBW4MnK2S",
+        "files": [
+          "hit_v3.wav"
+        ],
+        "seconds": 1.2,
+        "prompt": "One violent compact truck collision, a heavy thud of debris against steel bodywork, sharp metallic crunch and a few rattling fragments falling. Immediate transient with a short bassy tail, cinematic game action, no voices, no music, no explosion."
+      }
+    ],
+    "wood_hit": [
+      {
+        "generation_id": "EVALzjN88uqoYWvqz7lw",
+        "files": [
+          "wood_hit.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "One barn timber smashing the side of a heavy pickup truck: dry splintering wood crack and a solid chassis thump, scattering chips and short rattles. Aggressive detailed action game impact, no music, no voices."
+      },
+      {
+        "generation_id": "nwUKnfvaxa6dTjx6og2f",
+        "files": [
+          "wood_hit_v2.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "One barn timber smashing the side of a heavy pickup truck: dry splintering wood crack and a solid chassis thump, scattering chips and short rattles. Aggressive detailed action game impact, no music, no voices."
+      },
+      {
+        "generation_id": "uQ4QHhMDnOrAli90jvJ0",
+        "files": [
+          "wood_hit_v3.wav"
+        ],
+        "seconds": 1.28,
+        "prompt": "One barn timber smashing the side of a heavy pickup truck: dry splintering wood crack and a solid chassis thump, scattering chips and short rattles. Aggressive detailed action game impact, no music, no voices."
+      }
+    ],
+    "metal_hit": [
+      {
+        "generation_id": "yqtaAFMojx81tF3HRFQX",
+        "files": [
+          "metal_hit.wav"
+        ],
+        "seconds": 1.48,
+        "prompt": "One warehouse steel beam colliding with a reinforced pickup, massive metallic slam, crumpling corrugated sheet and a short ringing debris rattle. Crisp cinematic crash with weight and controlled low end, no voices, no music."
+      },
+      {
+        "generation_id": "kcOA38V2jM4J8TuUJBA7",
+        "files": [
+          "metal_hit_v2.wav"
+        ],
+        "seconds": 1.48,
+        "prompt": "One warehouse steel beam colliding with a reinforced pickup, massive metallic slam, crumpling corrugated sheet and a short ringing debris rattle. Crisp cinematic crash with weight and controlled low end, no voices, no music."
+      },
+      {
+        "generation_id": "kPBqB9vr4ScbCISUMzVB",
+        "files": [
+          "metal_hit_v3.wav"
+        ],
+        "seconds": 1.48,
+        "prompt": "One warehouse steel beam colliding with a reinforced pickup, massive metallic slam, crumpling corrugated sheet and a short ringing debris rattle. Crisp cinematic crash with weight and controlled low end, no voices, no music."
+      }
+    ],
+    "lens_hit": [
+      {
+        "generation_id": "0cEq0iJFxvndvnIa2Qks",
+        "files": [
+          "lens_hit.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "One close pebble and debris strike on a camera protective glass screen, sharp tick-crack with a small crunchy glassy shatter and a deep compact impact underneath. Immediate premium action game lens hit, no voices or music."
+      },
+      {
+        "generation_id": "ABr2e9VOZCr3pU4sHzcv",
+        "files": [
+          "lens_hit_v2.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "One close pebble and debris strike on a camera protective glass screen, sharp tick-crack with a small crunchy glassy shatter and a deep compact impact underneath. Immediate premium action game lens hit, no voices or music."
+      },
+      {
+        "generation_id": "r5Nx3g5AIHea3ORjiAmj",
+        "files": [
+          "lens_hit_v3.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "One close pebble and debris strike on a camera protective glass screen, sharp tick-crack with a small crunchy glassy shatter and a deep compact impact underneath. Immediate premium action game lens hit, no voices or music."
+      }
+    ],
+    "probe": [
+      {
+        "generation_id": "l1g6yxTB4Sb89B3B4KmA",
+        "files": [
+          "probe.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "Scientific storm probe launch sound, a crisp mechanical latch click then a short pneumatic thump and an ascending clean electronic telemetry chirp. Premium grounded sci-fi field equipment, satisfying and precise, no voices or music."
+      },
+      {
+        "generation_id": "t1p0vIrGm9cuZVFVvV4B",
+        "files": [
+          "probe_v2.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "Scientific storm probe launch sound, a crisp mechanical latch click then a short pneumatic thump and an ascending clean electronic telemetry chirp. Premium grounded sci-fi field equipment, satisfying and precise, no voices or music."
+      },
+      {
+        "generation_id": "XLE83zvpkfyEUaHqK7J1",
+        "files": [
+          "probe_v3.wav"
+        ],
+        "seconds": 0.88,
+        "prompt": "Scientific storm probe launch sound, a crisp mechanical latch click then a short pneumatic thump and an ascending clean electronic telemetry chirp. Premium grounded sci-fi field equipment, satisfying and precise, no voices or music."
+      }
+    ],
+    "pickup": [
+      {
+        "generation_id": "7x8r3Vbcu3Js8Tj58waU",
+        "files": [
+          "pickup.wav"
+        ],
+        "seconds": 0.8,
+        "prompt": "A single satisfying game supply pickup, soft mechanical snap layered with two warm clean rising electronic notes and a delicate bright shimmer. Short premium interface success cue, restrained, no speech."
+      },
+      {
+        "generation_id": "K7EJ2FMLyQjINBHuCaM2",
+        "files": [
+          "pickup_v2.wav"
+        ],
+        "seconds": 0.8,
+        "prompt": "A single satisfying game supply pickup, soft mechanical snap layered with two warm clean rising electronic notes and a delicate bright shimmer. Short premium interface success cue, restrained, no speech."
+      },
+      {
+        "generation_id": "dF9GQLqmH9QbwVxjITNE",
+        "files": [
+          "pickup_v3.wav"
+        ],
+        "seconds": 0.8,
+        "prompt": "A single satisfying game supply pickup, soft mechanical snap layered with two warm clean rising electronic notes and a delicate bright shimmer. Short premium interface success cue, restrained, no speech."
+      }
+    ],
+    "near": [
+      {
+        "generation_id": "7z1CxRaYkCvccfZYjNIa",
+        "files": [
+          "near.wav"
+        ],
+        "seconds": 0.6802,
+        "prompt": "A short thrilling perfect dodge confirmation, fast airy swish into a clean resonant metallic ping and tiny rising electronic sparkle. Elegant premium racing game feedback, no voice, no melody bed, no explosion."
+      },
+      {
+        "generation_id": "TAeArIFtRs8tcwioweEF",
+        "files": [
+          "near_v2.wav"
+        ],
+        "seconds": 0.6744,
+        "prompt": "A short thrilling perfect dodge confirmation, fast airy swish into a clean resonant metallic ping and tiny rising electronic sparkle. Elegant premium racing game feedback, no voice, no melody bed, no explosion."
+      },
+      {
+        "generation_id": "sX5zKlQa58WI5KPCB6hq",
+        "files": [
+          "near_v3.wav"
+        ],
+        "seconds": 0.6802,
+        "prompt": "A short thrilling perfect dodge confirmation, fast airy swish into a clean resonant metallic ping and tiny rising electronic sparkle. Elegant premium racing game feedback, no voice, no melody bed, no explosion."
+      }
+    ],
+    "click": [
+      {
+        "generation_id": "aUPFtc9TFV8edLeDHqlK",
+        "files": [
+          "click.wav"
+        ],
+        "seconds": 0.48,
+        "prompt": "One soft tactile radio equipment button click, compact mechanical tick with a subtle warm electronic blip, clean premium game interface feedback, very short attack and decay, no music, no voices."
+      },
+      {
+        "generation_id": "MmYItTZOgwqAtIXtmgW6",
+        "files": [
+          "click_v2.wav"
+        ],
+        "seconds": 0.48,
+        "prompt": "One soft tactile radio equipment button click, compact mechanical tick with a subtle warm electronic blip, clean premium game interface feedback, very short attack and decay, no music, no voices."
+      },
+      {
+        "generation_id": "avNYPbdm6a5bihzRO7OE",
+        "files": [
+          "click_v3.wav"
+        ],
+        "seconds": 0.48,
+        "prompt": "One soft tactile radio equipment button click, compact mechanical tick with a subtle warm electronic blip, clean premium game interface feedback, very short attack and decay, no music, no voices."
+      }
+    ],
+    "turbo_surge": [
+      {
+        "generation_id": "rsSrdfDEaqWbUjnlDYi7",
+        "files": [
+          "turbo_surge.wav"
+        ],
+        "seconds": 1.36,
+        "prompt": "One powerful turbo engagement surge, mechanical clutch clunk then rapidly rising turbine spool and short pressurized air hiss, punchy high performance diesel racing pickup, no music, no voices."
+      },
+      {
+        "generation_id": "u76GP7C8NQe4jtAS6TyT",
+        "files": [
+          "turbo_surge_v2.wav"
+        ],
+        "seconds": 1.36,
+        "prompt": "One powerful turbo engagement surge, mechanical clutch clunk then rapidly rising turbine spool and short pressurized air hiss, punchy high performance diesel racing pickup, no music, no voices."
+      },
+      {
+        "generation_id": "OcFqQb8svtnWhp6ZUnwo",
+        "files": [
+          "turbo_surge_v3.wav"
+        ],
+        "seconds": 1.36,
+        "prompt": "One powerful turbo engagement surge, mechanical clutch clunk then rapidly rising turbine spool and short pressurized air hiss, punchy high performance diesel racing pickup, no music, no voices."
+      }
+    ],
+    "chase": [
+      {
+        "generation_id": "mQM8JxtDgJ1bErglfh4S",
+        "files": [
+          "chase.wav"
+        ],
+        "seconds": 31.75,
+        "prompt": "Instrumental cinematic storm-chasing racing game score, 150 BPM, relentless ticking percussion, deep pulsing synth bass, urgent string ostinato, restrained brass swells, thunderous tightly controlled drums. Exhilarating forward momentum and adventurous tension, dark blue prairie storm atmosphere, no vocals, no sound effects, no spoken words. Immediate groove, consistent energy, end on a phrase suitable for looping."
+      }
+    ]
+  }
+}

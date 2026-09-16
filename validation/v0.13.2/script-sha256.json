@@ -1,0 +1,5 @@
+{
+  "scripts/main.gd": "106406ff59df2c6340e56ceb0ccb29a01e58ae30d3aea4c639502d566a87d0fd",
+  "tools/verify_road_margin.gd": "e39e633cf87c3db1dfa3d7e4e93f4fba2a981704987e5777c305d080c35387dd",
+  "tools/record_road_margin.gd": "2a249284c66649d55636371af43efa9d886854487475e91e36af3140826c6d55"
+}

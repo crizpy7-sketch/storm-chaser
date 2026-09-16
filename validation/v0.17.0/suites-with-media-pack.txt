@@ -1,0 +1,21 @@
+Suites on the same extraction with a complete synthetic media pack placed at the real asset paths.
+The synthetic pack is 57 WAV tones (chase.wav 31 s, motor_body.wav 4.0 s), 16 images (flat-colour placeholders, plus the
+truck reference sheet and model textures taken from interceptor-3d.glb) and 17 copies of tools/test_media/stand_in_film.ogv.
+It checks that the game and suites switch to installed files; it does not check the owner's actual recordings or art.
+
+  storm_art          pass    4  fail 0  skip 0  script errors 0
+  road_margin        pass   14  fail 0  skip 0  script errors 0
+  truck_3d           pass   16  fail 0  skip 0  script errors 0
+  weight             pass   14  fail 0  skip 0  script errors 0
+  driving            pass   23  fail 0  skip 0  script errors 0
+  landscape          pass   15  fail 0  skip 0  script errors 0
+  solid_impacts      pass   38  fail 0  skip 0  script errors 0
+  finale             pass   50  fail 0  skip 0  script errors 0
+  polish             pass   28  fail 0  skip 0  script errors 0
+  route              pass   71  fail 0  skip 0  script errors 0
+  checkpoints        pass  176  fail 0  skip 0  script errors 0
+  contact_campaign   pass    2  fail 0  skip 0  script errors 0
+  garage             pass   39  fail 0  skip 0  script errors 0
+  runtime            pass   22  fail 0  skip 0  script errors 0
+
+  total              pass  512  fail 0  skip 0

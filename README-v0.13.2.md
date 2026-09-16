@@ -1,10 +1,30 @@
-# Storm Chaser v0.17.0 — Mateo's Garage
+# Storm Chaser v0.13.2 — Keep the truck on the pavement
 
-**Mateo's Garage** opens from the base over the live 3D truck. It has five cosmetic slots: paint accents, wheels, roof equipment, bumper armor and suspension trim. Each slot starts on the approved stock part, and **STOCK LOOK** restores all of them. A separate, optional **chase setup** (Stock, Rally, Armored, Turbo) is the only performance choice, and Stock keeps the original tune. The loadout is saved, shown in Mateo's Footage, and labeled on the scoreboard when a non-stock setup is used.
+Paved-road steering limits now reserve space for the whole truck and a 0.40-world-unit margin, rather than allowing its center to reach the road edge. Outward steering eases over the last 0.22 normalized lane units; countersteering stays responsive. The dirt transition blends into the existing wider 1.2 off-road envelope. The original rigid truck presentation and heavy handling remain.
 
-This release also makes the three hill levels much cheaper to run, and the terrain looks the same. Jump height no longer depends on frame rate, and Mateo stays visible from side and orbit cameras. Trimmed project copies that lack the audio/film media now launch. Full details, the merge steps for your media folders, and the limits are in `README-v0.17.0.md` and `VALIDATION-v0.17.0.md`.
+390 automated checks pass, including full steering combined with wind and puddle-style slip at 30/60/120 FPS, both directions, countersteer recovery and wider dirt-road travel. The new preview uses controlled lane changes rather than the previous sustained full-input stress test. Windows still needs a Galaxy Book2 hardware playtest.
 
-v0.16.0 added swept solid debris impacts and the roadside shelter corridor (`README-v0.16.0.md`). v0.15.0 added the storm damage corridor: ruined homes, splintered trees, fences, fires and the breaking semi (`README-v0.15.0.md`). The approved truck mesh, Mateo, the campaign and the cinematic films are unchanged.
+## Previous release: Storm Chaser v0.13.1 — Rigid truck swerves
+
+The original orange truck now uses one planar body surface. The old depth strips bent its projection when the chase camera lagged behind a swerve. Unregistered generated steering and flight images no longer replace the body: those assets remain in the project for future art work. Smooth yaw, lateral fishtail, wheel tread, sprung-body motion, landing recovery and heavy engine response remain active.
+
+Mateo shares the sprung body and sits between the cab and a registered tailgate overlay. The swaying funnel, airborne environmental objects, campaign, checkpoints, films and saved progress are retained.
+
+376 automated checks pass. The included preview is rendered from actual game logic with scripted steering and selected stages, not a cinematic generation. Windows, Linux and Web exports are rebuilt. A Windows/Galaxy Book2 hardware playtest is still needed; the software-rendered preview is not a performance benchmark.
+
+## Prior release: Storm Chaser v0.13.0 — Storm in Motion
+
+Seven new truck movement views and a cinematic tornado with ground-to-funnel destruction are integrated. See `README-v0.13.0.md` for this release.
+
+The truck now builds engine torque through gear changes, compresses and settles on landing, and carries a recoverable slide after crooked touchdowns. RPM and load drive the engine sound, with new low motor and landing body layers. The original orange truck and Mateo remain intact. Off-road stages gain lighter textured clay, lit rolling prairie terrain and a new storm panorama. Read `research/Heavy-Truck-Research.md` for sources, decisions and validation.
+
+Your approved eighteen-second ending now plays after completing the full tornado lap. It keeps the accepted edit, original soundtrack, color and frame proportions. The ending unlocks as THE FINALE in Mateo's Footage, with pause, skip and safe replay controls. Scores and checkpoint retries remain intact.
+
+Your latest hill-jump-and-drift film now introduces Ridgeline Jumps (level six) at checkpoint 05. The truck launches from the muddy crest, lands and slides through the turn. Its original sound and frame proportions are retained. The previous Ridgeline film remains an alternate replay in Mateo's Footage, and both unlock at checkpoint 05. All seven checkpoints retain their cinematics.
+
+The Dirt Shortcut now branches perpendicularly from the straight highway at a square, ninety-degree junction. The truck brakes on approach, drifts through a tight right turn, then carries its slide into the lighter brown mud. Mud flies from the tires toward the camera, sticks to the lens, drips and clears. Wet ruts and pooled water remain visible, and the original truck geometry stays fixed.
+
+Eight escalating levels carry the original orange interceptor and Mateo from the highway into the tornado. The original truck art, restrained fishtail, moving tire tread, colored storm lighting, bottom instrument cluster, existing ElevenLabs audio, building movies, dodge celebrations and impact ending are retained.
 
 ## Play the campaign
 
@@ -29,7 +49,6 @@ Survive to the vortex and transmit at least **three probes** for a completed sur
 - **Space:** transmit a charged probe while in range. **P / Escape:** pause, including during the ending movie. **Space / Enter / controller A, B or X** skips the ending; the earned final transmission is still counted.
 - **T:** touch controls. **M:** mute. **C:** hide the driving HUD. **F11:** fullscreen.
 - Controller: left stick / D-pad steers, A boosts, B brakes, X transmits, Start pauses.
-- **Mateo's Garage** (base screen): Up/Down select, Left/Right change, Q/E or drag to orbit, R stock look, Enter start, Escape back. Controller: D-pad or stick, LB/RB orbit, Y stock look, A or Start to start, B back.
 
 Brake before a tight curve, hold steering against the outward drift, then accelerate out. Dirt reduces grip. Braking over big crests helps keep the tires down; at higher speed the truck follows a ballistic jump and must reconnect with the terrain. Steering is weaker in the air. Land straight to earn data; landing with a large sideways slide can damage the hull and kick the rear outward. High jumps can clear low debris, but cannot collect ground supplies or trigger puddles beneath the truck. Staying on the shoulder too long damages the truck.
 
@@ -41,7 +60,7 @@ DATA remains the score. Probes, close dodges, supplies and tracking earn data as
 
 - **Windows / Galaxy Book2:** extract the entire Windows ZIP and open `Storm-Chaser.exe`.
 - **Linux:** extract the Linux ZIP and run `./Storm-Chaser.x86_64`.
-- **Godot:** extract the project ZIP and import `project.godot` with Godot 4.5.2. Install official export templates to export on your own machine. The v0.17.0 source package omits the large audio and film files; extract it over a copy of your complete project (see `README-v0.17.0.md`).
+- **Godot:** extract the project ZIP and import `project.godot` with Godot 4.5.2. Install official export templates to export on your own machine.
 - **Web:** serve the complete Web folder over HTTP(S); opening `index.html` directly from disk is not supported.
 
 The driving/display menu retains optional steering recovery, extra hazard reaction time, lighter graphics, reduced camera effects and Mateo voice controls. Touch controls and vibration hooks remain available, subject to device/browser support. No Android or iOS package is included. Cristian playtested the prior Windows release on his laptop. This new handling tune, physical controller vibration, browser/mobile performance and multitouch still need device feedback. Supported gamepads receive brief impact pulses when haptics are enabled.
@@ -70,6 +89,6 @@ The driving/display menu retains optional steering recovery, extra hazard reacti
 
 `Storm-Chaser-v0.10.0-Into-the-Vortex.mp4` is the previous release recording of the actual Godot build, edited to show the new levels. An automated driver uses ordinary game handling, collisions, upgrades and probes. Unshown driving is simulated between highlights; health and earned progress carry through the campaign. Automatic dodge films are disabled for the capture. It is recorded offline at 30 fps, not a device performance benchmark.
 
-The ground, obstacles and puddles follow the driving route. At the shortcut, two perpendicular road rectangles form the junction, while a tight rounded driving line stays within it. The road and truck render in 3D; weather and character art still include illustrated layers, and campaign travel remains route-based. The approved cinematic supplies the immersive final sequence; the earlier 3D spiral remains a playback fallback. This release creates no new AI images, movies or audio and spends no Higgsfield or ElevenLabs credits.
+The ground, obstacles and puddles follow the driving route. At the shortcut, two perpendicular road rectangles form the junction, while a tight rounded driving line stays within it. Gameplay keeps the existing 2.5D presentation. The approved cinematic supplies the immersive final sequence; the earlier 3D spiral remains a playback fallback. This release creates no new AI images, movies or audio and spends no Higgsfield or ElevenLabs credits.
 
-See `VALIDATION-v0.17.0.md` for this release. `research/Heavy-Truck-Research.md` and earlier release notes document historical tuning.
+See `research/Heavy-Truck-Research.md` and `VALIDATION-v0.12.0.md` for the current implementation and testing limits. Earlier release notes are historical.

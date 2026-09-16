@@ -1,0 +1,104 @@
+[
+  {
+    "index": 0,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. A giant battered WOODEN SHIPPING CRATE with visible timber planks and diagonal bracing tumbles end over end diagonally across the highway directly ahead. The orange pickup fishtails RIGHT just in time. Camera tracks low beside its LEFT rear wheel as the crate misses the left side by inches, with splinters sweeping close to the camera. Emphasize the crate clearly for at least two seconds. The truck never collides with it. Do not add a barrel, cow or semi."
+    }
+  },
+  {
+    "index": 1,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. A large RED RUSTY STEEL OIL DRUM with reinforced metal rings bounces and rolls across the wet lane. The orange pickup fishtails LEFT just in time. A low rear three-quarter tracking camera sweeps slightly toward the RIGHT as the steel barrel bounces in extreme close foreground beside the truck, reflecting amber lights in the wet metal. Slow motion catches one bounce and inches of clearance, then the pickup rockets away. No explosion, fire, collision, cow, crate or semi."
+    }
+  },
+  {
+    "index": 2,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. A HUGE LOOSE BLACK TRACTOR TIRE with deep aggressive rubber tread and a hollow center bounces high down the lane. The orange pickup snakes RIGHT beneath and beside its bounce. The camera dips close to the wet asphalt behind the rear axle and the spinning tire rushes across the LEFT foreground, briefly filling half the view. Brief slow motion reveals rubber tread, tire rotation and water droplets, then speed returns as the truck escapes. The loose tire stays separate from all truck wheels. No collision, semi, cow, crate or barrel."
+    }
+  },
+  {
+    "index": 3,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. A LARGE SILVER CORRUGATED ROOFING SHEET, clearly thin ribbed galvanized metal, whirls like a blade across the highway at windshield height. The orange pickup makes a sharp horizontal fishtail LEFT. Camera pushes alongside the right rear corner as the broad sheet spins past the truck by inches, with a bright edge glint and slow-motion rain droplets. At the end a tiny harmless fragment flicks against the CAMERA LENS with a sharp tap and two water streaks, then the view clears as the truck accelerates. No vehicle damage, blood, crate, cow or semi."
+    }
+  },
+  {
+    "index": 4,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. An ENORMOUS RED 18-WHEELER TRACTOR AND SILVER BOX TRAILER, fully connected as one articulated semi, is lifted by tornado winds and rolls through the sky, upside down at its closest pass. The orange pickup fishtails RIGHT and races under the flying trailer. Camera dives behind the pickup close to the highway then tilts just enough to show the massive semi passing overhead by a few feet, all wheels and the red cab visibly attached. Slow motion at the tremendous overhead near miss, then rocket forward out from under its shadow. The pickup remains intact; the semi remains airborne as it passes behind. No cow, crate, barrel or explosion."
+    }
+  },
+  {
+    "index": 5,
+    "params": {
+      "model": "flux_3_video",
+      "duration": 5,
+      "resolution": "720p",
+      "aspect_ratio": "16:9",
+      "generate_audio": true,
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+        }
+      ],
+      "prompt": "Create a spectacular reusable 5-second storm-chasing game celebration cinematic, matching the reference orange research pickup exactly: amber beacons, roof radar dish, black roll cage, chunky tires, equipment bed. A photoreal blockbuster action shot on a soaking wet rural highway racing toward the huge blue-black tornado. Keep the truck upright with level wheels; fishtailing is horizontal rear-axle yaw, with a convincing countersteer and suspension weight, not a slanted flat sprite. One coherent moving camera shot. Start fast, briefly speed-ramp into extreme slow motion at the closest clearance, then snap back to blistering speed and finish safely accelerating away. Camera hugs the road, water spray streams backward, gusts and small fragments rush past the lens, realistic directional motion blur and cinematic teal/amber lighting. Clear coherent geometry and continuous truck identity. Loud synchronized engine roar, tire skid, wind and one deep whoosh at the near miss; no voice or music. No HUD, interface, captions, letters, logos, borders or watermark. A clearly recognizable large BLACK-AND-WHITE HOLSTEIN COW floats sideways through the storm just above road level, legs gently flailing in the wind, unharmed and comically startled. The orange pickup fishtails LEFT to dodge the airborne cow as it crosses from left to right. Camera swoops low around the right rear quarter, bringing the cow very close across the RIGHT foreground while the pickup remains plainly visible. Brief slow motion shows the cow's face, hooves and whipping rain, then the pickup rockets clear as the cow continues flying safely toward the grassy field. Include one short surprised moo in the synchronized audio. No collision, injury, falling to ground, semi, crate or barrel."
+    }
+  }
+]

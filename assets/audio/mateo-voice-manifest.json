@@ -1,0 +1,142 @@
+{
+  "voice": "VALF - Child, Young, Playful & Sarcastic",
+  "voice_id": "loY1uopAz31XyhAEhNSa",
+  "provider": "ElevenLabs",
+  "model": "eleven_multilingual_v2",
+  "synthetic_character_voice": true,
+  "completed_takes": [
+    {
+      "id": "1B5IyoRvkvXzzQXKSLgs",
+      "file": "mateo_dodge_1.mp3",
+      "duration": 1.1145578231292517,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 10.998899999999999,
+        "price_cents": 0.19998
+      },
+      "prompt": "I got that!",
+      "node": null
+    },
+    {
+      "id": "EHlWb0DSeITZXn39VHK5",
+      "file": "mateo_dodge_2.mp3",
+      "duration": 1.253877551020408,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 10.998899999999999,
+        "price_cents": 0.19998
+      },
+      "prompt": "I got that!",
+      "node": null
+    },
+    {
+      "id": "YTYqB7DOBiTXnXZi3Al4",
+      "file": "mateo_dodge_3.mp3",
+      "duration": 1.1145578231292517,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 10.998899999999999,
+        "price_cents": 0.19998
+      },
+      "prompt": "I got that!",
+      "node": null
+    },
+    {
+      "id": "43qAZw9A9KuQT1YA3YnQ",
+      "file": "mateo_dodge_4.mp3",
+      "duration": 1.207437641723356,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 10.998899999999999,
+        "price_cents": 0.19998
+      },
+      "prompt": "I got that!",
+      "node": null
+    },
+    {
+      "id": "v8YJD7AVIeA46VSCQgqQ",
+      "file": "mateo_cow_1.mp3",
+      "duration": 1.3467573696145125,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 13.998600000000001,
+        "price_cents": 0.25452
+      },
+      "prompt": "A flying cow?!",
+      "node": null
+    },
+    {
+      "id": "0BDuEd9r1tKVaa9BbqFR",
+      "file": "mateo_cow_2.mp3",
+      "duration": 1.5789569160997732,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 13.998600000000001,
+        "price_cents": 0.25452
+      },
+      "prompt": "A flying cow?!",
+      "node": null
+    },
+    {
+      "id": "MnGCNeaPYqgHsvR5bkp0",
+      "file": "mateo_cow_3.mp3",
+      "duration": 1.4396371882086167,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 13.998600000000001,
+        "price_cents": 0.25452
+      },
+      "prompt": "A flying cow?!",
+      "node": null
+    },
+    {
+      "id": "x3OcSvWvfJdIlQ7AzcZA",
+      "file": "mateo_cow_4.mp3",
+      "duration": 1.486077097505669,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 13.998600000000001,
+        "price_cents": 0.25452
+      },
+      "prompt": "A flying cow?!",
+      "node": null
+    },
+    {
+      "id": "SAJ9vLoB14KBeAddC1Ff",
+      "file": "mateo_recording_1.mp3",
+      "duration": 1.9969160997732427,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 29.997,
+        "price_cents": 0.5454
+      },
+      "prompt": "Keep it steady. I'm recording!",
+      "node": null
+    },
+    {
+      "id": "37iouFofaEB8gSdL23Ec",
+      "file": "mateo_recording_2.mp3",
+      "duration": 1.811156462585034,
+      "price": {
+        "cost_fiat_currency": "usd",
+        "credits": 29.997,
+        "price_cents": 0.5454
+      },
+      "prompt": "Keep it steady. I'm recording!",
+      "node": null
+    }
+  ],
+  "failed_variations": [
+    {
+      "id": "GS0Wmym62yvZInHhicvD",
+      "status": "failed",
+      "error": "Too many concurrent requests. Your current subscription is associated with a maximum of 5 concurrent requests (running in parallel). This is done such that a single user does not overwhelm our systems and affect other users negatively. Please upgrade your subscription or contact sales if you want to increase this limit."
+    },
+    {
+      "id": "LGuj7IkS8ZOrJB6sOZ7W",
+      "status": "failed",
+      "error": "Too many concurrent requests. Your current subscription is associated with a maximum of 5 concurrent requests (running in parallel). This is done such that a single user does not overwhelm our systems and affect other users negatively. Please upgrade your subscription or contact sales if you want to increase this limit."
+    }
+  ],
+  "completed_credit_total": 159.984
+}

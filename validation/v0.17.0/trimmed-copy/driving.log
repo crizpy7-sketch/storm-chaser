@@ -1,0 +1,36 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+WARNING: Storm Chaser: optional media is missing (first: res://assets/art/flying-cow.png). Built-in stand-ins are used; copy the full assets folders back to restore it.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _note_missing (res://scripts/media.gd:68)
+         [1] texture (res://scripts/media.gd:76)
+         [2] _ready (res://scripts/world3d.gd:72)
+         [3] _ready (res://scripts/main.gd:158)
+         [4] run (res://tools/verify_driving.gd:44)
+PASS: all gameplay sound players are created
+SKIP: all gameplay sound effects load (media pack not installed)
+SKIP: one-shot effects rotate multiple ElevenLabs takes (media pack not installed)
+SKIP: chase music asset loads (media pack not installed)
+PASS: engine loop is ready
+PASS: puddles always leave a route around them
+PASS: fast puddle hit breaks traction and kicks truck sideways
+PASS: water does not directly damage hull
+PASS: water hit emits a splash burst
+PASS: each puddle hits once
+PASS: slowing before water softens the slide
+PASS: grip upgrade reduces water kick
+PASS: driving around puddle keeps traction
+PASS: puddle causes actual lateral travel, not only a visual tilt
+PASS: brake and countersteer quickly restore grip
+PASS: boost-speed fishtail uses a restrained heading
+PASS: fishtail keeps truck upright on equal wheel heights
+PASS: rapid steering remains bounded
+PASS: pause freezes slide physics
+PASS: checkpoint clears water and momentum
+PASS: checkpoint retry starts with grip restored
+PASS: menu clears aquaplaning
+PASS: vibration off prevents haptic output
+DRIVING_TESTS 20 checks; 0 failures; 3 skipped
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)

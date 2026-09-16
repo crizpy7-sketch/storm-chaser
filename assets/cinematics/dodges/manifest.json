@@ -1,0 +1,60 @@
+{
+  "version": "0.4.0",
+  "purpose": "Reusable cinematic rewards, not exact gameplay replays",
+  "provider": "Higgsfield",
+  "model": "flux_3_video",
+  "duration_seconds": 5,
+  "resolution": "720p",
+  "reference_media_id": "cd146625-ac95-45f6-a272-4a25cabac18a",
+  "original_trailer_job": "94b8bbc1-28a5-4a83-9115-2b98c86723c8",
+  "films": [
+    {
+      "index": 0,
+      "item": "crate",
+      "job_id": "c772e2e8-7bec-4e82-a7c9-160676d30aff",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_054858_c772e2e8-7bec-4e82-a7c9-160676d30aff.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    },
+    {
+      "index": 1,
+      "item": "barrel",
+      "job_id": "a357e737-a88d-4e69-b981-201bc6e9be2b",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_054858_a357e737-a88d-4e69-b981-201bc6e9be2b.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    },
+    {
+      "index": 2,
+      "item": "tire",
+      "job_id": "3ad2e9cf-a001-459d-a9da-0c433234e281",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_055212_3ad2e9cf-a001-459d-a9da-0c433234e281.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    },
+    {
+      "index": 3,
+      "item": "metal",
+      "job_id": "77f4daba-2240-46aa-a676-1c812f434f7f",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_054858_77f4daba-2240-46aa-a676-1c812f434f7f.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    },
+    {
+      "index": 4,
+      "item": "semi",
+      "job_id": "657c14e4-2a78-43d4-a604-3cd4070bc94a",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_054859_657c14e4-2a78-43d4-a604-3cd4070bc94a.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    },
+    {
+      "index": 5,
+      "item": "cow",
+      "job_id": "fe909ec1-5b07-4d61-a4b0-1a2ab8f44981",
+      "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_055212_fe909ec1-5b07-4d61-a4b0-1a2ab8f44981.mp4",
+      "game_codec": "Theora / Vorbis",
+      "game_fps": 30
+    }
+  ]
+}

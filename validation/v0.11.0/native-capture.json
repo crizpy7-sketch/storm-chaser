@@ -1,0 +1,14 @@
+{
+  "hull": 100.0,
+  "movie_end": 22.8250000000003,
+  "movie_start": 4.99166666666666,
+  "natural_end": true,
+  "orbit": 1.0,
+  "passed": true,
+  "preview_end": 28.3583333333339,
+  "probes": 17,
+  "replay_natural_end": true,
+  "score": 49337.4166666704,
+  "version": "0.11.0",
+  "wall": 47.2249999999999
+}

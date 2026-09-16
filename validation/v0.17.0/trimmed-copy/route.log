@@ -1,0 +1,87 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+WARNING: Storm Chaser: optional media is missing (first: res://assets/art/flying-cow.png). Built-in stand-ins are used; copy the full assets folders back to restore it.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _note_missing (res://scripts/media.gd:68)
+         [1] texture (res://scripts/media.gd:76)
+         [2] _ready (res://scripts/world3d.gd:72)
+         [3] _ready (res://scripts/main.gd:158)
+         [4] run (res://tools/verify_route.gd:39)
+PASS: level 4 course remains at truck origin
+PASS: level 4 course is continuous
+PASS: level 5 course remains at truck origin
+PASS: level 5 course is continuous
+PASS: level 6 course remains at truck origin
+PASS: level 6 course is continuous
+PASS: level 7 course remains at truck origin
+PASS: level 7 course is continuous
+PASS: level 8 course remains at truck origin
+PASS: level 8 course is continuous
+PASS: shortcut turns a full ninety degrees right
+PASS: separate mud road is narrower than the highway
+PASS: highway and mud road have perpendicular straight centerlines
+PASS: asphalt stays asphalt until crossing its right edge
+PASS: tight driving line stays inside the square junction
+PASS: right turn completes at the junction, without a sweeping exit ramp
+PASS: perpendicular dirt road joins the later hills continuously
+PASS: shortcut creates sustained rear drift at cruise speed
+PASS: braking reduces shortcut slide and outward force
+PASS: steering controls the actual lateral slide through the right turn
+PASS: dramatic corner keeps original bounded smooth truck heading
+PASS: corner slide settles after the exit
+PASS: drift leaves all original truck vertices unchanged
+PASS: checkpoint entry clears corner momentum and both effect latches
+PASS: visible highway and mud road meshes meet at exactly ninety degrees
+PASS: junction meshes have a hard asphalt-to-mud seam with no blending ramp
+PASS: hairpin terrain has no folded or overturned triangles
+SHORTCUT_METRICS fast={ "slide": 0.99010345115509, "yaw": 0.12983932704318, "yaw_step": 0.00421827064388, "drift": 1.8, "lane": 0.1476487053729, &"exit_drift": 0.02860147331811, &"exit_slide": 0.00056153475537 } slow={ "slide": 0.04285394576353, "yaw": 0.02780132780707, "yaw_step": 0.00087211084953, "drift": 1.10907465400143, "lane": 0.08186726201594, &"exit_drift": 0.00900499635869, &"exit_slide": 0.00000000131681 } unattended={ "slide": 0.99010345115509, "yaw": 0.11634988906144, "yaw_step": 0.00260689512775, "drift": 1.8, "lane": 1.2, &"exit_drift": 0.02860147331811, &"exit_slide": 0.00056153475537 }
+PASS: asphalt puddles keep clean water instead of mud on screen
+PASS: mud puddle launches a visible lens splash
+PASS: repeated puddles cannot repaint the lens before its mud drains
+PASS: pause freezes and hides mud overlay
+PASS: mud drains off the lens without permanently blocking play
+PASS: airborne truck cannot kick ground mud onto the lens
+PASS: retry clears all lens mud
+PASS: big hills launch and land at level 6 cruise
+JUMP level=5 height=3.23777100834517 launches=2 landings=2
+PASS: braking keeps level 6 hills grounded
+PASS: big hills launch and land at level 7 cruise
+JUMP level=6 height=8.5746823696887 launches=3 landings=2
+PASS: braking keeps level 7 hills grounded
+PASS: lower speed and brake reduce bend drift
+PASS: debris rides the curved elevated surface
+PASS: high jump clears low road debris
+PASS: grounded truck still takes debris damage
+PASS: airborne truck cannot aquaplane on a puddle below it
+PASS: airborne tires stop emitting ground mist
+PASS: level 4 uses its available movie or in-engine preview
+PASS: new level 4 checkpoint saves
+PASS: retry 4 resets terrain motion without extra rewards
+PASS: level 5 uses its available movie or in-engine preview
+PASS: new level 5 checkpoint saves
+PASS: retry 5 resets terrain motion without extra rewards
+PASS: level 6 uses its available movie or in-engine preview
+PASS: new level 6 checkpoint saves
+PASS: retry 6 resets terrain motion without extra rewards
+PASS: level 7 uses its available movie or in-engine preview
+PASS: new level 7 checkpoint saves
+PASS: retry 7 resets terrain motion without extra rewards
+PASS: level 8 uses its available movie or in-engine preview
+PASS: new level 8 checkpoint saves
+PASS: retry 8 resets terrain motion without extra rewards
+PASS: tornado lap tracks actual course distance
+PASS: pause freezes road and airborne simulation
+PASS: completing circle triggers suction finale
+PASS: pause freezes suction finale
+PASS: resume returns to finale without restarting gameplay
+PASS: finale ends once with results and no duplicate reward
+PASS: Mateo stays attached through hills and vortex
+PASS: results retain the airborne final camera
+PASS: sideways hard landing damages hull and creates recovery slide
+PASS: fewer than three probes preserves survey objective and checkpoint retry
+PASS: older two-building checkpoint remains compatible
+PASS: old save schema cannot pretend to contain a new level
+ROUTE_TESTS 71 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)

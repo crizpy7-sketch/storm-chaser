@@ -1,0 +1,22 @@
+{
+  "status": "Approved 18-second finale, integrated after the complete tornado lap in v0.11.0.",
+  "source_name": "Storm-Chaser-Finale-Preview.mp4",
+  "source_library_file_id": "libfile_2bbfbefe4d448191b1bb4b1d32507550",
+  "source_sha256": "00eacfe2ff3f073002e1352b6f23e5b4853509395b800f641aebf04321bed74e",
+  "output": "final_transmission.ogv",
+  "output_sha256": "0c655358d1e9b482380109bab5ba33df20471bdf19b775e8d1fdaa45ae96a81f",
+  "video": {
+    "codec": "Theora",
+    "width": 910,
+    "height": 512,
+    "fps": 30,
+    "duration_seconds": 18
+  },
+  "audio": {
+    "codec": "Vorbis",
+    "sample_rate": 48000,
+    "source": "Approved edit soundtrack"
+  },
+  "changes": "Container/codec conversion only. No crop, upscale, replacement soundtrack or additional color grade. Poster extracted at 1.2 seconds.",
+  "credits_used": 0
+}

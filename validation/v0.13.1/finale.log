@@ -1,0 +1,57 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: approved finale is packaged for replay
+PASS: finale is locked before completing the lap
+PASS: finale replay retains the full approved edit
+PASS: finale cannot start before completing the actual tornado lap
+PASS: completed lap starts the approved finale in the game
+PASS: finale selects the approved movie
+PASS: film preserves truck and Mateo proportions
+PASS: entire film stays inside the viewport
+PASS: approved movie retains its accepted color grade
+PASS: completing the lap earns final footage
+PASS: game loops pause beneath the movie soundtrack
+PASS: final movie freezes mission, collision and probe scoring
+PASS: old eleven-second finale timer does not cut off the eighteen-second movie
+PASS: final transmission awards two thousand data once
+PASS: controller Start pauses film and exposes pause controls
+PASS: paused movie freezes its watchdog and rewards
+PASS: earned final movie can replay from the paused chase
+PASS: replay watchdog allows the longer final film
+PASS: gallery returns to the paused finale
+PASS: finale replay cannot duplicate score, records or checkpoint progress
+PASS: nested replay preserves the finale audio pause
+PASS: controller Start resumes the same movie
+PASS: focus loss pauses the movie instead of consuming the reward
+PASS: movie completion opens the successful survey results
+PASS: successful survey adds final data and remaining hull bonus exactly once
+PASS: successful survey retires its checkpoint
+PASS: completed player releases its decoder
+PASS: movie completion restores game audio
+PASS: late completion and timer callbacks cannot duplicate rewards or records
+PASS: replay returns to results without recording another expedition
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: keyboard/controller skip awards the earned ending exactly once
+PASS: insufficient probes show incomplete survey without success hull bonus
+PASS: incomplete survey preserves the final checkpoint
+PASS: retry restores final level entrance without failed-attempt rewards
+PASS: earned film survives a clean checkpoint retry
+PASS: stopped decoder safely falls back to the native ending
+PASS: fallback restores live storm sound
+PASS: fallback completes without losing or repeating the final reward
+PASS: stalled decoder cannot trap the player
+PASS: disabled movie uses the existing native finale
+PASS: native finale still reaches results
+PASS: return to base cleans up a paused decoder and restores sound
+PASS: earned final film survives a save and reload
+PASS: an old level-seven checkpoint alone does not unlock the ending
+PASS: fifteen-film gallery fits across two pages
+PASS: controller can focus the gallery return control
+FINALE_TESTS 50 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 17 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)
