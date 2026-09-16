@@ -103,6 +103,10 @@ var lens_hits: = 0
 var lens_kick: = 0.0
 var message: = ""
 var message_time: = 0.0
+var message_rank: = 0
+## Directional damage read-out, so a hit is visible even with calm effects on.
+var damage_side: = 0.0
+var damage_pulse: = 0.0
 var muted: = false
 var calm_fx: = false
 var steering_assist := false
@@ -683,6 +687,7 @@ func _simulate(dt: float) -> void :
 	cam_roll = clampf(cam_roll, -0.055, 0.055)
 	yaw_kick = clampf(yaw_kick, -0.16, 0.16)
 	flash = maxf(0.0, flash - dt * 3.0)
+	damage_pulse = maxf(0.0, damage_pulse - dt * 1.6)
 	lightning = maxf(0.0, lightning - dt * 2.5)
 	message_time = maxf(0.0, message_time - dt)
 	if distance < 300.0 and not route.active:
@@ -742,6 +747,8 @@ func _reset_water() -> void:
 	puddles.clear()
 	steer_column = 0.0
 	last_shift = powertrain.shifts
+	damage_side = 0.0
+	damage_pulse = 0.0
 	cam_impulse = Vector3.ZERO; cam_impulse_velocity = Vector3.ZERO
 	cam_roll = 0.0; cam_roll_velocity = 0.0
 	yaw_kick = 0.0; yaw_kick_velocity = 0.0
@@ -1017,6 +1024,7 @@ func _apply_debris_contact(d: Dictionary, contact: Dictionary) -> void:
 	cam_impulse_velocity-=normal*(1.7+2.1*severity)
 	cam_impulse_velocity.y-=0.6+0.8*severity
 	cam_roll_velocity-=side*(0.55+0.95*severity)
+	damage_side=side;damage_pulse=1.0
 	yaw_kick_velocity-=side*(0.9+1.3*severity)
 	world.truck.contact_kick(normal,severity)
 	world.contact_burst(contact.point,normal,int(d.get("theme",0)),int(d.kind))
@@ -1049,9 +1057,21 @@ func _demo_target() -> float:
 		if cost < best_cost: best_cost = cost;safest = candidate
 	return safest
 
+## Hazard warnings outrank rewards for the single message slot. Unlisted
+## notices (checkpoint, upgrade, landmark) rank highest and always win.
+const NOTICE_RANK := {
+	"CRITICAL HULL": 6, "SOLID HIT": 5, "HARD LANDING": 5,
+	"SHOULDER": 4, "TOO CLOSE!": 4, "AQUAPLANE": 4, "AIRBORNE": 4, "90° RIGHT": 4,
+	"CAMERA STRIKE": 3, "LANDING HELD": 2, "NEAR MISS": 2, "SUPPLY PICKUP": 2,
+	"PROBE CHARGING": 1, "MOVE INTO TRACKING RANGE": 1,
+}
+
 func notify(text: String, seconds: float = 2.0) -> void :
+	var rank: int = NOTICE_RANK.get(text.get_slice("/", 0).strip_edges(), 9)
+	if message_time > 0.0 and rank < message_rank: return
 	message = text
 	message_time = seconds
+	message_rank = rank
 
 func finish(won: bool, reason: String, after_crash: bool = false) -> void :
 	if mode == Mode.RESULTS: return

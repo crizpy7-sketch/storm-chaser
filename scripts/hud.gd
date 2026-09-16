@@ -219,15 +219,44 @@ func _draw_dashboard() -> void :
 		var x: float = 20.0 + 1240.0 * checkpoint_index / 8.0
 		draw_circle(Vector2(x, 69), 3.5, MINT if game.stage_seen >= checkpoint_index else MUTED)
 
-	panel(Rect2(24, 537, 226, 136), Color(0.025, 0.055, 0.063, 0.82))
+	panel(Rect2(24, 537, 248, 136), Color(0.025, 0.055, 0.063, 0.82))
 	text_at("%03d" % int(game.speed), 40, 591, 47, WHITE, MONO)
 	text_at("MPH", 149, 591, 12, MUTED, MONO)
-	text_at("TURBO" if game.boosting else ("BRAKE" if game.braking else "CRUISE"), 40, 609, 10, AMBER if game.boosting else MUTED, MONO)
-	text_at("GRIP %02d" % int(100.0 * (1.0 - game.aquaplane * 0.7) * game.route.traction), 163, 609, 10, AMBER if game.aquaplane > 0.1 else MUTED, MONO)
-	text_at("HULL", 40, 632, 10, MUTED, MONO)
-	bar(Rect2(89, 623, 143, 5), game.health / 100.0, MINT if game.health > 35 else AMBER)
-	text_at("BOOST", 40, 654, 10, MUTED, MONO)
-	bar(Rect2(89, 645, 143, 5), game.boost / game.boost_max, AMBER)
+	# The six-speed box with its shift interrupt was audio-only; it is the most
+	# heavy-truck system in the game and the player could not see any of it.
+	var revs: float = clampf((game.powertrain.rpm - 850.0) / 4850.0, 0.0, 1.0)
+	var dial: = Vector2(222, 576)
+	draw_arc(dial, 24.0, PI * 0.78, PI * 2.22, 32, Color(0.32, 0.45, 0.45, 0.35), 5.0, true)
+	draw_arc(dial, 24.0, PI * 0.78, PI * 0.78 + revs * PI * 1.44, 32, AMBER if revs < 0.86 else Color("ff6b4a"), 5.0, true)
+	centered("%d" % game.powertrain.gear, dial.x, dial.y + 7, 22, WHITE, MONO)
+	centered("GEAR", dial.x, dial.y + 32, 9, MUTED, MONO)
+	if game.powertrain.shift_time > 0.0:
+		draw_arc(dial, 28.0 + game.powertrain.shift_time * 26.0, 0, TAU, 40, Color(1, 0.82, 0.45, game.powertrain.shift_time / 0.23 * 0.5), 2.0, true)
+	if game.combo > 0:
+		for i in range(5):
+			draw_rect(Rect2(40 + i * 13, 566, 9, 4), MINT if i < game.combo else Color(0.32, 0.45, 0.45, 0.25))
+		text_at("x%d" % game.combo, 108, 571, 13, MINT, MONO)
+	var drive_label: String = "TURBO" if game.boosting else ("BRAKE" if game.braking else ("NO BOOST" if game.boost_locked else "CRUISE"))
+	text_at(drive_label, 40, 609, 11, AMBER if game.boosting else (Color("ff6b4a") if game.boost_locked else MUTED), MONO)
+	text_at("GRIP %02d" % int(100.0 * (1.0 - game.aquaplane * 0.7) * game.route.traction), 112, 609, 11, AMBER if game.aquaplane > 0.1 else MUTED, MONO)
+	# Damage is scaled, not removed, under calm effects: a hit must still read.
+	var punch_gain: float = 0.45 if game.calm_fx else 1.0
+	if game.damage_pulse > 0.0:
+		var edge: float = 96.0 if game.damage_side < 0.0 else 1184.0
+		var a0: float = PI * 0.62 if game.damage_side < 0.0 else -PI * 0.38
+		var glow: = Color(1.0, 0.27, 0.18, game.damage_pulse * 0.55 * punch_gain)
+		for i in range(4):
+			draw_arc(Vector2(edge, 400), 150.0 + i * 26.0, a0, a0 + PI * 0.76, 24, glow, 6.0 - i, true)
+	var punch: float = game.damage_pulse * 4.0 * punch_gain
+	text_at("HULL", 40, 632, 11, MUTED, MONO)
+	bar(Rect2(89 - punch, 623 - punch * 0.5, 143 + punch * 2.0, 5 + punch), game.health / 100.0, Color("ff6b4a").lerp(MINT if game.health > 25 else AMBER, 1.0 - game.damage_pulse))
+	text_at("BOOST", 40, 654, 11, MUTED, MONO)
+	var boost_rect: = Rect2(89, 645, 143, 5)
+	bar(boost_rect, game.boost / game.boost_max, Color("5c6d74") if game.boost_locked else AMBER)
+	if game.boost_locked:
+		# The lock releases at 28 units, not 28%: show the player that exact mark.
+		var gate: float = boost_rect.position.x + boost_rect.size.x * clampf(28.0 / game.boost_max, 0.0, 1.0)
+		draw_rect(Rect2(gate - 1.0, 641, 2, 13), MINT)
 	panel(Rect2(996, 537, 260, 146), Color(0.025, 0.055, 0.063, 0.82))
 	var tracking: bool = game.in_sampling_range()
 	var signal_color: = MINT if tracking else AMBER
@@ -237,9 +266,9 @@ func _draw_dashboard() -> void :
 	text_at("PROBES  %02d / 03" % game.probes, 1012, 592, 14, WHITE, MONO)
 	bar(Rect2(1012, 612, 228, 4), game.charge / 100.0, MINT)
 	if game.message_time > 0.0:
-		var width: = MONO.get_string_size(game.message, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 40.0
-		panel(Rect2(640 - width * 0.5, 84, width, 33), Color(0.025, 0.055, 0.063, 0.79))
-		centered(game.message, 640, 106, 12, AMBER, MONO)
+		var width: = MONO.get_string_size(game.message, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 40.0
+		panel(Rect2(640 - width * 0.5, 82, width, 37), Color(0.025, 0.055, 0.063, 0.79))
+		centered(game.message, 640, 107, 16, AMBER, MONO)
 	if game.mode == game.Mode.RUNNING:
 		var rec_alpha: float = 0.7 + 0.3 * sin(game.elapsed * 5.0)
 		draw_circle(Vector2(559, 676), 3.0, Color(1.0, 0.28, 0.22, rec_alpha))

@@ -251,7 +251,7 @@ func _step(dt: float) -> void:
 		edge_time+=dt
 		if edge_time>0.65:
 			game.health=maxf(0,game.health-dt*(7.0 if level==3 else 9.0)*game.setup_factor("damage"))
-			if game.message_time<0.1:game.notify("SHOULDER  /  BRAKE AND STEER BACK",1.2)
+			game.notify("SHOULDER  /  BRAKE AND STEER BACK",1.2)
 	else:edge_time=0.0
 	if not grounded:hint="AIRBORNE  /  LINE UP YOUR LANDING"
 	elif landing>0.25:hint="LANDING SLIDE  /  COUNTERSTEER"
