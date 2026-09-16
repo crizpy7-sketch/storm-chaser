@@ -4,8 +4,10 @@ name: Verify
 # 520 checks across 15 suites; before this they only ran when someone
 # remembered to run them by hand.
 on:
+  # Branch pushes are covered by pull_request once a PR is open, so push is
+  # limited to the default branch; otherwise every commit runs the suite twice.
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -57,3 +59,5 @@ jobs:
           name: suite-logs
           path: .suite-logs/
           retention-days: 14
+          # .suite-logs is a dotfile; without this the upload silently finds nothing.
+          include-hidden-files: true
