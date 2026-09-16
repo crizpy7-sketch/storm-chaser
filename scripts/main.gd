@@ -23,6 +23,10 @@ var stage: = 0
 var stage_seen: = 0
 var player_x: = 0.0
 var steer: = 0.0
+## The steering column itself. Raw input is a demand; a loaded truck's wheel
+## has its own inertia and cannot snap from lock to lock, so this follows the
+## demand at a bounded rate and is what the chassis actually reads.
+var steer_column: = 0.0
 var velocity_x: = 0.0
 var rear_slip: = 0.0
 var rear_slip_velocity: = 0.0
@@ -665,11 +669,11 @@ func in_sampling_range() -> bool:
 	return distance >= (150.0 if route.active else 450.0) and distance <= 1150.0
 
 func _update_fishtail(dt: float) -> void :
-	var target: float = clampf(-steer * speed / 240.0 * 0.58 + glide_velocity * 0.36 + wind * 0.4, -0.7, 0.7)
+	var target: float = clampf(-steer_column * speed / 240.0 * 0.58 + glide_velocity * 0.36 + wind * 0.4, -0.7, 0.7)
 	if braking: target *= 0.4
 	# Corner momentum drives the rear pose, with the original rigid truck yaw cap.
 	target=lerpf(target,-0.78,route.shortcut_slide)
-	rear_slip_velocity += (target - rear_slip) * 36.0 * dt
+	rear_slip_velocity += (target - rear_slip) * (36.0 if route.grounded else 7.5) * dt
 	rear_slip_velocity *= exp(-dt * (12.0 if braking else 9.0))
 	rear_slip = clampf(rear_slip + rear_slip_velocity * dt, -0.8, 0.8)
 	# Lateral travel carries the glide; keep the original truck silhouette and heading restrained.
@@ -684,6 +688,7 @@ func _update_fishtail(dt: float) -> void :
 
 func _reset_water() -> void:
 	puddles.clear()
+	steer_column = 0.0
 	aquaplane = 0.0
 	glide_velocity = 0.0
 	truck_yaw = 0.0
@@ -706,15 +711,30 @@ func _update_driving(dt: float) -> void:
 	glide_velocity *= exp(-dt * recovery)
 	splash_pulse = maxf(0.0, splash_pulse - dt * 2.8)
 	haptic_cooldown = maxf(0.0, haptic_cooldown - dt)
+	# The column winds on at a bounded rate that tightens with speed. Caster
+	# self-centres, so unwinding and reversing come back faster than new lock.
+	var column_rate: float = lerpf(8.2, 4.4, clampf((speed - 90.0) / 150.0, 0.0, 1.0))
+	if absf(steer) < absf(steer_column) or steer * steer_column < 0.0: column_rate *= 1.75
+	if steering_assist: column_rate *= 1.4
+	steer_column = move_toward(steer_column, steer, column_rate * dt)
 	var response: float = 14.0 if braking else lerpf(10.0, 6.0 if steering_assist else 3.8, aquaplane)
+	# Mass resists a change of direction more the faster it is already moving.
+	if not steering_assist: response *= lerpf(1.0, 0.72, clampf((speed - 90.0) / 150.0, 0.0, 1.0))
 	response *= route.traction
 	var road_limit: float = road_steering_limit()
 	var edge_weight: float = smoothstep(road_limit-0.22,road_limit,absf(player_x))
-	var steering_gain: float = lerpf(1.0,0.18,edge_weight) if steer*player_x>0.0 else 1.0
-	velocity_x = lerpf(velocity_x, steer * steering_gain * (2.55 if boosting else 2.35) * (0.45 if not route.grounded else 1.0), 1.0 - exp(-dt * response))
+	var steering_gain: float = lerpf(1.0,0.18,edge_weight) if steer_column*player_x>0.0 else 1.0
+	# Lateral authority falls with speed: the truck gets harder to place, not easier.
+	var authority: float = lerpf(2.55, 2.02, clampf((speed - 120.0) / 120.0, 0.0, 1.0))
+	if route.grounded:
+		velocity_x = lerpf(velocity_x, steer_column * steering_gain * authority, 1.0 - exp(-dt * response))
+	else:
+		# Airborne there is nothing to push against. Momentum carries and the
+		# wheels only nudge; letting go of the stick must not cancel a launch.
+		velocity_x = clampf(velocity_x + steer_column * 1.25 * dt, -2.6, 2.6)
 	_update_fishtail(dt)
 	player_x = clampf(player_x + (velocity_x + glide_velocity + wind * tires + rear_slip * 0.1 + route.drift) * dt, -road_limit, road_limit)
-	if steering_assist and absf(steer) < 0.15 and absf(player_x) > 0.94:
+	if steering_assist and absf(steer_column) < 0.15 and absf(player_x) > 0.94:
 		player_x = move_toward(player_x, signf(player_x)*0.90, dt*0.16)
 	# Shed outward momentum at the shoulder so countersteering always brings the truck back.
 	if absf(player_x) >= road_limit-0.001:

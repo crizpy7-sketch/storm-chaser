@@ -25,8 +25,11 @@ func run() -> void:
 			for i in range(fps/2):game._update_driving(1.0/fps)
 			check(absf(game.player_x)<.65,"countersteering promptly leaves edge at %s fps / %s"%[fps,direction])
 	fresh(5);game.route.dirt=1;check(is_equal_approx(game.road_steering_limit(),1.2),"mud retains broad off-road driving range")
-	fresh(3);game.steer=1;game.player_x=0;game._update_driving(.05);var center_velocity: float=game.velocity_x
-	game.player_x=game.road_steering_limit()-.02;game.velocity_x=0;game._update_driving(.05)
+	# Both probes must start from matched input state, so the steering column is
+	# zeroed alongside velocity_x; otherwise the second probe runs with the wheel
+	# further wound on and measures the column, not the pavement-margin gain.
+	fresh(3);game.steer=1;game.player_x=0;game.steer_column=0;game._update_driving(.05);var center_velocity: float=game.velocity_x
+	game.player_x=game.road_steering_limit()-.02;game.velocity_x=0;game.steer_column=0;game._update_driving(.05)
 	check(game.velocity_x<center_velocity*.3,"outward steering eases before reaching pavement margin")
 	print("ROAD_MARGIN_TESTS ",checks," checks; ",failures," failures")
 	game.queue_free();await process_frame;quit(1 if failures else 0)
