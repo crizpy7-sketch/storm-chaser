@@ -9,6 +9,10 @@ var particles: Array[Dictionary] = []
 var impact_age: = 10.0
 var impact_strength: = 0.0
 var hit_stop: = 0.0
+var hit_stop_span: = 0.0
+var crunch_delay: = -1.0
+var scatter_delay: = -1.0
+var scatter_kind: = 0
 var origin: = Vector2.ZERO
 var contact_origin:=Vector3.ZERO
 var projection_pending:=false
@@ -47,34 +51,53 @@ func reset() -> void :
 	impact_age = 10.0
 	impact_strength = 0.0
 	hit_stop = 0.0
+	hit_stop_span = 0.0
+	crunch_delay = -1.0
+	scatter_delay = -1.0
 	projection_pending=false
 	rumble.stop()
 	crunch.stop()
 	queue_redraw()
 
 func impact(kind: int, lane: float, building_theme: int = 0, contact_point: Vector3 = Vector3(INF,INF,INF), severity: float = 1.0) -> void :
-	game.haptic(150, 0.9)
+	game.haptic(int(lerpf(95.0, 180.0, clampf((severity - .6) / 1.1, 0.0, 1.0))), lerpf(.55, 1.0, clampf((severity - .6) / 1.1, 0.0, 1.0)))
 	impact_age = 0.0
-	impact_strength = clampf(severity,.65,1.55)
-	hit_stop = .085 if not game.calm_fx else 0.0
+	impact_strength = clampf(severity,.55,1.75)
+	# The hold scales with the blow: a sign clip is not a semi roof at 240.
+	hit_stop = 0.0 if game.calm_fx else (.055 + .085 * clampf(severity,.6,1.7))
+	hit_stop_span = maxf(hit_stop,.0001)
 	var side: float = signf(lane - game.player_x)
 	if side == 0.0: side = 1.0
 	if not contact_point.is_finite():contact_point=game.world.truck.position+Vector3(side*.75,.9,1.6)
 	contact_origin=contact_point;projection_pending=true
 	origin = game.world.camera.unproject_position(contact_point)
-	game.shake = 16.0 * impact_strength
+	game.shake = maxf(game.shake, 16.0 * impact_strength)
 	particles.clear()
 	var palette: = [Color("9b6d3e"), Color("9aaeb1"), Color("303b40"), Color("d0dad8")]
 	if building_theme == 1: palette = [Color("835849"), Color("956451"), Color("735948"), Color("a5adb0")]
 	elif building_theme == 2: palette = [Color("8c9999"), Color("687c86"), Color("5d747d"), Color("849ba0")]
 	elif building_theme == 3: palette = [Color("655c47"),Color("7a684b"),Color("514735"),Color("8b805f")]
-	for i in range(24 if not game.calm_fx else 6):
-		var angle: = rng.randf_range( - PI, 0.2)
-		var velocity: = Vector2(cos(angle), sin(angle)) * rng.randf_range(120.0, 680.0)
+	var strength: float = clampf((impact_strength - .55) / 1.2, 0.0, 1.0)
+	# Spray away from the contact rather than in a fixed upward fan.
+	var away: Vector2 = (origin - game.world.camera.unproject_position(game.world.truck.position + Vector3(0,1.0,0))).normalized()
+	var base: float = away.angle() if away.length_squared() > .1 else -1.5
+	for i in range(int(lerpf(14.0, 34.0, strength)) if not game.calm_fx else 6):
+		var angle: float = base + rng.randf_range( - 1.05, 1.05)
+		var velocity: = Vector2(cos(angle), sin(angle)) * rng.randf_range(120.0, 680.0) * (.7 + .5 * impact_strength)
 		particles.append({"p": origin, "v": velocity, "life": rng.randf_range(0.35, 1.25), "size": rng.randf_range(3.0, 12.0), "spin": rng.randf_range(-9.0, 9.0), "angle": rng.randf() * TAU, "spark": i % 3 == 0, "color": palette[clampi(kind, 0, 3)]})
+	# Sub thump now, mid crunch at +25 ms, scatter at +85 ms. Fired together
+	# they mush into one hit; staggered they read as mass arriving.
+	game.landing_audio.pitch_scale = lerpf(.86, .52, strength)
+	game.landing_audio.volume_db = lerpf(-14.0, -3.0, strength)
+	game.landing_audio.play()
+	rumble.pitch_scale = lerpf(.78, .50, strength)
+	rumble.volume_db = lerpf(-12.0, -2.5, strength)
 	rumble.play()
-	crunch.pitch_scale = [0.73, 0.88, 0.6, 1.12][clampi(kind, 0, 3)]
-	crunch.play()
+	crunch.pitch_scale = [0.73, 0.88, 0.6, 1.12][clampi(kind, 0, 3)] * lerpf(1.10, .86, strength)
+	crunch.volume_db = lerpf(-13.0, -3.0, strength)
+	crunch_delay = .025
+	scatter_delay = .085
+	scatter_kind = kind
 
 func sync_projection() -> void:
 	if not projection_pending:return
@@ -93,7 +116,7 @@ func begin(why: String) -> void :
 	game.mode = game.Mode.CRASH
 	game._clear_touch()
 	game.hud.rebuild()
-	if impact_age > 0.3: impact(3, game.player_x)
+	if impact_age > 0.3: impact(3, game.player_x, 0, Vector3(INF,INF,INF), 1.7)
 	game.world.mateo.pose = game.world.mateo.Pose.DUCK
 	game.world.mateo.previous_pose = game.world.mateo.pose
 	game.world.mateo.blend = 1.0
@@ -105,6 +128,12 @@ func _process(delta: float) -> void :
 	if game.mode in [game.Mode.RUNNING, game.Mode.CRASH]:
 		impact_age += dt
 		hit_stop = maxf(0.0, hit_stop - dt)
+		if crunch_delay > 0.0:
+			crunch_delay -= dt
+			if crunch_delay <= 0.0: crunch.play()
+		if scatter_delay > 0.0:
+			scatter_delay -= dt
+			if scatter_delay <= 0.0: game.play_sound("wood_hit" if scatter_kind == 1 else "metal_hit")
 		for p in particles:
 			p.life -= dt
 			p.p += p.v * dt

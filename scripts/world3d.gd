@@ -45,6 +45,7 @@ var environment: Environment
 var sun: DirectionalLight3D
 var travel: = 0.0
 var camera_pan: = 0.0
+var cam_roll: = 0.0
 var road_bend: = 99.0
 var road_material: ShaderMaterial
 var ground_material: ShaderMaterial
@@ -485,10 +486,11 @@ func _update_view(_dt: float) -> void :
 	sky.rotation = Vector3.ZERO
 	truck.position = road_point(0,game.player_x)+Vector3.UP*(0.025+game.route.air_height)
 	# Campaign heading drives a real mesh; secondary suspension is in truck_rig.
-	truck.rotation = Vector3(game.route.pitch, game.truck_yaw, 0)
+	truck.rotation = Vector3(game.route.pitch, scene_truck_yaw(), 0)
 	var surge: float = 0.0 if game.calm_fx else game.turbo_fx
 	var impact_time: float = game.crashes.impact_age if is_instance_valid(game.crashes) else 10.0
-	camera.fov = 66.0 + surge * 5.0 + (0.0 if game.calm_fx else maxf(0.0, 1.0 - impact_time / 0.6) * 4.5)
+	var istr: float = game.crashes.impact_strength if is_instance_valid(game.crashes) else 0.0
+	camera.fov = 66.0 + surge * 5.0 + (0.0 if game.calm_fx else pow(maxf(0.0, 1.0 - impact_time / 0.34), 2.0) * (1.8 + 3.6 * istr))
 	camera.fov -= game.cinematic_return*3.5
 	var drift_view: float=0.0 if game.calm_fx else game.route.shortcut_slide
 	camera.fov += drift_view*4.5
@@ -499,12 +501,7 @@ func _update_view(_dt: float) -> void :
 		junction_view=smoothstep(65.0,105.0,game.route.progress)*(1.0-smoothstep(game.route.SHORTCUT_TURN_END+8.0,game.route.SHORTCUT_TURN_END+45.0,game.route.progress))
 		cam_y+=junction_view*1.35
 		camera.fov+=junction_view*3.0
-	camera.position = Vector3(camera_pan, cam_y, 10.0 + surge * 0.4)
-	if not game.calm_fx:
-		camera.position += Vector3(sin(impact_time * 73.0), cos(impact_time * 61.0), 0) * (0.014 + game.shake * 0.008 + game.lens_kick * 0.17)
-		camera.position.x += game.near_side * game.near_pulse * 0.05
-		camera.position.x += game.glide_velocity * 0.17
-		camera.position.y += sin(game.elapsed * 46.0) * game.splash_pulse * 0.045
+	camera.position = Vector3(camera_pan, cam_y, 10.0 + surge * 0.4) + camera_shift()
 	var focus := Vector3(camera_pan*0.75+game.steer*0.28,3.9+game.flyby_pressure*2.7,-29.0)
 	if game.route.active:
 		camera.position.y += game.route.air_height*0.58
@@ -521,6 +518,12 @@ func _update_view(_dt: float) -> void :
 	camera.look_at(focus,Vector3.UP)
 	sky.rotation.y=camera.rotation.y
 	sky.position=camera.position+Vector3(0,474,-600).rotated(Vector3.UP,camera.rotation.y)
+	# A heavy cab banks out of a corner. look_at rebuilds the basis every frame,
+	# so the roll has to be applied after it.
+	if not game.calm_fx:
+		var lean: float=clampf(-game.velocity_x*0.018-game.glide_velocity*0.022-game.rear_slip*0.010,-0.052,0.052)
+		cam_roll=lerpf(cam_roll,lean,1.0-exp(-minf(_dt,0.05)*3.2))
+		camera.rotate_object_local(Vector3.BACK,cam_roll+game.cam_roll)
 	_update_props()
 	_update_hazards()
 	_update_puddle_view()
@@ -546,14 +549,25 @@ func _update_view(_dt: float) -> void :
 	if is_instance_valid(mateo): mateo.face_camera(camera)
 	if is_instance_valid(game.crashes):game.crashes.sync_projection()
 
+## Every displacement the chase camera takes on top of its rest pose. The
+## vortex heading in scene_truck_yaw() reconstructs the camera's X from this
+## same function, so the two cannot fall out of step.
+func camera_shift() -> Vector3:
+	if game.calm_fx: return Vector3.ZERO
+	var age: float = game.crashes.impact_age if is_instance_valid(game.crashes) else 10.0
+	# The undirected ring is deliberately small: an impact is sold by the
+	# directional impulse below, not by vibrating the whole frame.
+	var ring: float = minf(game.shake, 9.0) * 0.0026 + game.lens_kick * 0.17
+	var shift: Vector3 = Vector3(sin(age * 73.0), cos(age * 61.0), 0.0) * ring
+	shift.x += game.near_side * game.near_pulse * 0.05
+	shift.x += game.glide_velocity * 0.17
+	shift.y += sin(game.elapsed * 46.0) * game.splash_pulse * 0.045
+	return shift + game.cam_impulse
+
 func scene_truck_yaw() -> float:
 	if game.stage!=7 or not game.route.active:return game.truck_yaw
 	var circle: float=smoothstep(30,140,game.route.progress)
-	var x:=camera_pan
-	if not game.calm_fx:
-		var age: float=game.crashes.impact_age if is_instance_valid(game.crashes) else 10.0
-		x+=sin(age*73.0)*(.014+game.shake*.008+game.lens_kick*.17)
-		x+=game.near_side*game.near_pulse*.05+game.glide_velocity*.17
+	var x:=camera_pan+camera_shift().x
 	x=lerpf(x,camera_pan-13.0,circle)
 	var z:=lerpf(10.0+(0.0 if game.calm_fx else game.turbo_fx*.4),18.0,circle)
 	var p:=road_point(0,game.player_x)
@@ -809,6 +823,7 @@ func reset_motion() -> void :
 	travel = 0.0
 	last_landing = 0
 	camera_pan = 0.0
+	cam_roll = 0.0
 	spray.clear()
 	spray_clock = 0.0
 	road_bend = 99.0

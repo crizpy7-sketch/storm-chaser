@@ -71,6 +71,14 @@ var near_misses: = 0
 var hits: = 0
 var invulnerable: = 0.0
 var shake: = 0.0
+## Directional impact response. The frame is punched along the contact normal
+## and banked, with a spring return, instead of being vibrated harder.
+var cam_impulse: = Vector3.ZERO
+var cam_impulse_velocity: = Vector3.ZERO
+var cam_roll: = 0.0
+var cam_roll_velocity: = 0.0
+var yaw_kick: = 0.0
+var yaw_kick_velocity: = 0.0
 var flash: = 0.0
 var lightning: = 0.0
 var thunder_timer: = 6.0
@@ -538,7 +546,12 @@ func _process(delta: float) -> void :
 		demo_timer += dt
 		if mode == Mode.UPGRADE: choose_upgrade(0 if health < 80 else 1)
 		if mode == Mode.RUNNING and charge >= 100.0: deploy_probe()
-	if mode == Mode.RUNNING: _simulate(dt * (0.18 if crashes.hit_stop > 0.0 else 1.0))
+	if mode == Mode.RUNNING:
+		var hold := 1.0
+		if crashes.hit_stop > 0.0:
+			var u: float = 1.0 - crashes.hit_stop / crashes.hit_stop_span
+			hold = lerpf(0.05, 1.0, u * u)
+		_simulate(dt * hold)
 	if mode == Mode.VORTEX: finale.step(delta)
 	dodges.dispatch_pending()
 	if is_instance_valid(engine_audio):
@@ -629,7 +642,20 @@ func _simulate(dt: float) -> void :
 		distance += ((CRUISE_SPEEDS[stage] + 16.0) - speed) * 0.4 * dt
 	distance = maxf(125.0, distance)
 	invulnerable = maxf(0.0, invulnerable - dt)
-	shake = maxf(0.0, shake - dt * 14.0)
+	shake = maxf(0.0, shake - dt * 22.0)
+	var impulse_left := dt
+	while impulse_left > 0.000001:
+		var ih := minf(impulse_left, 1.0 / 120.0)
+		impulse_left -= ih
+		cam_impulse_velocity += (-cam_impulse * 230.0 - cam_impulse_velocity * 24.0) * ih
+		cam_impulse += cam_impulse_velocity * ih
+		cam_roll_velocity += (-cam_roll * 230.0 - cam_roll_velocity * 24.0) * ih
+		cam_roll += cam_roll_velocity * ih
+		yaw_kick_velocity += (-yaw_kick * 150.0 - yaw_kick_velocity * 17.0) * ih
+		yaw_kick += yaw_kick_velocity * ih
+	cam_impulse = cam_impulse.limit_length(0.22)
+	cam_roll = clampf(cam_roll, -0.055, 0.055)
+	yaw_kick = clampf(yaw_kick, -0.16, 0.16)
 	flash = maxf(0.0, flash - dt * 3.0)
 	lightning = maxf(0.0, lightning - dt * 2.5)
 	message_time = maxf(0.0, message_time - dt)
@@ -689,6 +715,9 @@ func _update_fishtail(dt: float) -> void :
 func _reset_water() -> void:
 	puddles.clear()
 	steer_column = 0.0
+	cam_impulse = Vector3.ZERO; cam_impulse_velocity = Vector3.ZERO
+	cam_roll = 0.0; cam_roll_velocity = 0.0
+	yaw_kick = 0.0; yaw_kick_velocity = 0.0
 	aquaplane = 0.0
 	glide_velocity = 0.0
 	truck_yaw = 0.0
@@ -789,6 +818,16 @@ func _strike_lens(point: Vector2) -> void :
 	lens_hits += 1
 	lens_kick = 1.0
 	lens_marks.append({"point": point, "age": 0.0, "duration": 3.6, "seed": lens_hits})
+	# A bolt on the glass previously lit the scene less than a horizon rumble.
+	var strike_side: float = signf(point.x - 640.0)
+	lightning = maxf(lightning, 0.95)
+	flash = maxf(flash, 0.75)
+	cam_impulse_velocity += Vector3(strike_side * 2.1, -1.4, 0.9)
+	cam_roll_velocity -= strike_side * 1.15
+	glide_velocity = clampf(glide_velocity + strike_side * 0.34, -1.8, 1.8)
+	speed = maxf(40.0, speed - 7.0)
+	haptic(165, 1.0)
+	play_sound("thunder")
 	play_sound("lens_hit")
 	notify("CAMERA STRIKE  /  KEEP YOUR LINE", 1.35)
 
@@ -910,7 +949,10 @@ func _update_debris(dt: float) -> void:
 			if d.kind<4 and route.air_height>3.0 and separation<.35:
 				score+=125
 			elif d.kind<4 and separation<.53:
-				near_misses+=1;combo=mini(combo+1,5);near_pulse=1.0;near_side=signf(d.lane-player_x)
+				near_misses+=1;combo=mini(combo+1,5)
+				var close: float=clampf(1.0-separation/.53,0.0,1.0)
+				near_pulse=maxf(near_pulse,.30+.70*close);near_side=signf(d.lane-player_x)
+				cam_roll_velocity+=near_side*close*.42
 				score+=100*combo;boost=minf(boost_max,boost+7)
 				notify("NEAR MISS  /  x%d  +%d"%[combo,100*combo],1.2);play_sound("near")
 				if d.get("variant","")=="semi_roof":dodges.request(4)
@@ -925,7 +967,14 @@ func _apply_debris_contact(d: Dictionary, contact: Dictionary) -> void:
 	var severity: float=weight*lerpf(.72,1.18,clampf((speed-60)/180.0,0,1))
 	# Each distinct solid object damages once. Recovery time never makes it ghost.
 	health=maxf(0,health-21.0*severity*setup_factor("damage"));hits+=1;combo=0;invulnerable=.3
-	speed=maxf(40,speed-(19.0+11.0*severity));flash=.55
+	# Proportional plus flat, so a hit at 240 costs more than a hit at 120
+	# instead of less. Routing it through the powertrain gives the existing
+	# weight-transfer model a real deceleration to dive on.
+	speed=maxf(40.0,speed*(1.0-0.10*severity)-(10.0+9.0*severity))
+	powertrain.acceleration=minf(powertrain.acceleration,-62.0*severity)
+	powertrain.throttle=minf(powertrain.throttle,0.15)
+	powertrain.load=minf(powertrain.load,0.20)
+	flash=maxf(flash,0.34+0.42*clampf(severity,0.6,1.7))
 	var normal: Vector3=contact.normal
 	var local_point: Vector3=contacts.truck_transform().affine_inverse()*contact.point
 	var side: float=signf(local_point.x)
@@ -938,6 +987,10 @@ func _apply_debris_contact(d: Dictionary, contact: Dictionary) -> void:
 	d.impact_velocity=normal*(10.0+weight*3.0)+Vector3(scatter*4.5,4.0,0.0)
 	play_sound("wood_hit" if d.get("theme",0)==1 else ("metal_hit" if d.get("theme",0)==2 or d.kind==3 else "hit"))
 	crashes.impact(int(d.kind),float(d.lane),int(d.get("theme",0)),contact.point,severity)
+	cam_impulse_velocity-=normal*(1.7+2.1*severity)
+	cam_impulse_velocity.y-=0.6+0.8*severity
+	cam_roll_velocity-=side*(0.55+0.95*severity)
+	yaw_kick_velocity-=side*(0.9+1.3*severity)
 	world.truck.contact_kick(normal,severity)
 	world.contact_burst(contact.point,normal,int(d.get("theme",0)),int(d.kind))
 	dodges.cancel_pending()
