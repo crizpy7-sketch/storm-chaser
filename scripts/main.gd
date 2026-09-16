@@ -44,6 +44,10 @@ var powertrain := preload("res://scripts/powertrain.gd").new()
 var contacts := preload("res://scripts/truck_contacts.gd").new()
 var motor_body: AudioStreamPlayer
 var landing_audio: AudioStreamPlayer
+## Dedicated transient player for gearshifts and turbo blow-off. Kept out of
+## the sfx dictionary, whose size and variant rotation are both asserted.
+var shift_audio: AudioStreamPlayer
+var last_shift: = 0
 var speed: = 0.0
 var distance: = 900.0
 var bend: = 0.0
@@ -225,6 +229,7 @@ func _setup_input() -> void :
 func _setup_audio() -> void :
 	motor_body = _audio("motor_body", -30.0, true)
 	landing_audio = _audio("landing_body", -9.0, false)
+	shift_audio = _audio("turbo_surge", -24.0, false)
 	wind_audio = _audio("wind", -22.0, true)
 	engine_audio = _audio("engine", -20.0, true)
 	music_audio = _audio("chase", -17.0, true)
@@ -556,18 +561,35 @@ func _process(delta: float) -> void :
 	dodges.dispatch_pending()
 	if is_instance_valid(engine_audio):
 		var wear: float = clampf((55.0-health)/55.0,0,1)
-		engine_audio.pitch_scale = (0.62 + powertrain.rpm / 6600.0)*(1.0+wear*sin(elapsed*23.0)*0.023)
-		engine_audio.volume_db = (-17.0 + powertrain.load * 6.0 + wear * sin(elapsed*15.0)*0.7) if mode == Mode.RUNNING else -45.0
-		motor_body.pitch_scale = 0.65 + powertrain.rpm / 4800.0
-		motor_body.volume_db = lerpf(-31.0, -19.0, powertrain.load) if mode == Mode.RUNNING else -60.0
-		music_audio.volume_db = -60.0 if is_instance_valid(film_overlay) else ((-22.0 if is_breathing() else -17.0) - (4.0 if mateo_caption_time>0 else 0.0) if mode == Mode.RUNNING else -26.0)
-		wind_audio.volume_db = -60.0 if is_instance_valid(film_overlay) else ((-21.0 + speed / 55.0) if mode == Mode.RUNNING else -34.0)
+		# Gearing pins rpm near 3700 at every cruise speed, so rpm alone cannot
+		# encode velocity: 112 to 178 mph actually ran the engine slightly LOWER.
+		# A subordinate speed term restores the climb without hiding the shifts.
+		engine_audio.pitch_scale = (0.62 + powertrain.rpm / 6600.0 + speed / 1400.0)*(1.0+wear*sin(elapsed*23.0)*0.023)
+		var overrun: float = clampf(-powertrain.acceleration / 60.0, 0.0, 1.0)
+		engine_audio.volume_db = (-20.0 + powertrain.load * 10.0 - overrun * 5.0 + wear * sin(elapsed*15.0)*0.7) if mode == Mode.RUNNING else -45.0
+		# The bottom octave has to stay sub: sweeping it faster than the lead
+		# made the one element carrying mass thin out exactly under load.
+		motor_body.pitch_scale = 0.78 + powertrain.rpm / 11000.0
+		motor_body.volume_db = (lerpf(-26.0, -13.0, powertrain.load) - overrun * 4.0) if mode == Mode.RUNNING else -60.0
+		# Every hit and every landing gets a hole in the mix to land in.
+		var thump: float = maxf(maxf(0.0, 1.0 - crashes.impact_age / 0.45) if is_instance_valid(crashes) else 0.0, route.landing * 0.8)
+		music_audio.volume_db = -60.0 if is_instance_valid(film_overlay) else ((-22.0 if is_breathing() else -17.0) - (4.0 if mateo_caption_time>0 else 0.0) - thump * 9.0 if mode == Mode.RUNNING else -26.0)
+		wind_audio.volume_db = -60.0 if is_instance_valid(film_overlay) else ((-30.0 + speed / 16.0 - thump * 6.0) if mode == Mode.RUNNING else -34.0)
+		wind_audio.pitch_scale = 0.88 + speed / 900.0
 		turbo_audio.volume_db = lerpf(-48.0, -15.0, turbo_fx) if mode == Mode.RUNNING else -50.0
 		turbo_audio.pitch_scale = 0.9 + speed / 400.0
 		var slide_sound: = clampf(absf(rear_slip) * 0.8 + absf(rear_slip_velocity) * 0.18, 0.0, 1.0)
-		slide_sound=maxf(slide_sound,route.shortcut_slide*0.95)
-		skid_audio.volume_db = lerpf(-48.0, -19.0, slide_sound) if mode == Mode.RUNNING else -50.0
-		skid_audio.pitch_scale = 0.85 + speed / 600.0
+		# A loose surface is heard continuously, and the tyres scrub audibly for
+		# the whole grip-recovery window after a landing.
+		slide_sound=maxf(slide_sound,maxf(route.shortcut_slide*0.95,route.landing*0.72))
+		slide_sound=maxf(slide_sound,route.dirt*clampf(speed/200.0,0.0,0.55))
+		skid_audio.volume_db = lerpf(-40.0, -16.0, slide_sound) if mode == Mode.RUNNING else -50.0
+		skid_audio.pitch_scale = (0.85 + speed / 600.0) * lerpf(1.0, 0.82, route.dirt)
+		if powertrain.shifts > last_shift and mode == Mode.RUNNING:
+			last_shift = powertrain.shifts
+			shift_audio.pitch_scale = 1.45 + powertrain.gear * 0.06
+			shift_audio.volume_db = -26.0 + powertrain.load * 6.0
+			shift_audio.play()
 	if mode == Mode.VORTEX:
 		wind_audio.volume_db = -11.0
 		music_audio.volume_db = -13.0
@@ -621,6 +643,10 @@ func _simulate(dt: float) -> void :
 	var was_boosting: = boosting
 	boosting = wants_boost and not braking and boost > 0.0 and not boost_locked
 	if boosting and not was_boosting: play_sound("turbo_surge")
+	elif was_boosting and not boosting and turbo_fx > 0.35:
+		shift_audio.pitch_scale = 0.62
+		shift_audio.volume_db = -14.0 + turbo_fx * 5.0
+		shift_audio.play()
 	turbo_fx = move_toward(turbo_fx, 1.0 if boosting else 0.0, dt * (5.5 if boosting else 3.0))
 	near_pulse = maxf(0.0, near_pulse - dt * 3.2)
 	var target_speed: float = CRUISE_SPEEDS[stage]
@@ -715,6 +741,7 @@ func _update_fishtail(dt: float) -> void :
 func _reset_water() -> void:
 	puddles.clear()
 	steer_column = 0.0
+	last_shift = powertrain.shifts
 	cam_impulse = Vector3.ZERO; cam_impulse_velocity = Vector3.ZERO
 	cam_roll = 0.0; cam_roll_velocity = 0.0
 	yaw_kick = 0.0; yaw_kick_velocity = 0.0

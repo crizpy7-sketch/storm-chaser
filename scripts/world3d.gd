@@ -46,6 +46,12 @@ var sun: DirectionalLight3D
 var travel: = 0.0
 var camera_pan: = 0.0
 var cam_roll: = 0.0
+## The boom has inertia in every axis, not only sideways. Height, reach, lens
+## and aim were previously assigned raw each frame, so they read as cuts.
+var cam_y_smooth: = 3.4
+var cam_z_smooth: = 10.0
+var cam_fov_smooth: = 66.0
+var cam_focus: = Vector3(0.0, 3.9, -29.0)
 var road_bend: = 99.0
 var road_material: ShaderMaterial
 var ground_material: ShaderMaterial
@@ -451,6 +457,7 @@ func _process(dt: float) -> void :
 		var step: = minf(dt, 0.05)
 		travel = game.route.progress if game.route.active else travel + step*game.speed*0.25
 		var follow_rate: float=3.6 if game.calm_fx else lerpf(lerpf(3.6,2.5,game.aquaplane),1.8,game.route.shortcut_slide)
+		if not game.calm_fx: follow_rate *= clampf(1.0 - game.powertrain.acceleration * 0.006, 0.62, 1.55)
 		camera_pan = lerpf(camera_pan, game.player_x * 3.6, 1.0 - exp(-step * follow_rate))
 		if game.route.landings>last_landing: water_fx.landing_burst(game.route.landing_severity)
 		last_landing=game.route.landings
@@ -490,26 +497,40 @@ func _update_view(_dt: float) -> void :
 	var surge: float = 0.0 if game.calm_fx else game.turbo_fx
 	var impact_time: float = game.crashes.impact_age if is_instance_valid(game.crashes) else 10.0
 	var istr: float = game.crashes.impact_strength if is_instance_valid(game.crashes) else 0.0
-	camera.fov = 66.0 + surge * 5.0 + (0.0 if game.calm_fx else pow(maxf(0.0, 1.0 - impact_time / 0.34), 2.0) * (1.8 + 3.6 * istr))
-	camera.fov -= game.cinematic_return*3.5
 	var drift_view: float=0.0 if game.calm_fx else game.route.shortcut_slide
-	camera.fov += drift_view*4.5
-	var cam_y: float = 3.4 - surge * 0.28 + game.flyby_pressure * 0.18
-	cam_y -= drift_view*0.22
+	var want_fov: float = 66.0 + surge * 5.0 - game.cinematic_return*3.5 + drift_view*4.5
+	var cam_y: float = 3.4 - surge * 0.28 + game.flyby_pressure * 0.18 - drift_view*0.22
+	var want_z: float = 10.0 + surge * 0.4
 	var junction_view: float=0.0
 	if game.stage==4 and not game.calm_fx:
 		junction_view=smoothstep(65.0,105.0,game.route.progress)*(1.0-smoothstep(game.route.SHORTCUT_TURN_END+8.0,game.route.SHORTCUT_TURN_END+45.0,game.route.progress))
 		cam_y+=junction_view*1.35
-		camera.fov+=junction_view*3.0
-	camera.position = Vector3(camera_pan, cam_y, 10.0 + surge * 0.4) + camera_shift()
-	var focus := Vector3(camera_pan*0.75+game.steer*0.28,3.9+game.flyby_pressure*2.7,-29.0)
+		want_fov+=junction_view*3.0
+	var focus := Vector3(camera_pan*0.75+game.velocity_x*0.42+game.steer*0.10,3.9+game.flyby_pressure*2.7,-29.0)
+	# Suspension breathing and the load dolly are properties of the truck, not
+	# of the route: gating them behind route.active left the first three stages
+	# with a perfectly rigid camera.
+	if not game.calm_fx:
+		cam_y += truck.suspension * 0.85
+		cam_y += clampf(-game.powertrain.acceleration * 0.0022, -0.11, 0.26)
+		want_z += clampf(game.powertrain.acceleration * 0.010, -0.55, 0.42)
 	if game.route.active:
-		camera.position.y += game.route.air_height*0.58
-		focus.y += clampf(surface_point(-30).y*0.5,-2.0,4.0)+game.route.air_height*0.42
+		# Tighten the follow on big jumps; at fixed gain the truck left the top
+		# of the frame above roughly 195 mph on stage 6.
+		var air_follow: float=lerpf(0.58,0.88,clampf(game.route.air_height/13.0,0.0,1.0))
+		cam_y += game.route.air_height*air_follow
+		focus.y += clampf(surface_point(-30).y*0.5,-2.0,4.0)+game.route.air_height*(air_follow*0.72)
 		focus.x += clampf(surface_point(-38).x*0.26,-2.2,2.2)
 		focus.x += clampf(surface_point(-24).x*0.18,-1.4,1.4)*drift_view
-		if not game.calm_fx: camera.position.y += truck.suspension * 0.85
-		if not game.calm_fx: camera.position.z += clampf(game.powertrain.acceleration * 0.004, -0.25, 0.2)
+	var ease: float = minf(_dt, 0.05)
+	cam_fov_smooth = lerpf(cam_fov_smooth, want_fov, 1.0 - exp(-ease * 5.5))
+	cam_y_smooth = lerpf(cam_y_smooth, cam_y, 1.0 - exp(-ease * 4.5))
+	cam_z_smooth = lerpf(cam_z_smooth, want_z, 1.0 - exp(-ease * 2.8))
+	cam_focus = cam_focus.lerp(focus, 1.0 - exp(-ease * 6.0))
+	# The impact punch is an attack; it must not be smoothed away.
+	camera.fov = cam_fov_smooth + (0.0 if game.calm_fx else pow(maxf(0.0, 1.0 - impact_time / 0.34), 2.0) * (1.8 + 3.6 * istr))
+	camera.position = Vector3(camera_pan, cam_y_smooth, cam_z_smooth) + camera_shift()
+	focus = cam_focus
 	if game.stage==7 and game.route.active:
 		var circle_view: float=smoothstep(30,140,game.route.progress)
 		camera.position=camera.position.lerp(Vector3(camera_pan-13,7.0,18),circle_view)
@@ -824,6 +845,10 @@ func reset_motion() -> void :
 	last_landing = 0
 	camera_pan = 0.0
 	cam_roll = 0.0
+	cam_y_smooth = 3.4
+	cam_z_smooth = 10.0
+	cam_fov_smooth = 66.0
+	cam_focus = Vector3(0.0, 3.9, -29.0)
 	spray.clear()
 	spray_clock = 0.0
 	road_bend = 99.0
