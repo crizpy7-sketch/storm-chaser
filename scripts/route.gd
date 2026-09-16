@@ -22,6 +22,9 @@ var grounded := true
 var body_y := 0.0
 var vertical_velocity := 0.0
 var ground_velocity := 0.0
+## Vertical acceleration of the surface under the wheels. The ramp face pushes
+## up hard and the crest pulls down; truck_rig loads the springs against it.
+var ground_acceleration := 0.0
 var air_height := 0.0
 var air_time := 0.0
 var pitch := 0.0
@@ -50,7 +53,7 @@ var _frame_height := 0.0
 func enter(next_level: int) -> void:
 	level=next_level;active=level>=3;progress=0.0
 	curvature=0.0;drift=0.0;traction=1.0;dirt=0.0
-	grounded=true;body_y=0.0;vertical_velocity=0.0;ground_velocity=0.0
+	grounded=true;body_y=0.0;vertical_velocity=0.0;ground_velocity=0.0;ground_acceleration=0.0
 	air_height=0.0;air_time=0.0;pitch=0.0;landing=0.0;landing_severity=0.0
 	launches=0;landings=0;hard_landings=0;launch_cooldown=0.0;edge_time=0.0;hint=""
 	shortcut_slide=0.0;shortcut_entry_played=false;shortcut_mud_played=false
@@ -191,7 +194,7 @@ func _step(dt: float) -> void:
 	progress+=v*dt
 	var new_ground:=height_at(progress)
 	var next_ground_velocity: float=(new_ground-old_ground)/dt
-	var ground_acceleration: float=(next_ground_velocity-ground_velocity)/dt
+	ground_acceleration=(next_ground_velocity-ground_velocity)/dt
 	dirt=dirt_at(progress)
 	curvature=(heading(progress+1.0)-heading(progress-1.0))*0.5
 	upcoming_curve=(heading(progress+45.0)-heading(progress))/45.0
@@ -242,7 +245,7 @@ func _step(dt: float) -> void:
 			body_y=new_ground;grounded=true;vertical_velocity=0;launch_cooldown=0.9
 	ground_velocity=next_ground_velocity
 	air_height=maxf(0.0,body_y-new_ground)
-	var target_pitch: float=clampf(atan(grade(progress)), -0.10,0.10) if grounded else clampf(vertical_velocity*0.009,-0.10,0.10)
+	var target_pitch: float=clampf(atan(grade(progress)), -0.10,0.10) if grounded else clampf(vertical_velocity*0.0135,-0.21,0.17)
 	pitch=lerpf(pitch,target_pitch,1-exp(-dt*5.5))
 	if absf(game.player_x)>1.03:
 		edge_time+=dt
@@ -262,17 +265,23 @@ func _step(dt: float) -> void:
 func _land(impact: float) -> void:
 	landings+=1
 	landing=1.0
-	landing_severity=clampf(impact/18.0,0.15,1.0)
+	# impact 18 still maps to exactly 1.0 (the reference landing the harness
+	# asserts against); the headroom above it is what separates a hop from a
+	# 23-metre crest landing. Measured impacts run 6.4 to 32.8.
+	landing_severity=clampf(impact/18.0,0.15,1.6)
 	var side: float=clampf(game.velocity_x+game.glide_velocity+drift,-2,2)
 	var kick: float=side*landing_severity*(0.85 if game.steering_assist else 1.55)
 	game.glide_velocity=clampf(game.glide_velocity+kick,-2.2,2.2)
-	game.aquaplane=maxf(game.aquaplane,0.25+landing_severity*0.48)
+	game.aquaplane=maxf(game.aquaplane,minf(0.92,0.25+landing_severity*0.48))
 	game.rear_slip_velocity+=clampf(kick,-1.5,1.5)
-	game.speed=maxf(60,game.speed-landing_severity*12.0)
-	game.shake=maxf(game.shake,landing_severity*3.0)
-	game.haptic(70,landing_severity*0.65)
-	game.landing_audio.pitch_scale=lerpf(1.1,0.78,landing_severity)
-	game.landing_audio.volume_db=lerpf(-16.0,-7.0,landing_severity)
+	game.speed=maxf(60,game.speed-landing_severity*11.0)
+	game.shake=maxf(game.shake,landing_severity*5.5)
+	game.haptic(int(70+landing_severity*70),clampf(landing_severity,0.0,1.0)*0.85)
+	# Audio weight reads the raw impact, so the hardest landings stay separable
+	# even though landing_severity is bounded for the handling model.
+	var heard: float=clampf(impact/26.0,0.15,1.0)
+	game.landing_audio.pitch_scale=lerpf(1.15,0.66,heard)
+	game.landing_audio.volume_db=lerpf(-18.0,-4.0,heard)
 	game.landing_audio.play()
 	if absf(side)>0.95 and impact>9.0:
 		hard_landings+=1

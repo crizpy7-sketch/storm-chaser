@@ -74,12 +74,16 @@ func landing_trace(game, impact: float) -> Dictionary:
 	var peak := 0.0
 	var settle := -1.0
 	var crossings := 0
+	var nose := 0.0
+	var tyre := 0.0
 	var previous: float = game.world.truck.suspension
 	var trace: Array[float] = []
 	for i in range(int(3.0 / H)):
 		game.world.truck.step(H)
 		var s: float = game.world.truck.suspension
 		peak = minf(peak, s)
+		nose = minf(nose, game.world.truck.pitch_kick)
+		tyre = maxf(tyre, game.world.truck.tire_squash)
 		if i % 12 == 0: trace.append(snappedf(s, 0.001))
 		if signf(s) != signf(previous) and absf(s) > 0.004: crossings += 1
 		previous = s
@@ -90,6 +94,8 @@ func landing_trace(game, impact: float) -> Dictionary:
 		"bottomed_out": peak <= -0.2599,
 		"settle_s": snappedf(settle, 0.001),
 		"zero_crossings": crossings,
+		"nose_dive_deg": snappedf(rad_to_deg(nose), 0.01),
+		"tyre_squash_m": snappedf(tyre, 0.001),
 		"speed_lost": snappedf(speed_before - game.speed, 0.01),
 		"grip_loss_window_s": snappedf(game.route.landing / maxf(0.001, 0.85), 0.01),
 		"trace_100ms": trace.slice(0, 14),

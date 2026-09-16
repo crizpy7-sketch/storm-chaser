@@ -33,6 +33,14 @@ var wheel_motion := 0.0
 var wheel_blur := 0.0
 var recoil := Vector3.ZERO
 var recoil_velocity := Vector3.ZERO
+## Landing attitude. A separate, faster spring than the body bounce so the read
+## is nose-slams-down, body-squats, rear-settles rather than one flat drop.
+var pitch_kick := 0.0
+var pitch_kick_velocity := 0.0
+## Unsprung tyre deflection. Much faster again: the wheels punch up into the
+## arches and are done before the body reaches full compression.
+var tire_squash := 0.0
+var tire_squash_velocity := 0.0
 ## Mateo Garage parts and finishes (scripts/truck_kit.gd).
 var kit: Node3D
 
@@ -97,6 +105,7 @@ func reset() -> void:
 	steering_angle=0.0;spin_angle=0.0;wheel_droop=0.0
 	wheel_phase=0.0;wheel_motion=0.0;wheel_blur=0.0
 	recoil=Vector3.ZERO;recoil_velocity=Vector3.ZERO
+	pitch_kick=0.0;pitch_kick_velocity=0.0;tire_squash=0.0;tire_squash_velocity=0.0
 	previous_speed=game.speed
 	last_hits=game.hits;last_landings=game.route.landings;last_puddles=game.puddle_hits
 	body.position=Vector3(0,kit.ride_height if is_instance_valid(kit) else 0.0,0);body.rotation=Vector3.ZERO
@@ -104,6 +113,13 @@ func reset() -> void:
 		wheel.position.y=.67;wheel.rotation=Vector3.ZERO;wheel.get_node("Spin").rotation=Vector3.ZERO
 	for antenna in antennas:antenna.rotation=Vector3.ZERO
 	apply_damage()
+
+## The suspension running out of travel is a distinct, mechanical event.
+func _bump_stop() -> void:
+	if game.calm_fx:return
+	game.play_sound("metal_hit")
+	game.shake=maxf(game.shake,4.2)
+	game.haptic(120,.95)
 
 func contact_kick(normal: Vector3, severity: float) -> void:
 	# The sprung body moves as one rigid mesh; the artwork is never stretched.
@@ -129,33 +145,52 @@ func step(dt: float) -> void:
 	wheel_phase=spin_angle/TAU;wheel_motion=smoothstep(0,4,road_speed)
 	wheel_blur=smoothstep(12,108,road_speed)*.16
 	if game.puddle_hits>last_puddles:suspension_velocity-=.48
-	if game.hits>last_hits:suspension_velocity-=.68
-	if game.route.landings>last_landings:suspension_velocity-=game.route.landing_severity*3.6
+	# Solid hits arrive through contact_kick(), which is severity-scaled and
+	# already advances last_hits; a second flat impulse here never fired.
+	if game.route.landings>last_landings:
+		var weight: float=clampf(game.route.landing_severity,0.0,1.6)
+		suspension_velocity-=weight*3.6
+		pitch_kick_velocity-=weight*1.15
+		tire_squash_velocity+=weight*1.9
 	last_hits=game.hits;last_landings=game.route.landings;last_puddles=game.puddle_hits
 	var grounded: bool=game.route.grounded
-	var road_motion: float=(sin(game.elapsed*17.0)*.008+sin(game.elapsed*29.0)*.004)*game.speed/180.0*(1.0+game.route.dirt*1.4) if grounded else .025
+	var road_motion: float=(sin(game.elapsed*17.0)*.008+sin(game.elapsed*29.0)*.004)*game.speed/180.0*(1.0+game.route.dirt*1.4) if grounded else .06
+	# The ramp face drives the chassis down and the crest lets it extend, so the
+	# truck visibly loads up before it flies instead of being welded to the hill.
+	if grounded:road_motion-=clampf(game.route.ground_acceleration*.0026,-.07,.11)
 	var remaining:=dt
 	while remaining>.000001:
 		var h:=minf(remaining,1.0/120.0);remaining-=h
 		recoil_velocity+=(-recoil*105.0-recoil_velocity*13.0)*h
 		recoil+=recoil_velocity*h
 		recoil=recoil.clamp(Vector3(-.10,-.03,-.13),Vector3(.10,.03,.13))
-		suspension_velocity+=((road_motion-suspension)*74.0-suspension_velocity*9.5)*h
+		# Real dampers resist rebound far harder than compression: swallow the
+		# hit, then extend under control. Symmetric damping is what reads as a toy.
+		var damp: float=7.4 if suspension_velocity<0.0 else 14.0
+		suspension_velocity+=((road_motion-suspension)*74.0-suspension_velocity*damp)*h
 		suspension+=suspension_velocity*h
-		if suspension<-.26:suspension=-.26;suspension_velocity=maxf(0,suspension_velocity)
+		if suspension<-.26:
+			if suspension_velocity<-1.6 and game.route.landing>.5:_bump_stop()
+			suspension=-.26;suspension_velocity=maxf(0,suspension_velocity)
 		if suspension>.13:suspension=.13;suspension_velocity=minf(0,suspension_velocity)
+		pitch_kick_velocity+=(-pitch_kick*120.0-pitch_kick_velocity*11.0)*h
+		pitch_kick+=pitch_kick_velocity*h
+		pitch_kick=clampf(pitch_kick,-.12,.05)
+		tire_squash_velocity+=(-tire_squash*900.0-tire_squash_velocity*42.0)*h
+		tire_squash+=tire_squash_velocity*h
+		tire_squash=clampf(tire_squash,0.0,.055)
 	pitch=lerpf(pitch,clampf(game.powertrain.acceleration*.00065,-.045,.035),1.0-exp(-dt*5.0))
 	# The chassis leans as a rigid object. Wheels remain independently planted.
-	var target_roll: float=clampf(game.steer*.024+game.glide_velocity*.007,-.045,.045) if grounded else 0.0
+	var target_roll: float=clampf(game.steer*.024+game.glide_velocity*.007,-.045,.045) if grounded else roll
 	roll=lerpf(roll,target_roll,1.0-exp(-dt*4.0))
-	body.position=recoil+Vector3(0,suspension+kit.ride_height,0);body.rotation=Vector3(pitch,0,roll)
+	body.position=recoil+Vector3(0,suspension+kit.ride_height,0);body.rotation=Vector3(pitch+pitch_kick,0,roll)
 	var speed_steer: float=lerpf(.43,.22,clampf(game.speed/200.0,0,1))
 	var desired_steer: float=clampf(-game.steer*speed_steer+game.rear_slip*.12,-.48,.48)
 	steering_angle=lerpf(steering_angle,desired_steer,1.0-exp(-dt*8.0))
 	wheel_droop=lerpf(wheel_droop,0.0 if grounded else -.13,1.0-exp(-dt*7.0))
 	for i in range(wheels.size()):
 		wheels[i].rotation.y=steering_angle if i<2 else 0.0
-		wheels[i].position.y=.67+wheel_droop
+		wheels[i].position.y=.67+wheel_droop+tire_squash
 		wheels[i].get_node("Spin").rotation.x=spin_angle
 	for i in range(antennas.size()):
 		antennas[i].rotation.z=sin(game.elapsed*6.5+i)*.012+game.wind*.027
