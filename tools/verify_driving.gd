@@ -48,6 +48,33 @@ func run() -> void:
 	media_check(game.sfx_variants.values().all(func(v): return v.size() >= 2), "one-shot effects rotate multiple ElevenLabs takes")
 	media_check(game.music_audio.stream.get_length() > 30.0, "chase music asset loads")
 	check(game.engine_audio.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "engine loop is ready")
+	# Mateo rotates his recorded takes the way the one-shot effects do. Ten takes
+	# were recorded for his three lines; before this only the first was ever
+	# loaded, so he repeated one identical recording for the whole campaign.
+	var collected: Array = game.mateo_takes("mateo_dodge")
+	check(game.mateo_variants.has("mateo_dodge") and game.mateo_cursor.has("mateo_dodge"), "Mateo's takes are collected once and cached")
+	media_check(collected.size() >= 2, "Mateo rotates multiple recorded takes")
+	# Rotation is asserted against injected takes so it is covered even in a
+	# trimmed copy that ships no audio payloads.
+	var first := AudioStreamWAV.new()
+	var second := AudioStreamWAV.new()
+	game.mateo_variants["mateo_probe_test"] = [first, second]
+	game.mateo_cursor["mateo_probe_test"] = 0
+	game.mode = game.Mode.RUNNING
+	game.mateo_voice = true
+	game.mateo_cooldown = 0.0
+	game.say_mateo("mateo_probe_test", "one")
+	var heard_first: bool = game.mateo_audio.stream == first
+	game.mateo_cooldown = 0.0
+	game.say_mateo("mateo_probe_test", "two")
+	var heard_second: bool = game.mateo_audio.stream == second
+	game.mateo_cooldown = 0.0
+	game.say_mateo("mateo_probe_test", "three")
+	check(heard_first and heard_second and game.mateo_audio.stream == first, "consecutive lines cycle through the takes and wrap")
+	check(game.say_mateo("mateo_probe_test", "blocked") == false, "the spoken-line cooldown still blocks a repeat")
+	game.mateo_cooldown = 0.0
+	game.mateo_voice = false
+	check(game.say_mateo("mateo_probe_test", "caption only"), "a line with the voice off still shows its caption")
 	fresh()
 	for i in range(100): game._spawn_puddle()
 	check(game.puddles.all(func(p): return absf(p.lane) <= 0.68 and p.half_width <= 0.32), "puddles always leave a route around them")

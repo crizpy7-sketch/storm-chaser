@@ -116,6 +116,11 @@ var mateo_voice := true
 var run_assisted := false
 var footage_unlocked: Array[int] = []
 var mateo_audio: AudioStreamPlayer
+## Mateo's spoken takes, rotated the way the one-shot effects already are.
+## Ten takes were recorded for his three lines but only one per line was ever
+## loaded, so he repeated the identical recording every time.
+var mateo_variants: Dictionary = {}
+var mateo_cursor: Dictionary = {}
 var mateo_caption := ""
 var mateo_caption_time := 0.0
 var mateo_cooldown := 0.0
@@ -273,6 +278,8 @@ func _exit_tree() -> void :
 			child.stream = null
 	sfx.clear()
 	sfx_variants.clear()
+	mateo_variants.clear()
+	mateo_cursor.clear()
 	if route: route.game = null
 
 func _audio(filename: String, db: float, looping: bool) -> AudioStreamPlayer:
@@ -1224,13 +1231,31 @@ func leave_garage(start: bool) -> void:
 		if can_retry_checkpoint(): retry_checkpoint()
 		else: start_chase()
 
+## Every recorded take for one of Mateo's lines, newest naming convention first.
+## Collected on first use and cached, so a new line needs only its files: drop
+## mateo_<line>.wav next to mateo_<line>_v2.wav and it joins the rotation with
+## no code change. Mirrors the _v2.._v4 scheme the sound effects already use.
+func mateo_takes(key: String) -> Array:
+	if mateo_variants.has(key): return mateo_variants[key]
+	var takes: Array = []
+	var base := "res://assets/audio/" + key + ".wav"
+	if Media.available(base): takes.append(load(base))
+	for variation in range(2, 5):
+		var path := "res://assets/audio/%s_v%d.wav" % [key, variation]
+		if Media.available(path): takes.append(load(path))
+	mateo_variants[key] = takes
+	mateo_cursor[key] = 0
+	return takes
+
 func say_mateo(key: String, caption: String) -> bool:
 	if mode != Mode.RUNNING or mateo_cooldown > 0.0: return false
 	mateo_caption = caption
 	mateo_caption_time = 2.8
 	mateo_cooldown = 13.0
-	var path := "res://assets/audio/" + key + ".wav"
-	if mateo_voice and is_instance_valid(mateo_audio) and Media.available(path):
-		mateo_audio.stream=load(path)
-		mateo_audio.play()
+	if mateo_voice and is_instance_valid(mateo_audio):
+		var takes: Array = mateo_takes(key)
+		if not takes.is_empty():
+			mateo_audio.stream = takes[int(mateo_cursor[key]) % takes.size()]
+			mateo_cursor[key] += 1
+			mateo_audio.play()
 	return true

@@ -299,6 +299,29 @@ Two findings in it are worth reading even if you take a different approach:
   Any design where stage index and route level diverge desyncs terrain
   visibility from terrain height, and no current test covers that.
 
+## 7b. Adding more of Mateo's voice lines
+
+Mateo speaks on exactly three occasions in the whole campaign: a dodge
+(`mateo_dodge`), a flying cow (`mateo_cow`) and the intro
+(`mateo_recording`), all fired from `scripts/mateo.gd:82-94` via
+`main.gd say_mateo(key, caption)`.
+
+`say_mateo()` now rotates recorded takes, mirroring the `_v2.._v4` scheme
+`play_sound()` already uses. **Adding takes needs no code**: drop
+`mateo_<line>_v2.wav` (through `_v4`) beside `mateo_<line>.wav` in
+`assets/audio/` and they join the rotation. `mateo_takes()` collects and
+caches them on first use.
+
+Before this, ten takes existed in `assets/audio/mateo-voice-manifest.json`
+(four for the dodge, four for the cow, two for the intro) and only the
+first of each was ever loaded, so he repeated one identical recording all
+campaign.
+
+Adding a *new* line is one call to `say_mateo("mateo_<key>", "caption")`
+plus its files. Events that already fire and would carry one well: a
+clean landing (`route._land()`), a fast near miss (`main.gd` near-miss
+branch), hull dropping low, the tornado closing, and the final lap.
+
 ## 8. Suggested next steps, in order
 
 1. **Get it on real hardware.** Windows + Galaxy Book2 + controller. Everything
