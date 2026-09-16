@@ -99,7 +99,20 @@ stuck on the gallery screen** — a real bug today.
 
 **Gate:** baseline green + new suite; total rises above 520.
 
-## Phase 2 — Route path length (prerequisite)
+## Phase 2 — Route path length (prerequisite) — DONE
+
+Shipped. `path_span()` derives the course length from `STAGE_LENGTH` and
+`TURBO_SPEED` rather than a fixed count, floored at the original 3,300 m so
+today's courses are byte-identical, and `path_exhausted` makes running off the
+end loud instead of silent. Seven checks added to `verify_route`, proven to
+fail when `STAGE_LENGTH` is raised to 90 against the old fixed road.
+
+**Note for Phase 4:** that same experiment also failed four *existing* finale
+checks, exactly as predicted below — `verify_route.enter()` hard-codes
+`game.elapsed = level * 30.0`. Those are Phase 4's to fix, by reading
+`STAGE_LENGTH` instead of the literal.
+
+### Original notes
 
 `scripts/route.gd:59-65`. Replace `range(1100)` with a const sized from the
 campaign, and add a `path_exhausted` flag set when `course()`'s clamp bites so a

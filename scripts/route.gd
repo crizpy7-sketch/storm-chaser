@@ -9,7 +9,18 @@ const SHORTCUT_TURN_START := 140.0
 const SHORTCUT_RADIUS := 14.0
 const SHORTCUT_TURN_END := SHORTCUT_TURN_START + SHORTCUT_RADIUS * PI * 0.5
 const SHORTCUT_JUNCTION_Z := SHORTCUT_TURN_START + SHORTCUT_RADIUS
+## world3d._road_mesh draws 145 rows of road back from z=+24, so the course is
+## sampled this far AHEAD of the truck, not only as far as it has travelled.
+const ROAD_LOOKAHEAD := 24.0 + 145.0 * STEP
+## Level 4 reaches its generated path only after an analytic 260 m lead-in.
+const SHORTCUT_LEAD := 260.0
+const PATH_MARGIN := 240.0
 var game
+## Set when course() runs past the end of the generated path. Past that point
+## clampi pins the index and the road collapses to a single point -- the level
+## goes flat with no error of any kind. Nothing may rely on this staying false
+## by luck, so it is asserted.
+var path_exhausted := false
 var level := 0
 var progress := 0.0
 var paths: Dictionary = {}
@@ -57,15 +68,32 @@ func enter(next_level: int) -> void:
 	air_height=0.0;air_time=0.0;pitch=0.0;landing=0.0;landing_severity=0.0
 	launches=0;landings=0;hard_landings=0;launch_cooldown=0.0;edge_time=0.0;hint=""
 	shortcut_slide=0.0;shortcut_entry_played=false;shortcut_mud_played=false
+	path_exhausted=false
 	if active and not paths.has(level):
 		var origin:=Vector2(SHORTCUT_RADIUS+260.0-SHORTCUT_TURN_END,-SHORTCUT_JUNCTION_Z) if level==4 else Vector2.ZERO
 		var points:=PackedVector2Array([origin])
-		for i in range(1100):
+		for i in range(path_steps()):
 			var a:=heading((260.0 if level==4 else 0.0)+(i+0.5)*STEP)
 			points.append(points[-1]+Vector2(sin(a),-cos(a))*STEP)
 		paths[level]=points
 	dirt=dirt_at(0.0)
 	body_y=height_at(0.0)
+
+## How much course one stage can possibly consume: a full STAGE_LENGTH held at
+## TURBO_SPEED, plus the road drawn ahead of the truck and level 4's lead-in.
+## Derived from the campaign constants rather than hard-coded, so raising
+## STAGE_LENGTH cannot silently drive the truck off the end of the world. Never
+## shorter than the original 3,300 m, so today's courses are unchanged.
+func path_span() -> float:
+	var stage_seconds: float = 30.0
+	var top_speed: float = 240.0
+	if game != null:
+		stage_seconds = float(game.STAGE_LENGTH)
+		top_speed = float(game.TURBO_SPEED)
+	return maxf(1100.0 * STEP, stage_seconds * top_speed * 0.25 + ROAD_LOOKAHEAD + SHORTCUT_LEAD + PATH_MARGIN)
+
+func path_steps() -> int:
+	return int(ceilf(path_span() / STEP))
 
 func heading(s: float) -> float:
 	var q:=maxf(s,0.0)
@@ -92,7 +120,9 @@ func course(s: float) -> Vector2:
 		return Vector2(ORBIT_RADIUS*(1.0-cos(a)),-ORBIT_APPROACH-ORBIT_RADIUS*sin(a))
 	var points: PackedVector2Array=paths.get(level,PackedVector2Array([Vector2.ZERO]))
 	var sample_s:=s-(260.0 if level==4 else 0.0)
-	var index:=clampi(floori(sample_s/STEP),0,points.size()-2)
+	var raw:=floori(sample_s/STEP)
+	var index:=clampi(raw,0,points.size()-2)
+	if raw>points.size()-2:path_exhausted=true
 	return points[index].lerp(points[index+1],clampf(sample_s/STEP-index,0,1))
 
 func _frame() -> void:

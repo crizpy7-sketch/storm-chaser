@@ -179,5 +179,30 @@ func run() -> void:
 	check(game.valid_checkpoint(legacy),"older two-building checkpoint remains compatible")
 	legacy.stage=7
 	check(not game.valid_checkpoint(legacy),"old save schema cannot pretend to contain a new level")
+	# The generated course is finite. Past its end course() pins the index and the
+	# road collapses to a point -- the level goes flat silently. These checks make
+	# the ceiling explicit so raising STAGE_LENGTH cannot quietly drive off it.
+	enter(3)
+	var route=game.route
+	var needed: float=game.STAGE_LENGTH*game.TURBO_SPEED*0.25+route.ROAD_LOOKAHEAD+route.SHORTCUT_LEAD
+	check(route.path_span()>=needed,"the generated road outlasts a full stage at top speed plus the road drawn ahead")
+	check(route.path_span()>=1100.0*route.STEP,"the road is never shorter than the original course")
+	check(not route.path_exhausted,"a fresh course starts unexhausted")
+	# Drive a whole stage flat out and confirm the road is still real underneath.
+	game.speed=game.TURBO_SPEED
+	var elapsed_drive:=0.0
+	while elapsed_drive<game.STAGE_LENGTH:
+		route.step(1.0/60.0);elapsed_drive+=1.0/60.0
+		# Driving alone never samples course(); only the renderer does. Sample the
+		# same span world3d._road_mesh draws, or this check passes vacuously.
+		route.point(24.0);route.point(24.0-145.0*route.STEP)
+	check(not route.path_exhausted,"a full stage at top speed stays inside the generated road")
+	# The far look-ahead row must still be distinct ground, not a collapsed point.
+	var near: Vector2=route.course(route.progress)
+	var far: Vector2=route.course(route.progress+route.ROAD_LOOKAHEAD)
+	check(near.distance_to(far)>route.ROAD_LOOKAHEAD*0.5,"the road drawn ahead of the truck is still real ground at the end of a stage")
+	check(not route.path_exhausted,"sampling the full look-ahead stays inside the generated road")
+	route.enter(3)
+	check(not route.path_exhausted,"entering a level clears the exhausted flag")
 	print("ROUTE_TESTS ",checks," checks; ",failures," failures")
 	game.queue_free();await process_frame;quit(0 if failures==0 else 1)
