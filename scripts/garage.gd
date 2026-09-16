@@ -157,8 +157,8 @@ func handle_input(event: InputEvent) -> void:
 				if not event.echo: start()
 			KEY_ESCAPE, KEY_P, KEY_BACKSPACE:
 				if not event.echo: back()
-			KEY_M, KEY_T, KEY_F11:
-				pass # Sound, touch and fullscreen are handled by the game first.
+			KEY_T, KEY_F11:
+				pass # Touch and fullscreen are handled by the game first.
 			_:
 				handled = false
 	elif event is InputEventJoypadButton and event.pressed:

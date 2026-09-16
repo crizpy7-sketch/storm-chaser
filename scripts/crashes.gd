@@ -228,8 +228,7 @@ func complete() -> void :
 
 func handle_input(event: InputEvent) -> void :
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_M: game.toggle_sound()
-		elif event.physical_keycode in [KEY_SPACE, KEY_ESCAPE, KEY_ENTER] and final_age > 0.3: complete()
+		if event.physical_keycode in [KEY_SPACE, KEY_ESCAPE, KEY_ENTER] and final_age > 0.3: complete()
 	elif event is InputEventJoypadButton and event.pressed:
 		if event.button_index in [JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_START] and final_age > 0.3: complete()
 	get_viewport().set_input_as_handled()

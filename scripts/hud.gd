@@ -120,12 +120,12 @@ func rebuild() -> void :
 			if i == 0: b.grab_focus()
 	elif game.mode == game.Mode.RESULTS:
 		if game.can_retry_checkpoint():
-			var retry: = button("RETRY CHECKPOINT   [R]", Rect2(352, 489, 284, 54), game.retry_checkpoint, true)
+			var retry: = button("RETRY CHECKPOINT   [%s]" % ("A" if game.pad_connected() else "R"), Rect2(352, 489, 284, 54), game.retry_checkpoint, true)
 			retry.grab_focus()
 			button("NEW CHASE", Rect2(650, 489, 168, 54), game.start_chase)
 			button("BASE", Rect2(832, 489, 96, 54), game.return_to_menu)
 		else:
-			var again: = button("CHASE AGAIN   [R]", Rect2(410, 489, 280, 54), game.start_chase, true)
+			var again: = button("CHASE AGAIN   [%s]" % ("A" if game.pad_connected() else "R"), Rect2(410, 489, 280, 54), game.start_chase, true)
 			again.grab_focus()
 			button("BASE", Rect2(706, 489, 164, 54), game.return_to_menu)
 		button("MATEO'S FOOTAGE",Rect2(524, 614, 232, 36),game.dodges.show_gallery)
@@ -273,7 +273,8 @@ func _draw_dashboard() -> void :
 		var rec_alpha: float = 0.7 + 0.3 * sin(game.elapsed * 5.0)
 		draw_circle(Vector2(559, 676), 3.0, Color(1.0, 0.28, 0.22, rec_alpha))
 		text_at("MATEO / STORM CAM", 571, 680, 10, MUTED, MONO)
-		centered("A/D STEER   W BOOST   S BRAKE   SPACE PROBE   C CINEMA   P PAUSE", 640, 701, 10, Color(0.68, 0.79, 0.78, 0.8), MONO)
+		var hint: String = "STICK STEER   A BOOST   B BRAKE   X PROBE   START PAUSE" if game.pad_connected() else "A/D STEER   W BOOST   S BRAKE   SPACE PROBE   C CINEMA   P PAUSE"
+		centered(hint, 640, 701, 10, Color(0.68, 0.79, 0.78, 0.8), MONO)
 	if game.mateo_caption_time > 0.0 and game.mode == game.Mode.RUNNING:
 		var subtitle: String = "MATEO:  " + game.mateo_caption
 		var width: float = BODY.get_string_size(subtitle,HORIZONTAL_ALIGNMENT_LEFT,-1,17).x+38
@@ -373,16 +374,18 @@ func settings_rows() -> Array:
 		["MATEO'S VOICE", "Occasional reactions. Captions remain visible with voice off.", game.mateo_voice, game.toggle_option.bind("mateo_voice")],
 		["CALM EFFECTS", "Less camera shake and flashing. The driving challenge stays the same.", game.calm_fx, game.toggle_calm],
 		["VIBRATION", "Short impact and puddle pulses on supported devices.", game.haptics_enabled, game.toggle_haptics],
-		["AUTOMATIC DODGE FILMS", "Celebrate close calls with a short movie. Every movie can be skipped.", game.auto_dodges, game.dodges.toggle_auto]
+		["AUTOMATIC DODGE FILMS", "Celebrate close calls with a short movie. Every movie can be skipped.", game.auto_dodges, game.dodges.toggle_auto],
+		["FULLSCREEN", "Fills the whole screen. Useful on a TV, and reachable without a keyboard.", game.is_fullscreen(), game.toggle_fullscreen],
+		["CINEMA VIEW", "Hides the dashboard for a clean view of the storm.", game.cinema_view, game.toggle_cinema]
 	]
 
 func _build_settings() -> void:
 	var rows:=settings_rows()
 	for i in range(rows.size()):
-		var b:=button("ON" if rows[i][2] else "OFF",Rect2(853,156+i*64, 90,38),_change_setting.bind(i,rows[i][3]),rows[i][2])
+		var b:=button("ON" if rows[i][2] else "OFF",Rect2(853,118+i*58, 90,38),_change_setting.bind(i,rows[i][3]),rows[i][2])
 		b.tooltip_text=rows[i][1]
 		if i==settings_focus: b.grab_focus()
-	button("DONE",Rect2(765,627,178,42),close_settings,true)
+	button("DONE",Rect2(765,646,178,38),close_settings,true)
 
 func _change_setting(index: int, action: Callable) -> void:
 	settings_focus=index
@@ -390,13 +393,13 @@ func _change_setting(index: int, action: Callable) -> void:
 
 func _draw_settings() -> void:
 	dim()
-	panel(Rect2(302,57,677,630),Color(0.018,0.042,0.05,0.98))
-	text_at("MAKE THE CHASE YOURS",334,105,26,WHITE,DISPLAY)
-	text_at("All checkpoint films can be earned with either driving setting.",335,132,13,MUTED,BODY)
+	panel(Rect2(302,30,677,662),Color(0.018,0.042,0.05,0.98))
+	text_at("MAKE THE CHASE YOURS",334,78,26,WHITE,DISPLAY)
+	text_at("All checkpoint films can be earned with either driving setting.",335,103,13,MUTED,BODY)
 	var rows:=settings_rows()
 	for i in range(rows.size()):
-		var y:=174+i*64
+		var y:=136+i*58
 		text_at(rows[i][0],335,y,13,AMBER,DISPLAY)
-		text_at(rows[i][1],335,y+21,11,MUTED,BODY)
-		if i<6: draw_line(Vector2(335,y+41),Vector2(943,y+41),EDGE,1)
-	text_at("Changes save automatically.",335,653,12,MUTED,BODY)
+		text_at(rows[i][1],335,y+20,11,MUTED,BODY)
+		if i<rows.size()-1: draw_line(Vector2(335,y+40),Vector2(943,y+40),EDGE,1)
+	text_at("Changes save automatically.",335,672,12,MUTED,BODY)

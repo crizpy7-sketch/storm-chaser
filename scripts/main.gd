@@ -217,18 +217,26 @@ func _ready() -> void :
 		start_chase()
 
 func _setup_input() -> void :
-	var bindings: = {"left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT], "boost": [KEY_W, KEY_UP, KEY_SHIFT], "brake": [KEY_S, KEY_DOWN], "probe": [KEY_SPACE], "pause_game": [KEY_ESCAPE, KEY_P]}
+	var bindings: = {"left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT], "boost": [KEY_W, KEY_UP, KEY_SHIFT], "brake": [KEY_S, KEY_DOWN], "probe": [KEY_SPACE], "pause_game": [KEY_ESCAPE, KEY_P], "mute": [KEY_M]}
 	for action in bindings:
 		if not InputMap.has_action(action): InputMap.add_action(action, 0.2)
 		for key in bindings[action]:
 			var event: = InputEventKey.new()
 			event.physical_keycode = key
 			InputMap.action_add_event(action, event)
-	var pads: = {"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT, "boost": JOY_BUTTON_A, "brake": JOY_BUTTON_B, "probe": JOY_BUTTON_X, "pause_game": JOY_BUTTON_START}
+	# Right stick click, because BACK and every face button are already spoken
+	# for by the garage, where BACK means leave.
+	var pads: = {"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT, "boost": JOY_BUTTON_A, "brake": JOY_BUTTON_B, "probe": JOY_BUTTON_X, "pause_game": JOY_BUTTON_START, "mute": JOY_BUTTON_RIGHT_STICK}
 	for action in pads:
 		var event: = InputEventJoypadButton.new()
 		event.button_index = pads[action]
 		InputMap.action_add_event(action, event)
+	# The right trigger also boosts; holding A to accelerate is not the idiom
+	# anyone brings to a controller.
+	var trigger: = InputEventJoypadMotion.new()
+	trigger.axis = JOY_AXIS_TRIGGER_RIGHT
+	trigger.axis_value = 1.0
+	InputMap.action_add_event("boost", trigger)
 
 func _setup_audio() -> void :
 	motor_body = _audio("motor_body", -30.0, true)
@@ -407,6 +415,13 @@ func start_chase(clear_checkpoint: bool = true) -> void :
 	play_sound("click")
 
 func _unhandled_input(event: InputEvent) -> void :
+	# Mute is global. Handling it once here, before every early return, is what
+	# lets it work from the pad during films, cinematics, the crash sequence and
+	# the garage, none of which used to see anything but the M key.
+	if event.is_action_pressed("mute"):
+		toggle_sound()
+		get_viewport().set_input_as_handled()
+		return
 	if is_instance_valid(hud) and hud.settings_open:
 		if event.is_action_pressed("pause_game"):
 			hud.close_settings()
@@ -426,14 +441,11 @@ func _unhandled_input(event: InputEvent) -> void :
 		elif event is InputEventJoypadButton and event.pressed and event.button_index in [JOY_BUTTON_B, JOY_BUTTON_START]: close_film()
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_M: toggle_sound()
 		if event.physical_keycode == KEY_C and mode == Mode.RUNNING: cinema_view = not cinema_view
 		if event.physical_keycode == KEY_T:
 			touch_controls = not touch_controls
 			hud.rebuild()
-		if event.physical_keycode == KEY_F11:
-			var full: = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		if event.physical_keycode == KEY_F11: toggle_fullscreen()
 		if mode == Mode.MENU and event.physical_keycode == KEY_ENTER: start_chase()
 		elif mode == Mode.RESULTS and event.physical_keycode == KEY_R:
 			if can_retry_checkpoint(): retry_checkpoint()
@@ -1143,6 +1155,23 @@ func is_breathing() -> bool:
 	if stage == 7 and route.orbit_progress() > 0.92: return true
 	var front_time := fposmod(elapsed, STAGE_LENGTH)
 	return (front_time >= 11.0 and front_time < 14.5) or (stage < 2 and front_time >= 25.0)
+
+## True when a controller is attached, so on-screen hints can name pad buttons
+## instead of keys the player is not touching.
+func pad_connected() -> bool:
+	return not Input.get_connected_joypads().is_empty()
+
+func toggle_fullscreen() -> void:
+	var full: = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+	hud.rebuild()
+
+func toggle_cinema() -> void:
+	cinema_view = not cinema_view
+	hud.rebuild()
+
+func is_fullscreen() -> bool:
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 
 func toggle_option(key: String) -> void:
 	if key not in ["steering_assist", "relaxed_hazards", "light_graphics", "mateo_voice"]: return

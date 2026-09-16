@@ -374,7 +374,6 @@ func complete(pause_after: bool = false) -> void :
 
 func handle_input(event: InputEvent) -> void :
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_M: game.toggle_sound()
 		if event.physical_keycode in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]: complete()
 	elif event is InputEventJoypadButton and event.pressed:
 		if event.button_index in [JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_START]: complete()

@@ -196,7 +196,6 @@ func focus_lost() -> void :
 
 func handle_input(event: InputEvent) -> void :
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_M: game.toggle_sound()
 		if event.physical_keycode in [KEY_ESCAPE, KEY_SPACE, KEY_ENTER]:
 			if playing: finish_clip()
 			elif event.physical_keycode == KEY_ESCAPE: close_gallery()
@@ -268,7 +267,14 @@ func _draw_gallery() -> void :
 		next.disabled = gallery_page == page_count - 1
 		if not next.disabled: next.grab_focus()
 		elif not previous.disabled: previous.grab_focus()
-	_button("RETURN TO CHASE" if return_mode == game.Mode.PAUSED else ("BACK TO RESULTS" if return_mode == game.Mode.RESULTS else "RETURN TO BASE"), Rect2(962, 641, 262, 45), close_gallery)
+	var close_button := _button("RETURN TO CHASE" if return_mode == game.Mode.PAUSED else ("BACK TO RESULTS" if return_mode == game.Mode.RESULTS else "RETURN TO BASE"), Rect2(962, 641, 262, 45), close_gallery)
+	# Focus is only seeded on tile 0 and on the page buttons, and all of those
+	# can be disabled at once. That cannot happen with today's 15 films and a
+	# page size of 8, because there are always two pages and a page button
+	# always takes focus -- but it would strand a controller on this screen the
+	# moment the film list fits on one page. Guard it rather than depend on the
+	# catalog size.
+	if get_viewport().gui_get_focus_owner() == null: close_button.grab_focus()
 
 func _change_page(direction: int) -> void:
 	gallery_page += direction
