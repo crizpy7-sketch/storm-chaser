@@ -282,6 +282,23 @@ These are enforced by the suites. Each is here because it is non-obvious.
 
 ---
 
+## 7a. There is a plan for the next version
+
+`PLAN-v0.19.0.md` in this repo is a phased implementation plan for three
+features the owner asked for after v0.18.0: a longer campaign, full gamepad
+support, and vehicle upgrades that are earned rather than free. It is written
+for you to execute, names every file and line that changes, states what must
+not break, and ends each phase with a verification gate.
+
+Two findings in it are worth reading even if you take a different approach:
+
+- `route.enter()` generates only 3,300 m of road (`scripts/route.gd:63`). Raise
+  `STAGE_LENGTH` past ~55 and the truck drives off the end, where `course()`'s
+  clamp collapses the road to a single point — silently, with no error.
+- `game.stage` is used as the route level in ~25 places across the 3D scripts.
+  Any design where stage index and route level diverge desyncs terrain
+  visibility from terrain height, and no current test covers that.
+
 ## 8. Suggested next steps, in order
 
 1. **Get it on real hardware.** Windows + Galaxy Book2 + controller. Everything
