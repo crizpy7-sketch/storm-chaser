@@ -1,0 +1,10 @@
+STEER_RESPONSE_CRUISE { "steady": 2.43516658529144, "t63": 0.18333333333333, "t95": 0.40833333333333 }
+STEER_RESPONSE_BOOST { "steady": 2.01999887407145, "t63": 0.13333333333333, "t95": 0.40833333333333 }
+STEER_REVERSAL { "entry": -2.43493081397186, "cross_zero": 0.18333333333333, "full_reverse": 0.44166666666667 }
+ATTITUDE_DEG { "squat_deg": 1.22, "brake_dive_deg": -2.55, "cornering_lean_deg": 1.74 }
+IMPACT_CRATE_SLOW { "speed_lost": 24.34, "speed_lost_pct": 27.0, "lateral_shove": -0.719, "rear_kick": -0.398, "health_lost": 16.73, "recoil_peak_m": 0.044, "hit_stop_s": 0.123, "shake": 12.75 }
+IMPACT_CRATE_FAST { "speed_lost": 48.94, "speed_lost_pct": 20.4, "lateral_shove": -0.834, "rear_kick": -0.59, "health_lost": 24.78, "recoil_peak_m": 0.066, "hit_stop_s": 0.155, "shake": 18.88 }
+IMPACT_MASONRY_FAST { "speed_lost": 62.84, "speed_lost_pct": 26.2, "lateral_shove": -0.96, "rear_kick": -0.801, "health_lost": 33.63, "recoil_peak_m": 0.089, "hit_stop_s": 0.191, "shake": 25.62 }
+LANDING_SOFT { "severity": 0.444, "peak_compression_m": -0.103, "bottomed_out": false, "settle_s": 0.483, "zero_crossings": 0, "nose_dive_deg": -1.34, "tyre_squash_m": 0.009, "speed_lost": 4.89, "grip_loss_window_s": 1.18, "trace_100ms": [-0.024, -0.1, -0.088, -0.051, -0.023, -0.008, -0.002, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0] }
+LANDING_HARD { "severity": 1.0, "peak_compression_m": -0.232, "bottomed_out": false, "settle_s": 0.55, "zero_crossings": 0, "nose_dive_deg": -3.02, "tyre_squash_m": 0.02, "speed_lost": 11.0, "grip_loss_window_s": 1.18, "trace_100ms": [-0.054, -0.226, -0.197, -0.115, -0.052, -0.018, -0.003, 0.001, 0.002, 0.001, 0.0, 0.0, 0.0, 0.0] }
+LANDING_EXTREME { "severity": 1.444, "peak_compression_m": -0.26, "bottomed_out": true, "settle_s": 0.483, "zero_crossings": 0, "nose_dive_deg": -4.36, "tyre_squash_m": 0.029, "speed_lost": 15.89, "grip_loss_window_s": 1.18, "trace_100ms": [-0.079, -0.243, -0.155, -0.075, -0.028, -0.007, 0.001, 0.002, 0.002, 0.001, 0.0, 0.0, 0.0, 0.0] }

@@ -1,3 +1,19 @@
+# 0.18.0 — Weight
+
+- Steering gains a column. Raw input is a demand that winds the wheel on at a bounded, speed-sensitive rate; the chassis, rear axle and steering assist all read the column. A full-lock reversal takes 0.183 s to cross zero lateral velocity instead of 0.067 s.
+- Speed now costs agility instead of granting it. Lateral authority falls from 2.55 at 120 mph to 2.02 at 240, where boost previously raised it from 2.35 to 2.55.
+- Landings have range. landing_severity was clamped at 1.0 while measured impacts run 6.4 to 32.8, so every jump above roughly 135 mph landed identically. Soft, hard and extreme landings now compress -0.103 / -0.232 / -0.260 m, the hardest bottoming the travel stops.
+- The chassis carries the landing: a pitch spring drops the nose up to 4.4 degrees, a fast tyre spring slaps the wheels into the arches first, damping is asymmetric in compression and rebound, and the body loads against the ramp face before launch.
+- Impacts move along the impact. A spring-returned impulse punches the camera down the contact normal, banks it and swings the truck's heading, paid for by cutting the undirected sine ring; peak camera displacement is unchanged.
+- Collisions cost momentum in proportion. A crate at 240 mph took 13.3% of your speed and now takes 20.4%; the loss also reaches the powertrain so the existing weight-transfer model has a deceleration to dive on.
+- Hit stop scales from 88 to 200 ms and eases out of a near freeze. Impact audio is severity-scaled and staggered: thump, crunch at +25 ms, scatter at +85 ms.
+- The camera has inertia in every axis, not only sideways, and its suspension breathing and load dolly are no longer gated off for the first three stages.
+- Audio regains a speed cue. Gearing pinned rpm near 3700 so engine pitch was flat and fell from 112 to 178 mph; wind moved 2.33 dB across the whole range. Wind now moves 8 dB, engine range goes 6 dB to 15 dB with a real lift-off drop, and the sub layer stops evaporating under load.
+- Lightning on the lens finally lights the scene, shoves the truck and costs speed.
+- The HUD reports the six-speed box (revs, gear, shift ring), shows damage direction and a hull bar that flinches even with calm effects on, and marks boost lockout. Notifications are ranked, so hazards stop being overwritten by rewards.
+- Adds tools/measure_feel.gd, a telemetry probe that asserts nothing and prints the numbers behind every figure above.
+- All 520 checks across fifteen suites pass. No art, campaign, save format, checkpoint or footage behaviour changed.
+
 # 0.17.0 — Mateo's Garage
 
 - Adds Mateo's Garage at the base: live orbiting 3D preview, five cosmetic slots (paint accents, wheels, roof equipment, bumper armor, suspension trim) with the approved part first, and a STOCK LOOK reset.

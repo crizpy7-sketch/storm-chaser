@@ -1,0 +1,13 @@
+Baseline v0.17.0, captured with tools/measure_feel.gd on Godot 4.5.1 before any
+change in this branch. Kept so the after-figures can be reproduced and diffed.
+
+STEER_RESPONSE_CRUISE { "steady": 2.34999999515629, "t63": 0.09166666666667, "t95": 0.29166666666667 }
+STEER_RESPONSE_BOOST { "steady": 2.54999999474406, "t63": 0.09166666666667, "t95": 0.29166666666667 }
+STEER_REVERSAL { "entry": -2.34998556110097, "cross_zero": 0.06666666666667, "full_reverse": 0.29166666666667 }
+ATTITUDE_DEG { "squat_deg": 1.22, "brake_dive_deg": -2.55, "cornering_lean_deg": 1.74 }
+IMPACT_CRATE_SLOW { "speed_lost": 27.76, "speed_lost_pct": 30.8, "health_lost": 16.73, "recoil_peak_m": 0.044, "hit_stop_s": 0.085, "shake": 12.75 }
+IMPACT_CRATE_FAST { "speed_lost": 31.98, "speed_lost_pct": 13.3, "health_lost": 24.78, "recoil_peak_m": 0.066, "hit_stop_s": 0.085, "shake": 18.88 }
+IMPACT_MASONRY_FAST { "speed_lost": 36.61, "speed_lost_pct": 15.3, "health_lost": 33.63, "recoil_peak_m": 0.089, "hit_stop_s": 0.085, "shake": 24.8 }
+LANDING_SOFT { "severity": 0.444, "peak_compression_m": -0.09, "bottomed_out": false, "settle_s": 0.375, "speed_lost": 5.33 }
+LANDING_HARD { "severity": 1.0, "peak_compression_m": -0.203, "bottomed_out": false, "settle_s": 0.4, "speed_lost": 12.0 }
+LANDING_EXTREME { "severity": 1.0, "peak_compression_m": -0.203, "bottomed_out": false, "settle_s": 0.4, "speed_lost": 12.0 }
