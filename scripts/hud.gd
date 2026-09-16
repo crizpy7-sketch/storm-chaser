@@ -167,7 +167,7 @@ func _draw_menu() -> void :
 	draw_rect(Rect2(75, 345, 56, 3), AMBER)
 	text_at("Follow the vortex.", 75, 391, 26, WHITE, BODY)
 	text_at("Dodge the debris. Bring the data home.", 75, 426, 19, Color("c6d3cd"), BODY)
-	text_at("8 LEVELS.  7 CHECKPOINTS.  REACH THE VORTEX.", 75, 454, 11, AMBER, MONO)
+	text_at("8 LEVELS.  7 FILMS.  14 SAVE FLAGS.  REACH THE VORTEX.", 75, 454, 11, AMBER, MONO)
 	text_at("A / D   STEER     W / SHIFT   BOOST", 75, 605, 13, WHITE, MONO)
 	text_at("S       BRAKE     SPACE       PROBE", 75, 630, 13, WHITE, MONO)
 	text_at("Controller: stick steer  /  A boost  /  B brake  /  X probe", 75, 672, 12, MUTED, BODY)
@@ -211,10 +211,16 @@ func _draw_dashboard() -> void :
 	text_at("STORM CHASER", 49, 45, 16, WHITE, DISPLAY)
 	text_at("0%d / %s" % [game.stage + 1, game.STAGE_NAMES[game.stage]], 299, 44, 12, AMBER, MONO)
 	text_at("WIND %03d MPH" % [101 + mini(game.stage,3) * 32 + int(absf(game.wind) * 60)], 625, 44, 11, MUTED, MONO)
-	var chapter_progress: float=game.route.orbit_progress() if game.stage==7 else fposmod(game.elapsed,30.0)/30.0
-	text_at("LAP %02d%%" % int(chapter_progress*100) if game.stage==7 else "%02d S" % ceili((1.0-chapter_progress)*30.0),796,46,17,WHITE,MONO)
+	var chapter_progress: float=game.route.orbit_progress() if game.stage==7 else fposmod(game.elapsed,game.STAGE_LENGTH)/game.STAGE_LENGTH
+	text_at("LAP %02d%%" % int(chapter_progress*100) if game.stage==7 else "%02d S" % ceili((1.0-chapter_progress)*game.STAGE_LENGTH),796,46,17,WHITE,MONO)
 	text_at("DATA %06d" % int(game.score), 923, 44, 13, WHITE, MONO)
 	bar(Rect2(20, 68, 1240, 2), (game.stage+chapter_progress)/8.0, AMBER)
+	# Thin ticks for the silent mid-stage saves, drawn under the checkpoint pips.
+	var spans: int = maxi(1, int(round(game.STAGE_LENGTH / game.SAVE_SPAN)))
+	if spans > 1:
+		for stage_index in range(8):
+			for span in range(1, spans):
+				draw_rect(Rect2(20.0 + 1240.0 * (float(stage_index) + float(span) / spans) / 8.0 - 0.5, 65, 1, 8), MUTED)
 	for checkpoint_index in range(1,8):
 		var x: float = 20.0 + 1240.0 * checkpoint_index / 8.0
 		draw_circle(Vector2(x, 69), 3.5, MINT if game.stage_seen >= checkpoint_index else MUTED)
@@ -281,7 +287,7 @@ func _draw_dashboard() -> void :
 		panel(Rect2(640-width/2,615,width,34),Color(0.015,0.035,0.04,0.84))
 		centered(subtitle,640,638,17,WHITE,BODY)
 	if game.mode == game.Mode.RUNNING:
-		var to_checkpoint: float = (game.stage+1)*30.0-game.elapsed
+		var to_checkpoint: float = (game.stage+1)*game.STAGE_LENGTH-game.elapsed
 		if game.stage<2 and to_checkpoint<10.0:
 			panel(Rect2(429,126,422,46),Color(0.02,0.04,0.05,0.75))
 			centered(("SILO COUNTY" if game.stage==0 else "FREIGHT DISTRICT")+"  /  "+"%02d S" % ceili(to_checkpoint),640,145,12,AMBER,MONO)

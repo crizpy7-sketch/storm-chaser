@@ -15,7 +15,7 @@ func shot(label: String) -> void:
 	print("SHOT ", label)
 
 func select(level: int, progress: float = 0.0) -> void:
-	game.stage = level; game.stage_seen = level; game.elapsed = level * 30.0 + 4.0
+	game.stage = level; game.stage_seen = level; game.elapsed = level * game.STAGE_LENGTH + 4.0
 	game.mode = game.Mode.RUNNING; game.route.enter(level)
 	game.route.progress = progress; game.world.travel = progress
 	game.speed = game.CRUISE_SPEEDS[level]; game.powertrain.reset(game.speed)
@@ -70,7 +70,7 @@ func run() -> void:
 	game.pause_chase()
 	await shot("11-pause")
 	game.resume_chase()
-	select(0); game.elapsed = 30.0; game.stage_seen = 0; game.stage = 1
+	select(0); game.elapsed = game.STAGE_LENGTH; game.stage_seen = 0; game.stage = 1
 	game.mode = game.Mode.UPGRADE; game.hud.rebuild()
 	await shot("12-upgrade")
 	game.mode = game.Mode.RUNNING; game.finish(false, "The tornado escaped radar range. Use boost to close the gap.")

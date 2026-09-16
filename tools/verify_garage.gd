@@ -32,7 +32,7 @@ func pad(button: JoyButton) -> InputEventJoypadButton:
 func quiet(level: int) -> void:
 	game.start_chase()
 	game.set_process(false); game.world.set_process(false)
-	game.stage = level; game.stage_seen = level; game.elapsed = level * 30.0 + 0.5
+	game.stage = level; game.stage_seen = level; game.elapsed = level * game.STAGE_LENGTH + 0.5
 	game.route.enter(level); game.speed = game.CRUISE_SPEEDS[level]; game.powertrain.reset(game.speed)
 	game.world.reset_motion()
 
@@ -80,7 +80,7 @@ func campaign(setup: String) -> bool:
 	game.start_chase()
 	game.set_process(false); game.world.set_process(false); game.checkpoints.set_process(false)
 	var stages: Array[int] = []
-	for frame in range(22000):
+	for frame in range(48000):
 		if game.mode == game.Mode.UPGRADE:
 			stages.append(game.stage)
 			game.choose_upgrade(0 if game.health < 80 else 1)
@@ -277,7 +277,7 @@ func run() -> void:
 	game._unhandled_input(key(KEY_ENTER))
 	check(game.mode == game.Mode.RUNNING and game.elapsed == 0.0 and not game.checkpoint_retry and game.loadout.setup == "turbo", "Enter starts a new chase with the chosen loadout")
 	game.set_process(false)
-	game.stage = 3; game.elapsed = 90.0; game.mode = game.Mode.UPGRADE
+	game.stage = 3; game.elapsed = 3.0 * game.STAGE_LENGTH; game.mode = game.Mode.UPGRADE
 	game.choose_upgrade(1); game.checkpoints.complete()
 	check(game.checkpoint.get("setup", "") == "turbo" and game.valid_checkpoint(game.checkpoint), "checkpoint snapshot records the chase setup and stays valid")
 	game.return_to_menu()

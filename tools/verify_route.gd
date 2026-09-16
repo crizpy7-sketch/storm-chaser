@@ -12,7 +12,7 @@ func enter(level: int) -> void:
 	game.start_chase()
 	game.set_process(false);game.world.set_process(false);game.checkpoints.set_process(false)
 	game.world.mateo.set_process(false)
-	game.stage=level;game.stage_seen=level;game.elapsed=level*30.0
+	game.stage=level;game.stage_seen=level;game.elapsed=level * game.STAGE_LENGTH
 	game.route.enter(level);game.speed=game.CRUISE_SPEEDS[level]
 	game.wind=0;game.steer=0
 

@@ -12,7 +12,7 @@ func start() -> void:
 	game.light_graphics=false;game.calm_fx=false;game.muted=false
 	AudioServer.set_bus_mute(0,false);game.rng.seed=75271;game.start_chase()
 func select(level: int) -> void:
-	game.stage=level;game.stage_seen=level;game.elapsed=level*30.0+1.0
+	game.stage=level;game.stage_seen=level;game.elapsed=level * game.STAGE_LENGTH+1.0
 	game.mode=game.Mode.RUNNING;game.route.enter(level)
 	game.speed=game.CRUISE_SPEEDS[level];game.powertrain.reset(game.speed)
 	game.player_x=0;game.velocity_x=0;game._reset_water()

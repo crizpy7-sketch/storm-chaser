@@ -130,7 +130,7 @@ func run() -> void:
 	check(game.glide_velocity == frozen, "pause freezes slide physics")
 	game.mode = game.Mode.UPGRADE
 	game.stage = 1
-	game.elapsed = 30.0
+	game.elapsed = game.STAGE_LENGTH
 	game.choose_upgrade(1)
 	check(game.puddles.is_empty() and game.aquaplane == 0 and game.glide_velocity == 0, "checkpoint clears water and momentum")
 	game.checkpoints.complete()

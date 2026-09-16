@@ -29,7 +29,7 @@ func _initialize() -> void:
 func enter_checkpoint(stage: int, choice: int = 1) -> void:
 	game.start_chase()
 	game.stage = stage
-	game.elapsed = stage * 30.0
+	game.elapsed = stage * game.STAGE_LENGTH
 	game.mode = game.Mode.UPGRADE
 	game.choose_upgrade(choice)
 	game.set_process(false)
@@ -164,7 +164,9 @@ func run() -> void:
 	game.auto_dodges = false
 	game.start_chase()
 	var stages: Array[int] = []
-	for frame in range(22000):
+	var flag_times: Array[float] = []
+	var marks_seen := 0
+	for frame in range(48000):
 		if game.mode == game.Mode.UPGRADE:
 			stages.append(game.stage)
 			game.choose_upgrade(0 if game.health < 80 else 1)
@@ -172,9 +174,22 @@ func run() -> void:
 		if game.mode == game.Mode.RUNNING:
 			if game.charge >= 100: game.deploy_probe()
 			game._simulate(1.0 / 60.0)
+			if game.saves_marked != marks_seen:
+				marks_seen = game.saves_marked
+				if game.message.begins_with("SAVE FLAG"): flag_times.append(game.elapsed)
 		if game.mode==game.Mode.VORTEX: game.finale.step(1.0/60.0)
 		if game.mode in [game.Mode.RESULTS, game.Mode.CRASH]: break
 	check(stages == [1,2,3,4,5,6,7], "full run reaches seven checkpoints in order")
+	# Two flags inside each of the seven timed stages. The vortex lap ends on
+	# orbit progress rather than the clock and is far too short to reach one.
+	var spans_per_stage: int = int(round(game.STAGE_LENGTH / game.SAVE_SPAN)) - 1
+	check(flag_times.size() == 7 * spans_per_stage, "every timed stage records its mid-stage save flags")
+	var rising := true
+	for i in range(1, flag_times.size()):
+		if flag_times[i] < flag_times[i-1]: rising = false
+	check(rising, "save flags are recorded in order")
+	check(flag_times.is_empty() or not is_zero_approx(fposmod(flag_times[0], game.STAGE_LENGTH)), "a flag never lands on a stage boundary, which belongs to the checkpoint")
+	print("SAVE_FLAGS=", flag_times.size())
 	check(game.mode == game.Mode.RESULTS and game.result_title == "INTO THE VORTEX", "recovered game remains winnable")
 	check(game.probes >= 3 and game.score > 0, "full run earns valid probe/data score")
 	check(not game.can_retry_checkpoint(), "victory retires checkpoint")

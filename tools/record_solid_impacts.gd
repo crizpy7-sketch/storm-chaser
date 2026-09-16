@@ -12,7 +12,7 @@ func start() -> void:
 	game.save_enabled=false;game.auto_dodges=false;game.light_graphics=false;game.calm_fx=false
 	game.muted=false;AudioServer.set_bus_mute(0,false);game.rng.seed=76314;game.start_chase()
 func select(level: int) -> void:
-	game.stage=level;game.stage_seen=level;game.elapsed=level*30.0+.2;game.mode=game.Mode.RUNNING
+	game.stage=level;game.stage_seen=level;game.elapsed=level * game.STAGE_LENGTH+.2;game.mode=game.Mode.RUNNING
 	game.route.enter(level);game.speed=game.CRUISE_SPEEDS[level];game.powertrain.reset(game.speed)
 	game.player_x=0;game.velocity_x=0;game._reset_water();game._clear_touch()
 	game.debris.clear();game.puddles.clear();game.sky_debris.clear();game.contacts.reset();game.crashes.reset()

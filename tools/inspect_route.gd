@@ -6,7 +6,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false);game.world.set_process(false);game.world.mateo.set_process(false)
 	for spec in [[3,170.0,0.0],[4,185.0,0.0],[4,355.0,0.0],[5,145.0,2.5],[6,168.0,5.0],[7,220.0,0.0]]:
-		game.start_chase();game.stage=spec[0];game.stage_seen=spec[0];game.elapsed=spec[0]*30.0+5.0
+		game.start_chase();game.stage=spec[0];game.stage_seen=spec[0];game.elapsed=spec[0] * game.STAGE_LENGTH+5.0
 		game.route.enter(spec[0]);game.route.progress=spec[1];game.route.air_height=spec[2];game.route.hint=game.route.chapter_caption()
 		game.world.truck.step(.016);game.speed=game.CRUISE_SPEEDS[game.stage]
 		game.world.space.show();game.world.show();game.world._update_view(0)

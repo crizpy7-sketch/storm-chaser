@@ -87,7 +87,7 @@ func run() -> void:
 	game.footage_unlocked.clear();game.return_to_menu();game.dodges.show_gallery()
 	check(not game.dodges.start_clip(6,true),"unearned checkpoint footage cannot play")
 	game.dodges.close_gallery()
-	fresh();game.stage=1;game.elapsed=30;game.mode=game.Mode.UPGRADE
+	fresh();game.stage=1;game.elapsed=game.STAGE_LENGTH;game.mode=game.Mode.UPGRADE
 	game.choose_upgrade(1);game.checkpoints.complete()
 	check(game.footage_unlocked==[1],"reaching checkpoint one unlocks only its movie")
 	game.pause_chase();game.dodges.show_gallery()
@@ -116,7 +116,7 @@ func run() -> void:
 	check(not game.hud.settings_open and game.mode==game.Mode.PAUSED,"Escape closes settings without resuming the chase")
 	game.demo=true;game.rng.seed=99152;game.steering_assist=true;game.relaxed_hazards=true
 	fresh()
-	for i in range(22000):
+	for i in range(48000):
 		if game.mode==game.Mode.UPGRADE: game.choose_upgrade(0);game.checkpoints.complete()
 		if game.mode==game.Mode.RUNNING:
 			if game.charge>=100: game.deploy_probe()

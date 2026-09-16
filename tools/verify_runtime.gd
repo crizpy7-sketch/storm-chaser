@@ -45,7 +45,7 @@ func pad(button: JoyButton) -> InputEventJoypadButton:
 	return e
 
 func enter(level: int, progress: float) -> void:
-	game.stage = level; game.stage_seen = level; game.elapsed = level * 30.0
+	game.stage = level; game.stage_seen = level; game.elapsed = level * game.STAGE_LENGTH
 	game.route.enter(level); game.route.progress = progress
 	game.world.travel = progress
 

@@ -11,7 +11,7 @@ func run() -> void:
 	for assist in [false,true]:
 		game.steering_assist=assist;game.relaxed_hazards=assist;game.rng.seed=72611;game.start_chase()
 		var stages: Array[int]=[]
-		for frame in range(22000):
+		for frame in range(48000):
 			if game.mode==game.Mode.UPGRADE:
 				stages.append(game.stage);print("STAGE ",game.stage," health ",game.health)
 				game.choose_upgrade(0 if game.health<80 else 1);game.checkpoints.complete()

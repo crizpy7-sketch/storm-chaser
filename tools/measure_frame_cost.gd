@@ -17,7 +17,7 @@ func run() -> void:
 	for level in [0, 3, 4, 5, 6, 7]:
 		game.start_chase()
 		game.set_process(false)
-		game.stage = level; game.stage_seen = level; game.elapsed = level * 30.0 + 1.0
+		game.stage = level; game.stage_seen = level; game.elapsed = level * game.STAGE_LENGTH + 1.0
 		game.route.enter(level); game.speed = game.CRUISE_SPEEDS[level]; game.powertrain.reset(game.speed)
 		game.world.reset_motion()
 		var simulate := 0

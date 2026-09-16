@@ -10,7 +10,7 @@ func start() -> void:
 	game.demo=true;game.auto_dodges=false;game.save_enabled=false;game.rng.seed=72611
 	game.start_chase()
 	game.set_process(false)
-	for i in range(22000):
+	for i in range(48000):
 		if game.mode==game.Mode.UPGRADE:game.choose_upgrade(0 if game.health<80 else 1);game.checkpoints.complete()
 		if game.mode==game.Mode.RUNNING:
 			if game.charge>=100:game.deploy_probe()

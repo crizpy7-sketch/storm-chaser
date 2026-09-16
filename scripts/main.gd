@@ -1,7 +1,7 @@
 extends Node2D
 
 enum Mode{MENU, RUNNING, PAUSED, UPGRADE, RESULTS, CELEBRATION, CRASH, CHECKPOINT, VORTEX, GARAGE}
-const STAGE_LENGTH: = 30.0
+const STAGE_LENGTH: = 90.0
 ## Progress is saved this often, silently, between the checkpoints. STAGE_LENGTH
 ## must stay a whole number of these: a span that lands on a stage boundary
 ## belongs to the upgrade screen, not to a flag. Keeping this at 30 is what lets
@@ -638,7 +638,7 @@ func _simulate(dt: float) -> void :
 	mateo_cooldown = maxf(0.0,mateo_cooldown-dt)
 	stage = mini(7, int(elapsed / STAGE_LENGTH))
 	run_assisted = run_assisted or steering_assist or relaxed_hazards
-	if stage < 2 and fposmod(elapsed, STAGE_LENGTH) >= 23.0 and announced_landmark != stage:
+	if stage < 2 and fposmod(elapsed, STAGE_LENGTH) >= STAGE_LENGTH - 7.0 and announced_landmark != stage:
 		announced_landmark = stage
 		notify(("SILO COUNTY" if stage == 0 else "FREIGHT DISTRICT") + " AHEAD  /  NEW FOOTAGE AT CHECKPOINT", 4.0)
 	if stage > stage_seen:

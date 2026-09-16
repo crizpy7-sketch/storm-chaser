@@ -30,7 +30,7 @@ func enter(probe_count: int = 3) -> void:
 	game.world.set_process(false)
 	game.checkpoints.set_process(false)
 	game.dodges.set_process(false)
-	game.stage = 7;game.stage_seen = 7;game.elapsed = 210.0
+	game.stage = 7;game.stage_seen = 7;game.elapsed = 7.0 * game.STAGE_LENGTH
 	game.route.enter(7)
 	game.speed = game.CRUISE_SPEEDS[7]
 	game.score = 12345.0;game.probes = probe_count;game.health = 80.0

@@ -8,7 +8,7 @@ func run() -> void:
 	game.set_process(false);game.world.set_process(false)
 	for shot in range(3):
 		var level: int= [1,3,5][shot]
-		game.stage=level;game.stage_seen=level;game.elapsed=level*30.0+4.0
+		game.stage=level;game.stage_seen=level;game.elapsed=level * game.STAGE_LENGTH+4.0
 		game.mode=game.Mode.RUNNING;game.route.enter(level)
 		game.route.progress=[115.0,90.0,185.0][shot];game.world.travel=game.route.progress
 		game.player_x=0;game.velocity_x=0;game.speed=110
