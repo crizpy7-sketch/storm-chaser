@@ -1,9 +1,12 @@
 shader_type spatial;
+render_mode diffuse_burley, specular_schlick_ggx;
 uniform sampler2D material_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform vec4 tint : source_color = vec4(.5,.4,.3,1.0);
 uniform vec2 tile = vec2(0.0);
 uniform float metal = 0.0;
 uniform float scale_uv = .35;
+uniform float flash = 0.0;
+uniform float wetness = 0.35;
 varying vec3 local_point;
 varying vec3 local_normal;
 void vertex() { local_point=VERTEX; local_normal=NORMAL; }
@@ -13,5 +16,8 @@ void fragment() {
  vec3 tex=sample_face(local_point.zy)*w.x+sample_face(local_point.xz)*w.y+sample_face(local_point.xy)*w.z;
  float luminance=dot(tex,vec3(.3,.5,.2));
  ALBEDO=tint.rgb*(.46+luminance*1.15);
- ROUGHNESS=mix(.92,.62,metal); METALLIC=metal;
+ ALBEDO*=1.0+flash*0.45;
+ ROUGHNESS=mix(mix(.92,.62,metal), mix(.55,.22,metal), wetness);
+ METALLIC=metal;
+ EMISSION=ALBEDO*flash*0.1;
 }

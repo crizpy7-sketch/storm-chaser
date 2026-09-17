@@ -232,3 +232,10 @@ func update_view() -> void:
 			p=world.surface_point(z,lateral)
 			p.y=_ground(p)
 		grass.set_instance_transform(i,Transform3D(grass_bases[i],p))
+	var bolt: float=0.0 if game.calm_fx else game.lightning
+	grass_material.set_shader_parameter("clock",time)
+	grass_material.set_shader_parameter("flash",bolt)
+	for mat in [wood, pale, brick, roof]:
+		if mat is ShaderMaterial:
+			mat.set_shader_parameter("flash",bolt)
+			mat.set_shader_parameter("wetness",0.38)

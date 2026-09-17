@@ -43,6 +43,12 @@ var tornado: MeshInstance3D
 var sky: MeshInstance3D
 var environment: Environment
 var sun: DirectionalLight3D
+var fill: DirectionalLight3D
+var bounce: DirectionalLight3D
+var contact_blobs: Array[MeshInstance3D] = []
+var tornado_cross: MeshInstance3D
+var dust_ring: MeshInstance3D
+var rain_sheets: Array[MeshInstance3D] = []
 var travel: = 0.0
 var camera_pan: = 0.0
 var cam_roll: = 0.0
@@ -166,29 +172,49 @@ func _build_environment() -> void :
 	var holder: = WorldEnvironment.new()
 	environment = Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("1c303c")
+	environment.background_color = Color("152430")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("a9c3d2")
-	environment.ambient_light_energy = 0.65
+	environment.ambient_light_color = Color("6a8494")
+	environment.ambient_light_energy = 0.28
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_exposure = 0.94
 	environment.fog_enabled = true
-	environment.fog_light_color = Color("243b40")
-	environment.fog_light_energy = 0.7
-	environment.fog_density = 0.0027
+	environment.fog_light_color = Color("1a2e36")
+	environment.fog_light_energy = 0.88
+	environment.fog_density = 0.0032
+	environment.fog_sky_affect = 0.62
+	environment.glow_enabled = true
+	environment.glow_intensity = 0.38
+	environment.glow_strength = 0.68
+	environment.glow_bloom = 0.06
+	environment.glow_hdr_threshold = 0.9
+	environment.adjustment_enabled = true
+	environment.adjustment_saturation = 0.86
+	environment.adjustment_contrast = 1.10
+	environment.adjustment_brightness = 0.98
 	holder.environment = environment
 	space.add_child(holder)
 	sun = DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-34, -125, 0)
-	sun.light_color = Color("d9b98b")
-	sun.light_energy = 1.55
+	sun.rotation_degrees = Vector3(-28, -118, 0)
+	sun.light_color = Color("c9a574")
+	sun.light_energy = 1.12
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 65.0
+	sun.shadow_blur = 1.4
+	sun.shadow_opacity = 0.78
+	sun.shadow_bias = 0.04
+	sun.directional_shadow_max_distance = 48.0
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	space.add_child(sun)
-	var fill: = DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-32, 30, 0)
-	fill.light_color = Color("98b8d5")
-	fill.light_energy = 0.6
+	fill = DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-16, 52, 0)
+	fill.light_color = Color("7a9bb0")
+	fill.light_energy = 0.16
 	space.add_child(fill)
+	bounce = DirectionalLight3D.new()
+	bounce.rotation_degrees = Vector3(72, -30, 0)
+	bounce.light_color = Color("5c4a32")
+	bounce.light_energy = 0.11
+	space.add_child(bounce)
 	camera = Camera3D.new()
 	camera.current = true
 	camera.fov = 66.0
@@ -209,7 +235,10 @@ func _build_environment() -> void :
 	ground_material.shader = preload("res://shaders/ground.gdshader")
 	ground_material.set_shader_parameter("field_texture", SKY)
 	ground_material.set_shader_parameter("clay_texture", clay_texture)
+	var grass_tex: Texture2D = Media.texture("res://assets/art/terrain/prairie-grass.png", "clay")
+	if grass_tex: ground_material.set_shader_parameter("grass_texture", grass_tex)
 	ground_node = mesh_node(space, ground, Vector3(0, -0.055, -400), ground_material)
+	ground_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	terrain = MeshInstance3D.new()
 	terrain.material_override = ground_material
 	terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -220,6 +249,8 @@ func _build_environment() -> void :
 	road_material.shader = preload("res://shaders/wet_road.gdshader")
 	road_material.set_shader_parameter("storm_sky", SKY)
 	road_material.set_shader_parameter("clay_texture", clay_texture)
+	var asphalt_tex: Texture2D = Media.texture("res://assets/art/terrain/wet-asphalt.png", "clay")
+	if asphalt_tex: road_material.set_shader_parameter("asphalt_texture", asphalt_tex)
 	road.material_override = road_material
 	road.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	space.add_child(road)
@@ -229,6 +260,9 @@ func _build_environment() -> void :
 	storm_material.set_shader_parameter("storm_texture", VORTEX)
 	tornado = mesh_node(space, storm_quad, Vector3(15, 70, -150), storm_material)
 	tornado.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_build_storm_volume()
+	_build_contact_shadows()
+	_build_rain_sheets()
 
 func _build_vehicles() -> void :
 	var scene: PackedScene = load("res://assets/models/storm-vehicles.glb")
@@ -481,12 +515,27 @@ func _update_view(_dt: float) -> void :
 	ground_material.set_shader_parameter("travel", travel)
 	ground_material.set_shader_parameter("dirt",game.route.dirt if game.route.active else 0.0)
 	if terrain_field.visible:
-		for key in ["route_origin", "route_heading", "travel", "dirt"]:
+		for key in ["route_origin", "route_heading", "travel", "dirt", "flash", "clock"]:
 			terrain_field_material.set_shader_parameter(key, ground_material.get_shader_parameter(key))
-	road_material.set_shader_parameter("flash", 0.0 if game.calm_fx else game.lightning)
+	var bolt: float = 0.0 if game.calm_fx else game.lightning
+	road_material.set_shader_parameter("flash", bolt)
+	road_material.set_shader_parameter("clock", game.elapsed)
+	ground_material.set_shader_parameter("flash", bolt)
+	ground_material.set_shader_parameter("clock", game.elapsed)
+	if terrain_field.visible:
+		terrain_field_material.set_shader_parameter("flash", bolt)
+		terrain_field_material.set_shader_parameter("clock", game.elapsed)
 	storm_material.set_shader_parameter("clock", game.elapsed * 1.45)
-	storm_material.set_shader_parameter("brightness", 0.69 if game.calm_fx else 0.69 + game.lightning * 0.4)
-	sun.light_energy = 1.55 + (0.0 if game.calm_fx else game.lightning * 2.0)
+	storm_material.set_shader_parameter("brightness", 0.69 if game.calm_fx else 0.69 + bolt * 0.4)
+	sun.light_energy = 1.12 + bolt * 2.35
+	sun.light_color = Color("c9a574").lerp(Color("dce8f4"), clampf(bolt, 0.0, 1.0))
+	fill.light_energy = 0.16 + bolt * 0.85
+	bounce.light_energy = 0.11 + bolt * 0.12
+	environment.ambient_light_energy = 0.28 + bolt * 0.5
+	environment.fog_light_energy = 0.88 + bolt * 0.55
+	environment.fog_light_color = Color("1a2e36").lerp(Color("8aa8b8"), clampf(bolt * 0.55, 0.0, 1.0))
+	if sky.material_override is StandardMaterial3D:
+		(sky.material_override as StandardMaterial3D).albedo_color = Color(1, 1, 1).lerp(Color(1.25, 1.32, 1.4), clampf(bolt, 0.0, 1.0))
 	var storm_z: float = -135.0 - (game.distance - 800.0) * 0.025
 	tornado.position = Vector3(road_center(storm_z) + game.storm_offset * 45.0, 70.0, storm_z)
 	sky.position = Vector3(camera_pan*0.1,474,-600)
@@ -506,7 +555,7 @@ func _update_view(_dt: float) -> void :
 		junction_view=smoothstep(65.0,105.0,game.route.progress)*(1.0-smoothstep(game.route.SHORTCUT_TURN_END+8.0,game.route.SHORTCUT_TURN_END+45.0,game.route.progress))
 		cam_y+=junction_view*1.35
 		want_fov+=junction_view*3.0
-	var focus := Vector3(camera_pan*0.75+game.velocity_x*0.42+game.steer*0.10,3.9+game.flyby_pressure*2.7,-29.0)
+	var focus := Vector3(camera_pan*0.75+game.velocity_x*0.42+game.steer_column*0.10,3.9+game.flyby_pressure*2.7,-29.0)
 	# Suspension breathing and the load dolly are properties of the truck, not
 	# of the route: gating them behind route.active left the first three stages
 	# with a perfectly rigid camera.
@@ -542,7 +591,7 @@ func _update_view(_dt: float) -> void :
 	# A heavy cab banks out of a corner. look_at rebuilds the basis every frame,
 	# so the roll has to be applied after it.
 	if not game.calm_fx:
-		var lean: float=clampf(-game.velocity_x*0.018-game.glide_velocity*0.022-game.rear_slip*0.010,-0.052,0.052)
+		var lean: float=clampf(-game.velocity_x*0.018-game.glide_velocity*0.022-game.rear_slip*0.010-game.steer_column*0.008,-0.052,0.052)
 		cam_roll=lerpf(cam_roll,lean,1.0-exp(-minf(_dt,0.05)*3.2))
 		camera.rotate_object_local(Vector3.BACK,cam_roll+game.cam_roll)
 	_update_props()
@@ -557,6 +606,8 @@ func _update_view(_dt: float) -> void :
 	if is_instance_valid(landscape): landscape.update_view()
 	if is_instance_valid(shelters): shelters.update_view()
 	_apply_quality()
+	_update_contact_shadows()
+	_update_storm_volume()
 	for i in range(orbit_nodes.size()):
 		var u: = i / 42.0
 		var angle: float = game.elapsed * (1.1 + u) + i * 2.4
@@ -999,6 +1050,8 @@ func _apply_quality() -> void:
 	if quality==last_quality: return
 	last_quality=quality
 	sun.shadow_enabled=not game.light_graphics
+	environment.glow_enabled=not game.light_graphics
+	environment.adjustment_enabled=not game.light_graphics
 	get_viewport().msaa_3d=Viewport.MSAA_DISABLED if game.light_graphics else Viewport.MSAA_2X
 	for i in range(orbit_nodes.size()): orbit_nodes[i].visible=not game.light_graphics or i%2==0
 
@@ -1039,7 +1092,7 @@ func _build_terrain_field() -> void:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	terrain_field_material = ShaderMaterial.new()
 	terrain_field_material.shader = ground_material.shader
-	for key in ["field_texture", "clay_texture"]:
+	for key in ["field_texture", "clay_texture", "grass_texture"]:
 		terrain_field_material.set_shader_parameter(key, ground_material.get_shader_parameter(key))
 	terrain_field_material.set_shader_parameter("terrain_field", true)
 	terrain_field = MeshInstance3D.new()
@@ -1216,6 +1269,91 @@ func _update_shortcut() -> void:
 	var block: Vector2=game.route.project(Vector2(0,-game.route.SHORTCUT_JUNCTION_Z-23.0))
 	shortcut_barrier.position=Vector3(block.x,0.03,block.y)
 	shortcut_barrier.rotation.y=game.route.heading(game.route.progress)
+
+func _build_contact_shadows() -> void:
+	contact_blobs.clear()
+	var shader: Shader = preload("res://shaders/contact_blob.gdshader")
+	for i in range(5):
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(1.55, 1.55) if i < 4 else Vector2(2.8, 5.4)
+		var mat := ShaderMaterial.new()
+		mat.shader = shader
+		mat.set_shader_parameter("opacity", 0.34 if i < 4 else 0.20)
+		var n := mesh_node(space, plane, Vector3(0, 0.02, 0), mat)
+		n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		n.name = "ContactBlob%d" % i
+		contact_blobs.append(n)
+
+func _build_storm_volume() -> void:
+	tornado_cross = mesh_node(space, _storm_mesh(), tornado.position, storm_material)
+	tornado_cross.rotation.y = PI * 0.5
+	tornado_cross.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var ring := PlaneMesh.new()
+	ring.size = Vector2(54, 54)
+	var dust_mat := ShaderMaterial.new()
+	dust_mat.shader = preload("res://shaders/storm_dust.gdshader")
+	var dust_tex: Texture2D = Media.texture("res://assets/art/terrain/storm-dust.png", "clay")
+	if dust_tex: dust_mat.set_shader_parameter("dust_texture", dust_tex)
+	dust_mat.set_shader_parameter("opacity", 0.5)
+	dust_ring = mesh_node(space, ring, Vector3.ZERO, dust_mat)
+	dust_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+func _build_rain_sheets() -> void:
+	var shader: Shader = preload("res://shaders/rain_curtain.gdshader")
+	for i in range(3):
+		var quad := QuadMesh.new()
+		quad.size = Vector2(70.0 - i * 8.0, 32.0)
+		var mat := ShaderMaterial.new()
+		mat.shader = shader
+		mat.set_shader_parameter("density", 0.42 - i * 0.08)
+		var n := mesh_node(space, quad, Vector3.ZERO, mat)
+		n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		n.name = "RainSheet%d" % i
+		rain_sheets.append(n)
+
+func _update_contact_shadows() -> void:
+	if contact_blobs.size() < 5 or not is_instance_valid(truck):
+		return
+	var air: float = game.route.air_height
+	var fade: float = 1.0 if game.route.grounded else clampf(1.0 - air / 3.6, 0.0, 1.0)
+	if game.light_graphics:
+		fade = 0.0
+	var ground_y: float = road_point(0, game.player_x).y + 0.02
+	for i in range(4):
+		var p: Vector3 = truck.wheels[i].global_position
+		contact_blobs[i].visible = fade > 0.03
+		contact_blobs[i].global_position = Vector3(p.x, ground_y, p.z)
+		contact_blobs[i].rotation = Vector3(0.0, truck.rotation.y, 0.0)
+		(contact_blobs[i].material_override as ShaderMaterial).set_shader_parameter("opacity", (0.40 if i < 2 else 0.36) * fade)
+	var tp: Vector3 = truck.global_position
+	contact_blobs[4].visible = fade > 0.03
+	contact_blobs[4].global_position = Vector3(tp.x, ground_y - 0.004, tp.z)
+	contact_blobs[4].rotation = Vector3(0.0, truck.rotation.y, 0.0)
+	(contact_blobs[4].material_override as ShaderMaterial).set_shader_parameter("opacity", 0.18 * fade)
+
+func _update_storm_volume() -> void:
+	if is_instance_valid(tornado_cross):
+		tornado_cross.position = tornado.position
+		tornado_cross.rotation = tornado.rotation + Vector3(0.0, PI * 0.5, 0.0)
+		tornado_cross.visible = not game.light_graphics
+	if is_instance_valid(dust_ring):
+		dust_ring.position = Vector3(tornado.position.x, tornado.position.y - 68.5, tornado.position.z)
+		dust_ring.rotation.y = game.elapsed * 0.55
+		var dust_mat := dust_ring.material_override as ShaderMaterial
+		dust_mat.set_shader_parameter("clock", game.elapsed)
+		var bolt: float = 0.0 if game.calm_fx else game.lightning
+		dust_mat.set_shader_parameter("opacity", 0.52 + bolt * 0.2)
+		dust_ring.visible = not game.light_graphics
+	for i in range(rain_sheets.size()):
+		var n: MeshInstance3D = rain_sheets[i]
+		var z: float = -14.0 - float(i) * 24.0
+		n.position = road_point(z, 0.0) + Vector3.UP * 9.0
+		if n.position.distance_to(camera.global_position) > 0.4:
+			n.look_at(camera.global_position, Vector3.UP)
+		var mat := n.material_override as ShaderMaterial
+		mat.set_shader_parameter("clock", game.elapsed)
+		mat.set_shader_parameter("wind", game.wind)
+		n.visible = not game.light_graphics
 
 func _storm_mesh() -> ArrayMesh:
 	var surface:=SurfaceTool.new();surface.begin(Mesh.PRIMITIVE_TRIANGLES)

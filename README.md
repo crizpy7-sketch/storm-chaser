@@ -1,3 +1,7 @@
+# Storm Chaser v0.18.1 — Storm Grade
+
+The 3D chase now has a storm-grade look: lower ambient so the truck plants a real contact shadow, lightning that actually lights the world, a crossed tornado with a dust foot, wet asphalt and prairie grass tiles, and rain that recedes down the road. Handling, campaign and films are unchanged from v0.18.0 Weight.
+
 # Storm Chaser v0.17.0 — Mateo's Garage
 
 **Mateo's Garage** opens from the base over the live 3D truck. It has five cosmetic slots: paint accents, wheels, roof equipment, bumper armor and suspension trim. Each slot starts on the approved stock part, and **STOCK LOOK** restores all of them. A separate, optional **chase setup** (Stock, Rally, Armored, Turbo) is the only performance choice, and Stock keeps the original tune. The loadout is saved, shown in Mateo's Footage, and labeled on the scoreboard when a non-stock setup is used.

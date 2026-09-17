@@ -130,9 +130,14 @@ func contact_kick(normal: Vector3, severity: float) -> void:
 
 func apply_damage() -> void:
 	damage_level=clampf(1.0-game.health/100.0,0.0,1.0)
+	var wet: float=0.42+(game.route.dirt*0.22 if game.route.active else 0.0)
+	if not game.route.grounded: wet*=0.65
+	var bolt: float=0.0 if game.calm_fx else game.lightning
 	for paint in paint_finishes:
 		paint.set_shader_parameter("damage",damage_level)
 		paint.set_shader_parameter("clock",game.elapsed)
+		paint.set_shader_parameter("wetness",wet)
+		paint.set_shader_parameter("flash",bolt)
 	for mat in brake_materials:mat.emission_energy_multiplier=.60 if game.braking else .16
 	for i in range(beacon_materials.size()):
 		beacon_materials[i].emission_energy_multiplier=.18+(pow(maxf(0.0,sin(game.elapsed*7.5+i*PI)),8.0)*.80 if not game.calm_fx else .12)
@@ -181,11 +186,12 @@ func step(dt: float) -> void:
 		tire_squash=clampf(tire_squash,0.0,.055)
 	pitch=lerpf(pitch,clampf(game.powertrain.acceleration*.00065,-.045,.035),1.0-exp(-dt*5.0))
 	# The chassis leans as a rigid object. Wheels remain independently planted.
-	var target_roll: float=clampf(game.steer*.024+game.glide_velocity*.007,-.045,.045) if grounded else roll
+	var visual_steer: float = game.steer_column if absf(game.steer_column) > 0.0001 else game.steer
+	var target_roll: float=clampf(visual_steer*.024+game.glide_velocity*.007,-.045,.045) if grounded else roll
 	roll=lerpf(roll,target_roll,1.0-exp(-dt*4.0))
 	body.position=recoil+Vector3(0,suspension+kit.ride_height,0);body.rotation=Vector3(pitch+pitch_kick,0,roll)
 	var speed_steer: float=lerpf(.43,.22,clampf(game.speed/200.0,0,1))
-	var desired_steer: float=clampf(-game.steer*speed_steer+game.rear_slip*.12,-.48,.48)
+	var desired_steer: float=clampf(-visual_steer*speed_steer+game.rear_slip*.12,-.48,.48)
 	steering_angle=lerpf(steering_angle,desired_steer,1.0-exp(-dt*8.0))
 	wheel_droop=lerpf(wheel_droop,0.0 if grounded else -.13,1.0-exp(-dt*7.0))
 	for i in range(wheels.size()):

@@ -1,3 +1,14 @@
+# 0.18.1 — Storm Grade
+
+- Rebuilds the 3D lighting for GL Compatibility: lower ambient so shadows can read, a raking gold sun with 48 m cascaded shadows, cool fill, dirt bounce from the prairie, modest glow and a teal/amber grade.
+- Lightning now hits the sun, fill, ambient, fog and sky, not just the 2D overlay.
+- Contact blob shadows sit under the tires so the truck plants on the huge prairie ground. The 8000 m ground mesh no longer casts, so the shadow map stays dense around the chase.
+- The tornado is a crossed pair of cards with a spinning dust foot; world-space rain curtains recede down the road.
+- New tiles: wet asphalt, prairie grass, storm dust, and the missing hill-stage panorama.
+- Truck paint reads the steering column, rain beads and lightning. Grass and ruins flash with the storm. Wet-road and ground shaders keep emission low enough for contact shadows.
+- Lighter graphics still drops shadows, glow, blobs and extra storm volume.
+- Adds 12 storm-grade checks (571 total across sixteen suites). Existing suites stay green.
+
 # 0.18.0 — Weight
 
 - Steering gains a column. Raw input is a demand that winds the wheel on at a bounded, speed-sensitive rate; the chassis, rear axle and steering assist all read the column. A full-lock reversal takes 0.183 s to cross zero lateral velocity instead of 0.067 s.

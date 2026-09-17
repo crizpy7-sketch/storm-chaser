@@ -35,7 +35,7 @@ func run() -> void:
 	check(rig.finish.get_shader_parameter("truck_art")==preload("res://assets/art/truck.png"),"original paint and panel art is reused on the 3D body")
 	check(game.world.mateo.get_parent()==rig.body and game.world.mateo.position.z<2.65 and absf(game.world.mateo.position.x)<.9,"Mateo is attached inside the actual truck bed")
 	var before: Dictionary={};geometry(rig.model,before)
-	game.steer=1.0;game.rear_slip=0.0;game.glide_velocity=0.0
+	game.steer=1.0;game.steer_column=1.0;game.rear_slip=0.0;game.glide_velocity=0.0
 	for i in range(90):rig.step(1.0/60)
 	check(rig.wheels[0].rotation.y<-.1 and rig.wheels[1].rotation.y<-.1,"right input visibly turns both front wheels right")
 	check(is_zero_approx(rig.wheels[2].rotation.y) and is_zero_approx(rig.wheels[3].rotation.y),"rear wheels do not steer like the stock monster truck")
@@ -53,7 +53,7 @@ func run() -> void:
 	for i in range(30):rig.step(1.0/120);low=minf(low,rig.suspension)
 	check(low<-.1 and low>=-.26,"landing compresses the rigid body within its suspension stops")
 	for i in range(360):
-		game.steer=sin(i*.05);game.rear_slip=game.steer*.8
+		game.steer=sin(i*.05);game.steer_column=game.steer;game.rear_slip=game.steer*.8
 		rig.rotation=Vector3(sin(i*.04)*.32,sin(i*.03)*.70,0)
 		rig.step(1.0/60)
 	var after: Dictionary={};geometry(rig.model,after)

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://6pkqb5g1ypc6"
-path="res://.godot/imported/prairie-storm.png-0eb7d8ea60c719c33bceaecc4dda5b41.ctex"
+uid="uid://bgeltx1uiggb7"
+path="res://.godot/imported/storm-dust.png-a2b22b3b70c8ac3cf7763e1ff97ae654.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/terrain/prairie-storm.png"
-dest_files=["res://.godot/imported/prairie-storm.png-0eb7d8ea60c719c33bceaecc4dda5b41.ctex"]
+source_file="res://assets/art/terrain/storm-dust.png"
+dest_files=["res://.godot/imported/storm-dust.png-a2b22b3b70c8ac3cf7763e1ff97ae654.ctex"]
 
 [params]
 

@@ -10,6 +10,11 @@ The gameplay screenshots and Storm-Chaser-v0.4-Cinematic-Dodges-Gameplay.mp4 are
 |---|---|
 | `assets/art/key-art.png` | Cinematic title background |
 | `assets/art/storm-sky.png` | In-game storm panorama |
+| `assets/art/terrain/prairie-storm.png` | Hill-stage supercell panorama |
+| `assets/art/terrain/clay-ruts.png` | Seamless wet clay / rut tile |
+| `assets/art/terrain/prairie-grass.png` | Seamless olive stubble mixed into the ground shader |
+| `assets/art/terrain/wet-asphalt.png` | Seamless wet pavement sampled by the road shader |
+| `assets/art/terrain/storm-dust.png` | Seamless dust grain for the tornado foot |
 | `assets/art/truck.png` | Original truck art on the 3D depth mesh |
 | `assets/art/tornado.png` | Transparent animated vortex sprite |
 | `assets/art/debris-atlas.png` | Debris reference and lens projectile atlas |
