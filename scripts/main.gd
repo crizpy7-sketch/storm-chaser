@@ -17,6 +17,8 @@ const SAVE_PATH: = "user://storm_chaser.cfg"
 const Media := preload("res://scripts/media.gd")
 const STORM_FILM := "res://assets/cinematics/storm-film.ogv"
 const Loadout := preload("res://scripts/loadout.gd")
+const Advisor := preload("res://scripts/advisor.gd")
+const AdvisorJev := preload("res://scripts/advisor_jev.gd")
 const CareerStore := preload("res://scripts/career_store.gd")
 const CareerStoreLocal := preload("res://scripts/career_store_local.gd")
 const CHECKPOINT_FOOTAGE: = [1, 2, 3, 4, 5, 6, 7]
@@ -184,6 +186,13 @@ var career: Dictionary = CareerStore.blank()
 var career_store = CareerStoreLocal.new(SAVE_PATH)
 ## What the last finished run added, for the debrief line. Not persisted.
 var banked_this_run: = 0
+## Who decides the judgement calls the game makes about the moment -- which of
+## Mateo's recorded lines fits what just happened, and more later. The base
+## class is the game deciding for itself, which is what runs unless a key is in
+## the environment. Nothing here can change what is in the game, only which of
+## the things already in it happens next.
+var advisor = Advisor.new()
+var storm_ai: = true
 
 func _ready() -> void :
 	contacts.game=self
@@ -193,6 +202,7 @@ func _ready() -> void :
 	_setup_input()
 	light_graphics = OS.has_feature("mobile")
 	_load_settings()
+	build_advisor()
 	if "--test" in OS.get_cmdline_user_args(): auto_dodges = false
 	touch_controls = OS.has_feature("mobile")
 	route = preload("res://scripts/route.gd").new()
@@ -339,6 +349,7 @@ func _load_settings() -> void :
 		relaxed_hazards = bool(config.get_value("settings", "relaxed_hazards", false))
 		light_graphics = bool(config.get_value("settings", "light_graphics", light_graphics))
 		mateo_voice = bool(config.get_value("settings", "mateo_voice", true))
+		storm_ai = bool(config.get_value("settings", "storm_ai", true))
 		footage_unlocked.clear()
 		var films = config.get_value("records", "footage", [])
 		if films is Array:
@@ -386,6 +397,7 @@ func save_settings() -> void :
 	config.set_value("settings", "relaxed_hazards", relaxed_hazards)
 	config.set_value("settings", "light_graphics", light_graphics)
 	config.set_value("settings", "mateo_voice", mateo_voice)
+	config.set_value("settings", "storm_ai", storm_ai)
 	config.set_value("records", "scores", high_scores)
 	config.set_value("checkpoint", "snapshot", checkpoint)
 	config.set_value("settings", "muted", muted)
@@ -672,6 +684,7 @@ func _simulate(dt: float) -> void :
 	contacts.begin_step()
 	elapsed += dt
 	cinematic_return = maxf(0.0,cinematic_return-dt*0.7)
+	advisor.step(dt)
 	mateo_caption_time = maxf(0.0,mateo_caption_time-dt)
 	mateo_cooldown = maxf(0.0,mateo_cooldown-dt)
 	stage = mini(7, int(elapsed / STAGE_LENGTH))
@@ -1279,11 +1292,12 @@ func is_fullscreen() -> bool:
 	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 
 func toggle_option(key: String) -> void:
-	if key not in ["steering_assist", "relaxed_hazards", "light_graphics", "mateo_voice"]: return
+	if key not in ["steering_assist", "relaxed_hazards", "light_graphics", "mateo_voice", "storm_ai"]: return
 	set(key, not bool(get(key)))
 	if key in ["steering_assist", "relaxed_hazards"] and mode == Mode.PAUSED:
 		run_assisted = run_assisted or steering_assist or relaxed_hazards
 	if key == "mateo_voice" and not mateo_voice and is_instance_valid(mateo_audio): mateo_audio.stop()
+	if key == "storm_ai": build_advisor()
 	save_settings()
 	hud.rebuild()
 
@@ -1342,6 +1356,22 @@ func buy_part(slot: String, id: String) -> bool:
 func enforce_loadout() -> void:
 	var allowed: Dictionary = Loadout.owned_only(loadout, career.owned, career.badges)
 	if allowed != loadout: set_loadout(allowed)
+
+## Builds the advisor from the environment.
+##
+## The key is read from TYPESAFE_API_KEY (or JEV_API_KEY), never from the save
+## file and never from anything that ships. An exported build has no such
+## variable to read, so it runs the local advisor -- which is to say, it runs
+## exactly as this game always has. The demo driver and the check suites are
+## excluded outright, so nothing measured or asserted anywhere depends on a
+## network.
+func build_advisor() -> void:
+	advisor = Advisor.new()
+	if not storm_ai or demo or "--test" in OS.get_cmdline_user_args(): return
+	var key: = OS.get_environment("TYPESAFE_API_KEY")
+	if key.is_empty(): key = OS.get_environment("JEV_API_KEY")
+	if key.is_empty(): return
+	advisor = AdvisorJev.new(key, self)
 
 func setup_factor(key: String) -> float:
 	return Loadout.factor(loadout, key)

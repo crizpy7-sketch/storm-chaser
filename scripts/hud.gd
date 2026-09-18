@@ -211,6 +211,9 @@ func _draw_menu() -> void :
 			text_at(run_label, 1147, y + 9, 8, MUTED, MONO)
 	text_at("BEST DATA   %06d" % game.best, 974, 617, 13, AMBER, MONO)
 	text_at("WALLET   %s DATA" % data_amount(int(game.career.banked)), 974, 641, 11, MINT, MONO)
+	# Only when a storm link is actually up, so "is my key working" is a
+	# question the base menu answers rather than a log file.
+	if game.advisor.live(): text_at("STORM LINK   " + game.advisor.describe(), 974, 663, 10, AMBER, MONO)
 	var look: String = "STOCK LOOK" if game.Loadout.is_stock_look(game.loadout) else "CUSTOM LOOK"
 	panel(Rect2(1030, 526, 208, 24), Color(0.02, 0.045, 0.052, 0.82))
 	centered(look + "  /  " + game.Loadout.setup_name(game.loadout) + " SETUP", 1134, 542, 10, MINT if look == "CUSTOM LOOK" else MUTED, MONO)
@@ -398,7 +401,8 @@ func settings_rows() -> Array:
 		["VIBRATION", "Short impact and puddle pulses on supported devices.", game.haptics_enabled, game.toggle_haptics],
 		["AUTOMATIC DODGE FILMS", "Celebrate close calls with a short movie. Every movie can be skipped.", game.auto_dodges, game.dodges.toggle_auto],
 		["FULLSCREEN", "Fills the whole screen. Useful on a TV, and reachable without a keyboard.", game.is_fullscreen(), game.toggle_fullscreen],
-		["CINEMA VIEW", "Hides the dashboard for a clean view of the storm.", game.cinema_view, game.toggle_cinema]
+		["CINEMA VIEW", "Hides the dashboard for a clean view of the storm.", game.cinema_view, game.toggle_cinema],
+		["MATEO READS THE CHASE", "Mateo picks his reactions to suit the moment. Needs a storm link; without one he uses his own judgement.", game.storm_ai, game.toggle_option.bind("storm_ai")]
 	]
 
 func _build_settings() -> void:

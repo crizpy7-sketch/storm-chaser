@@ -83,7 +83,7 @@ func run() -> void:
 	await settle()
 	check(focus_owner() != null, "the settings panel seeds focus")
 	var rows: Array = game.hud.settings_rows()
-	check(rows.size() == 9, "settings expose nine rows including the keyboard-only toggles")
+	check(rows.size() == 10, "settings expose ten rows including the keyboard-only toggles")
 	check(rows.any(func(r): return str(r[0]) == "FULLSCREEN"), "fullscreen is reachable without a keyboard")
 	check(rows.any(func(r): return str(r[0]) == "CINEMA VIEW"), "cinema view is reachable without a keyboard")
 	# Every row must fit inside the 720p panel, buttons included.
