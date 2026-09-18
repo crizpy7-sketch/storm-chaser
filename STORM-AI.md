@@ -81,6 +81,20 @@ If you want the link on a machine you do not control, the answer is the same
 small server Phase 5's `CareerStore` already anticipates: the game talks to your
 server, your server holds the key.
 
+## Confidence, and why the bar is low
+
+Choice answers carry a `confidence` derived from the probability distribution
+across the options. TypeSafe's guidance is that **a threshold is not one number:
+it scales with what being wrong costs.** `Advisor.HARMLESS` (0.5) is the floor
+for a decision whose worst outcome the player would not notice, and it travels
+with the question rather than being one setting for the whole game.
+
+It is deliberately low. A spread distribution usually means several options were
+*acceptable*, not that the answer was bad — and a high bar would throw the answer
+away in exactly the case the question was worth asking, which is the tie between
+a near miss and a flying cow. A decision that changes difficulty or progress
+belongs at a higher floor, passed per call.
+
 ## What it costs to be wrong
 
 Nothing that cannot be turned off in one toggle. The worst case is Mateo picking
@@ -94,9 +108,18 @@ opening line still guaranteed and the flying cow still winning ties.
   when they are cruising, ease off after a bad stretch. It is the same seam and
   the same rules, and it is the one with real engagement upside. It touches what
   the campaign suites guard, so it is its own piece of work.
+
+  One thing worth knowing before building it: **independent questions over the
+  same state go in one request and are answered in parallel**, so the Director's
+  judgement and Mateo's line can share a round trip rather than costing two.
+  `Score`, the third primitive, is the right shape for "how is this run going" —
+  a probability-weighted position on ordered levels you describe.
 - **Nobody has played this with a live key.** The request and response shapes
-  follow TypeSafe's published API reference and are exercised against synthetic
-  bodies in `verify_advisor`. The first live call is still ahead.
+  were checked field by field against TypeSafe's published API reference — the
+  `{state, model, questions}` body, the choice question's `criteria` map, and the
+  `{model, answers, usage}` response whose Choice answer carries `choice`,
+  `probabilities` and `confidence`. They match, and they are exercised against
+  synthetic bodies in `verify_advisor`. The first live call is still ahead.
 - **More of Mateo's lines.** The system is worth most when he has more to choose
   between. A new line needs an entry in `LINES` and its `.wav` beside the
   others; `mateo_takes()` already finds the takes.
