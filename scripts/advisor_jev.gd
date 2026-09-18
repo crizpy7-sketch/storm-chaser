@@ -25,8 +25,6 @@ extends "res://scripts/advisor.gd"
 
 const ENDPOINT := "https://api.typesafe.ai/v1/systemone"
 const MODEL := "jev-latest"
-## Below this, Jev is not sure enough to overrule the game.
-const CONFIDENCE_FLOOR := 0.55
 ## One request in flight, and no more often than this.
 const MIN_INTERVAL := 0.5
 const TIMEOUT := 4.0
@@ -40,6 +38,7 @@ var http: HTTPRequest
 var decisions := {}
 var pending := ""
 var pending_options: Array = []
+var pending_floor := HARMLESS
 var cooldown := 0.0
 ## Counters the check suite and the HUD read; no behaviour depends on them.
 var requests := 0
@@ -87,7 +86,7 @@ func _ids(options: Array) -> PackedStringArray:
 	for option in options: ids.append(str(option.get("id", "")))
 	return ids
 
-func choose(topic: String, question: String, options: Array, state: Dictionary, fallback: int) -> int:
+func choose(topic: String, question: String, options: Array, state: Dictionary, fallback: int, floor: float = HARMLESS) -> int:
 	if not live() or options.is_empty(): return fallback
 	var ids := _ids(options)
 	var cache_key := signature(topic, state) + "#" + "+".join(ids)
@@ -96,14 +95,15 @@ func choose(topic: String, question: String, options: Array, state: Dictionary, 
 		# The option list can change between moments; an index that no longer
 		# addresses the same thing is worth nothing.
 		if remembered >= 0 and remembered < options.size(): return remembered
-	_ask(cache_key, topic, question, options, state)
+	_ask(cache_key, topic, question, options, state, floor)
 	return fallback
 
 ## Queues one question. Returns quietly when another is in flight -- the moment
 ## has passed by the time an answer could arrive, and the next one like it will
 ## be served from the cache.
-func _ask(cache_key: String, topic: String, question: String, options: Array, state: Dictionary) -> void:
+func _ask(cache_key: String, topic: String, question: String, options: Array, state: Dictionary, floor: float = HARMLESS) -> void:
 	if not pending.is_empty() or cooldown > 0.0: return
+	pending_floor = floor
 	var criteria := {}
 	for option in options: criteria[str(option.get("id", ""))] = str(option.get("info", ""))
 	var body := {
@@ -136,9 +136,10 @@ func _on_answer(result: int, code: int, _headers: PackedStringArray, body: Packe
 		last_error = "body was not an object"
 		discards += 1
 		return
-	# The answer map is returned either bare or under "answers"; take whichever
-	# is there, and take the single question back out of it by position, since
-	# this only ever asks one.
+	# The API returns {model, answers, usage} with answers keyed by the question
+	# ids sent. Reading a bare map too costs one expression and means a body
+	# that arrives unwrapped is still understood. The single question is taken
+	# back out by position, since this only ever asks one.
 	var answer_map = parsed.get("answers", parsed)
 	if not answer_map is Dictionary or answer_map.is_empty():
 		last_error = "no answers in body"
@@ -149,9 +150,12 @@ func _on_answer(result: int, code: int, _headers: PackedStringArray, body: Packe
 		last_error = "answer was not an object"
 		discards += 1
 		return
-	if float(answer.get("confidence", 0.0)) < CONFIDENCE_FLOOR:
-		# Not an error: Jev saying it is unsure is a useful answer, and the
-		# game's own decision is what a shrug should leave standing.
+	# Choice and Score answers carry a confidence derived from the probability
+	# distribution; below the floor the model is saying none of the options is a
+	# clear winner, and the game's own decision is what that should leave
+	# standing. It is not an error -- an honest "I am not sure" is a useful
+	# answer, and the floor scales with what the question decides.
+	if float(answer.get("confidence", 0.0)) < pending_floor:
 		discards += 1
 		return
 	var picked := str(answer.get("choice", ""))

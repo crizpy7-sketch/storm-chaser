@@ -162,7 +162,10 @@ func _speak(cues: Dictionary) -> void:
 		if a_fresh != b_fresh:
 			if a_fresh: best = i
 		elif int(a.rank) > int(b.rank): best = i
-	var picked: int = game.advisor.choose("mateo_line", "Mateo is the co-driver filming this storm chase and can say one thing right now. Which of his recorded lines best fits this moment for the child driving?", candidates, _moment(cues), best)
+	# HARMLESS: the worst outcome here is a slightly less apt line, once every
+	# thirteen seconds. When two lines are both good the probabilities spread
+	# and confidence falls, and that is the moment the question was worth asking.
+	var picked: int = game.advisor.choose("mateo_line", "Mateo is the co-driver filming this storm chase and can say one thing right now. Which of his recorded lines best fits this moment for the child driving?", candidates, _moment(cues), best, game.Advisor.HARMLESS)
 	if picked < 0 or picked >= candidates.size(): picked = best
 	var line: Dictionary = candidates[picked]
 	if not game.say_mateo(str(line.id), str(line.caption)): return

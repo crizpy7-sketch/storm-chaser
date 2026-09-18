@@ -22,10 +22,12 @@ class StubAdvisor extends "res://scripts/advisor.gd":
 	var seen_options: Array = []
 	var seen_state := {}
 	var seen_topic := ""
-	func choose(topic: String, _question: String, options: Array, state: Dictionary, fallback: int) -> int:
+	var seen_floor := -1.0
+	func choose(topic: String, _question: String, options: Array, state: Dictionary, fallback: int, floor: float = HARMLESS) -> int:
 		seen_topic = topic
 		seen_options = options.duplicate(true)
 		seen_state = state.duplicate(true)
+		seen_floor = floor
 		return forced if forced >= 0 else fallback
 
 func _initialize() -> void: call_deferred("run")
@@ -116,6 +118,21 @@ func run() -> void:
 	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.91))
 	check(jev.choose("mateo_line", "q", options(["mateo_dodge"]), moment, 0) == 0, "a remembered answer is dropped when the options are no longer the same list")
 
+	# The floor scales with what the question decides, so it travels with the
+	# question rather than being one number for the whole game.
+	jev.decisions.clear()
+	jev.pending_floor = Advisor.HARMLESS
+	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52))
+	check(jev.choose("mateo_line", "q", three, moment, 1) == 0,
+		"a spread distribution between several acceptable options is still used for a harmless choice")
+	jev.decisions.clear()
+	jev.pending_floor = 0.9
+	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52))
+	check(jev.decisions.is_empty() and jev.choose("mateo_line", "q", three, moment, 1) == 1,
+		"the same answer is refused when the question carries a higher floor")
+	jev.pending_floor = Advisor.HARMLESS
+	check(Advisor.new().choose("t", "q", three, moment, 2, 0.99) == 2, "the local advisor ignores the floor, having nothing to be unsure about")
+
 	var before_requests: int = jev.requests
 	jev.pending = "something in flight"
 	jev._ask("another", "mateo_line", "q", three, moment)
@@ -183,6 +200,7 @@ func run() -> void:
 	var identifying := ["name", "player", "user", "email", "id", "run_id", "key"]
 	check(identifying.all(func(field): return not stub.seen_state.has(field)), "the moment sent out carries no identity of any kind")
 	check(stub.seen_state.has("hull") and stub.seen_state.has("dodge_combo") and stub.seen_state.has("level"), "it carries the run's own numbers, which is all it carries")
+	check(is_equal_approx(stub.seen_floor, Advisor.HARMLESS), "Mateo's line is asked at the harmless floor, because that is what being wrong costs")
 
 	game.mateo_cooldown = 0.0
 	mateo.said.clear()

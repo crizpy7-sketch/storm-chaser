@@ -18,13 +18,24 @@ extends RefCounted
 ##    word, name a part or invent an event. An answer that is not one of the
 ##    options offered is discarded.
 
+## How certain an answer must be before it is allowed to overrule the game.
+##
+## A threshold is not one number: it scales with what being wrong costs, and
+## this is the floor for a decision whose worst outcome the player would not
+## notice. It is deliberately low, because a spread distribution usually means
+## several options were *acceptable* rather than that the answer was bad, and
+## discarding those would throw the answer away in exactly the case the question
+## was worth asking -- the tie. A decision that changes difficulty or progress
+## belongs at a higher floor, passed per call.
+const HARMLESS := 0.5
+
 ## The game's own answer, possibly improved.
 ##
 ## `options` is an Array of Dictionaries carrying an "id" and an "info" that
 ## describes when that option is the right one. `state` describes the moment.
 ## `fallback` is what the game decided by itself, and is what is returned unless
-## an implementation is both available and confident.
-func choose(_topic: String, _question: String, _options: Array, _state: Dictionary, fallback: int) -> int:
+## an implementation is available and at least `floor` certain.
+func choose(_topic: String, _question: String, _options: Array, _state: Dictionary, fallback: int, _floor: float = HARMLESS) -> int:
 	return fallback
 
 ## Called once a frame by the game so an implementation can retire stale work.
