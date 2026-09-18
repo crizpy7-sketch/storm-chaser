@@ -2,9 +2,8 @@
 
 Storm Chaser can ask [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev),
 TypeSafe AI's System One model, to make some of the judgement calls the game
-makes about a moment. Today that is one call: **which of Mateo's recorded lines
-he says next.** The Storm Director — hazard pacing — is designed for and not
-built.
+makes about a moment. There are two: **which of Mateo's recorded lines he says
+next**, and **the Storm Director** — how hard the next wave of debris presses.
 
 It is off unless a key is in the environment. There is no key in this
 repository, and none in any build.
@@ -81,6 +80,37 @@ If you want the link on a machine you do not control, the answer is the same
 small server Phase 5's `CareerStore` already anticipates: the game talks to your
 server, your server holds the key.
 
+## The Storm Director
+
+Before every wave of debris, the game picks one of three pacing bands and the
+Director may re-rank that choice:
+
+| Band | Space between waves | How fast debris flies at you |
+|---|---|---|
+| `ease` | ×1.18 | ×0.80 |
+| `hold` | ×1.0 — the shipped tune | ×1.0 |
+| `press` | ×0.86 | ×1.15 |
+
+Those are the same two levers the **EXTRA REACTION TIME** setting already moves,
+by about as much, so every band is a pace this game is known to play well at.
+`press` is the milder of the two, because making a ten-year-old's game harder
+deserves more caution than making it easier.
+
+**`hold` is always the fallback**, so a game with no storm link is not merely
+close to the shipped campaign, it is bit-for-bit that campaign — which is what
+the 710 checks run against. `verify_advisor` measures both levers in the running
+game rather than reading them off the constants, and asserts each band moves
+them by exactly what it declares.
+
+One rule lives in the game rather than in the question: **the Director never
+presses against EXTRA REACTION TIME.** Somebody switched that on having decided
+this player needs more room; the Director may ease further, never crowd. Policy
+stays in code, so it holds however the answer comes back.
+
+It is asked at `Advisor.CONSEQUENTIAL` (0.75) rather than `HARMLESS`, because
+the player feels this one. Refusing to act is always safe: the fallback is the
+tune the game shipped with.
+
 ## Confidence, and why the bar is low
 
 Choice answers carry a `confidence` derived from the probability distribution
@@ -97,9 +127,12 @@ belongs at a higher floor, passed per call.
 
 ## What it costs to be wrong
 
-Nothing that cannot be turned off in one toggle. The worst case is Mateo picking
-a less apt line than the game would have, thirteen seconds apart, with the
-opening line still guaranteed and the flying cow still winning ties.
+Nothing that cannot be turned off in one toggle. For Mateo, the worst case is a
+less apt line than the game would have picked, thirteen seconds apart, with the
+opening line still guaranteed and the flying cow still winning ties. For the
+Director, it is one wave of debris paced as if the run were going better or
+worse than it is — inside a range the game already ships as an accessibility
+setting, never against that setting, and reconsidered at the very next wave.
 
 ## What is not done
 
@@ -109,11 +142,22 @@ opening line still guaranteed and the flying cow still winning ties.
   the same rules, and it is the one with real engagement upside. It touches what
   the campaign suites guard, so it is its own piece of work.
 
-  One thing worth knowing before building it: **independent questions over the
-  same state go in one request and are answered in parallel**, so the Director's
-  judgement and Mateo's line can share a round trip rather than costing two.
-  `Score`, the third primitive, is the right shape for "how is this run going" —
-  a probability-weighted position on ordered levels you describe.
+  **Not done, and it matters:** the two questions are asked separately, and one
+  request is in flight at a time. The Director asks every wave, roughly twice a
+  second at pace; Mateo asks at most once every thirteen. So the Director wins
+  the slot almost every time and Mateo's question is usually dropped, falling
+  back to the game's own choice. The fix is the one the docs point at —
+  **independent questions over the same state go in one request and are answered
+  in parallel** — which means batching both into a single call rather than
+  racing them. Until that is built, the line selection is mostly running local.
+
+  On `Score`: an earlier note here called it the right primitive for the
+  Director. It is not, and `Choice` is. What the game needs is a bounded action
+  — one of three bands it knows how to play — and `Choice` returns the
+  distribution over exactly those actions. `Score` would give a continuous
+  reading of how the run is going that the game would then have to threshold
+  itself, which is a second policy to tune for no gain here. It would earn its
+  place if that reading were wanted for something else too.
 - **Nobody has played this with a live key.** The request and response shapes
   were checked field by field against TypeSafe's published API reference — the
   `{state, model, questions}` body, the choice question's `criteria` map, and the

@@ -13,6 +13,27 @@ const DEBRIS_BASE_RATE: = 0.2
 const DEBRIS_SPEED_RATE: = 0.0024
 const STAGE_NAMES: = ["PRAIRIE APPROACH", "BARN BREAKOUT", "WAREHOUSE COLLAPSE", "CROSSWIND CURVES", "DIRT SHORTCUT", "RIDGELINE JUMPS", "WILD HILLS", "VORTEX RUN"]
 const DEBRIS_MULTIPLIERS: = [1.0, 1.16, 1.32, 1.20, 1.10, 1.12, 1.20, 1.08]
+## The pacing the Storm Director chooses between before each wave of debris.
+##
+## Every band is a pace this game already plays at. HOLD is today's tune to the
+## last decimal and is always the fallback, so with no storm link the campaign
+## is byte-identical to the one that shipped. The other two move the same two
+## levers EXTRA REACTION TIME already moves, and by about as much: the space
+## between waves, and how fast the debris flies at the driver, which is how long
+## they get to read it. That is a range this game is known to play well at.
+## PRESS is the milder of the two, because making a ten-year-old's game harder
+## deserves more caution than making it easier.
+##
+## "info" is what the Director is shown. It describes when a band is right, and
+## is never displayed to anyone.
+const DIRECTOR_BANDS: = [
+	{"id": "ease", "gap": 1.18, "approach": 0.80,
+		"info": "The driver is struggling: taking hits, low on hull, or has just lost a run. Give them more space between waves and more time to read each one."},
+	{"id": "hold", "gap": 1.0, "approach": 1.0,
+		"info": "The chase is going as intended -- some pressure, some success. Change nothing. Correct whenever the run is unremarkable or hard to read."},
+	{"id": "press", "gap": 0.86, "approach": 1.15,
+		"info": "The driver is cruising: clean, fast, stringing dodges together and taking no damage. Close the gap between waves and send the debris in faster, so the chase stays exciting."},
+]
 const SAVE_PATH: = "user://storm_chaser.cfg"
 const Media := preload("res://scripts/media.gd")
 const STORM_FILM := "res://assets/cinematics/storm-film.ogv"
@@ -32,6 +53,8 @@ var stage: = 0
 var stage_seen: = 0
 ## How many SAVE_SPAN boundaries have been marked this run.
 var saves_marked: = 0
+## The pacing band in force. Always "hold" unless a storm link is up and sure.
+var director_band: = "hold"
 ## What `hits` stood at when the current level began, so IRON HULL can ask
 ## whether a whole level went by without one. Carried in the snapshot, because
 ## a resumed run must not be able to claim a level it only half drove.
@@ -466,7 +489,7 @@ func start_chase(clear_checkpoint: bool = true) -> void :
 	speed = 112.0;powertrain.reset(speed);distance = 900.0;health = 100.0;boost = 100.0;boost_max = 100.0
 	boosting = false;braking = false;turbo_fx = 0.0;near_pulse = 0.0;near_side = 1.0
 	demo_boost_latched = false
-	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0;stage_entry_hits = 0
+	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0;stage_entry_hits = 0;director_band = "hold"
 	invulnerable = 0.0;flash = 0.0;shake = 0.0;tires = 1.0
 	spawn_timer = 0.85;pickup_timer = 7.0;thunder_timer = 6.0;boost_locked = false
 	debris.clear();effects.clear();_clear_touch()
@@ -785,8 +808,9 @@ func _simulate(dt: float) -> void :
 	else: score += dt * 5.0
 	spawn_timer -= dt
 	if spawn_timer <= 0.0 and not is_breathing():
+		_choose_pacing()
 		_spawn_wave()
-		spawn_timer = (rng.randf_range(1.50, 1.90) if route.active else rng.randf_range(1.22, 1.52) - stage * 0.10) * (1.18 if relaxed_hazards else 1.0)
+		spawn_timer = (rng.randf_range(1.50, 1.90) if route.active else rng.randf_range(1.22, 1.52) - stage * 0.10) * (1.18 if relaxed_hazards else 1.0) * director_gap()
 	pickup_timer -= dt
 	if pickup_timer <= 0.0:
 		_spawn_item(4, rng.randf_range(-0.8, 0.8))
@@ -1019,8 +1043,57 @@ func _spawn_wave() -> void :
 		var second: = first + 1 if first < 3 else 2
 		_spawn_item(rng.randi_range(0, 3), lanes[second], -0.06)
 
+## The band in force, by id. An unknown id is HOLD, so nothing outside this
+## list can change the pace.
+func director_pacing() -> Dictionary:
+	for band in DIRECTOR_BANDS:
+		if str(band.id) == director_band: return band
+	return DIRECTOR_BANDS[1]
+
+## How much longer the gap between waves is. 1.0 is the shipped game.
+func director_gap() -> float:
+	return float(director_pacing().gap)
+
+## How much faster debris flies at the driver, which is how long they get to
+## read it. 1.0 is the shipped game.
+func director_approach() -> float:
+	return float(director_pacing().approach)
+
+## Chooses the pacing for the wave about to spawn.
+##
+## The fallback is always HOLD, which is the tune the game shipped with, so an
+## advisor that is absent, offline, slow or unsure leaves the campaign exactly
+## as it was -- and that is what every check suite runs against.
+func _choose_pacing() -> void:
+	var hold: = 1
+	var picked: int = advisor.choose("storm_pacing", "A ten-year-old is driving a storm chase. Given how this run is going, should the next wave of flying debris ease off, hold as it is, or press them a little harder?", DIRECTOR_BANDS, _pacing_state(), hold, Advisor.CONSEQUENTIAL)
+	if picked < 0 or picked >= DIRECTOR_BANDS.size(): picked = hold
+	# EXTRA REACTION TIME is switched on deliberately, by someone who decided
+	# this player needs more room. The Director may ease further; it never
+	# presses against that decision. Policy stays here in the game, not in the
+	# question, so it holds however the answer comes back.
+	if relaxed_hazards and str(DIRECTOR_BANDS[picked].id) == "press": picked = hold
+	director_band = str(DIRECTOR_BANDS[picked].id)
+
+## How the run is going, in numbers the game already keeps. No identity of any
+## kind, and nothing the player typed.
+func _pacing_state() -> Dictionary:
+	return {
+		"hull": int(health),
+		"level": stage + 1,
+		"seconds_in": int(elapsed),
+		"speed_mph": int(speed),
+		"hits_taken": hits,
+		"hits_this_level": maxi(0, hits - stage_entry_hits),
+		"near_misses": near_misses,
+		"dodge_combo": combo,
+		"probes_sent": probes,
+		"resumed_after_a_crash": checkpoint_retry,
+		"extra_reaction_time_on": relaxed_hazards,
+	}
+
 func debris_rate() -> float:
-	return (DEBRIS_BASE_RATE + speed * DEBRIS_SPEED_RATE) * DEBRIS_MULTIPLIERS[stage] * (0.78 if relaxed_hazards else 1.0)
+	return (DEBRIS_BASE_RATE + speed * DEBRIS_SPEED_RATE) * DEBRIS_MULTIPLIERS[stage] * (0.78 if relaxed_hazards else 1.0) * director_approach()
 
 func _shed_semi_roof(piece: Dictionary) -> void:
 	if piece.get("shed",false):return

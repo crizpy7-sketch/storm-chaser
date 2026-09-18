@@ -29,6 +29,12 @@ extends RefCounted
 ## belongs at a higher floor, passed per call.
 const HARMLESS := 0.5
 
+## The floor for a decision the player would feel. Getting this one wrong means
+## a harder game for a child who may already be struggling, so it takes a clear
+## read rather than a lean. Refusing to act is always safe here, because the
+## fallback is the tune the game already shipped.
+const CONSEQUENTIAL := 0.75
+
 ## The game's own answer, possibly improved.
 ##
 ## `options` is an Array of Dictionaries carrying an "id" and an "info" that

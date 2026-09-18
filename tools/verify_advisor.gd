@@ -54,6 +54,35 @@ func deliver(jev, cache_key: String, ids: Array, body: PackedByteArray, code: in
 	jev.pending_options = PackedStringArray(ids)
 	jev._on_answer(result, code, PackedStringArray(), body)
 
+## Spawns exactly one wave at a forced pacing band and returns the gap the game
+## sets before the next one. The rng is reseeded per call and the reset draws
+## one number, so two calls differ only by the band.
+func gap_after(band_index: int) -> float:
+	var pacer := StubAdvisor.new()
+	pacer.forced = band_index
+	game.advisor = pacer
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	game.rng.seed = 90210
+	# A middle stage, at a moment that is not one of the calm stretches, since
+	# those suppress spawning entirely.
+	game.stage = 2; game.stage_seen = 2; game.elapsed = 2.0 * game.STAGE_LENGTH + 20.0
+	game.route.enter(2); game.speed = game.CRUISE_SPEEDS[2]; game.powertrain.reset(game.speed)
+	game.world.reset_motion()
+	game.invulnerable = 999.0
+	game.spawn_timer = 0.0
+	game._simulate(1.0 / 60.0)
+	return game.spawn_timer
+
+## How fast debris flies at the driver under a forced band, at a fixed speed.
+func approach_at(band_index: int) -> float:
+	var pacer := StubAdvisor.new()
+	pacer.forced = band_index
+	game.advisor = pacer
+	game.stage = 2; game.speed = game.CRUISE_SPEEDS[2]
+	game._choose_pacing()
+	return game.debris_rate()
+
 func run() -> void:
 	if not MediaPack.media_complete(): MediaPack.stand_in_film = "res://tools/test_media/stand_in_film.ogv"
 
@@ -207,6 +236,85 @@ func run() -> void:
 	mateo._speak({"near_miss": false, "intro": true, "cow": false})
 	check(game.mateo_caption.begins_with("Keep it steady"), "the opening line is still spoken at the start of a chase")
 	check(mateo.intro_spoken, "and is not repeated")
+
+	# --- the Storm Director ------------------------------------------------------------
+	# The whole point of the fallback: with nothing behind the seam, the pace is
+	# the one the game shipped with, to the last decimal.
+	game.advisor = Advisor.new()
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	check(game.director_band == "hold", "a chase starts at the shipped pace")
+	game._choose_pacing()
+	check(game.director_band == "hold" and game.director_gap() == 1.0 and game.director_approach() == 1.0,
+		"with no storm link the Director changes neither the gap nor the approach, at all")
+	var ids: Array = game.DIRECTOR_BANDS.map(func(b): return str(b.id))
+	check(ids == ["ease", "hold", "press"], "the three bands are the ones the game knows how to play at")
+	check(game.DIRECTOR_BANDS[1].gap == 1.0 and game.DIRECTOR_BANDS[1].approach == 1.0, "HOLD is exactly the shipped tune")
+	check(game.DIRECTOR_BANDS[0].gap > 1.0 and game.DIRECTOR_BANDS[0].approach < 1.0, "EASE widens the gap and slows the debris down")
+	check(game.DIRECTOR_BANDS[2].gap < 1.0 and game.DIRECTOR_BANDS[2].approach > 1.0, "PRESS narrows the gap and speeds the debris up")
+	check(absf(1.0 - game.DIRECTOR_BANDS[2].gap) < absf(game.DIRECTOR_BANDS[0].gap - 1.0),
+		"PRESS is the milder of the two, because making a child's game harder deserves more caution")
+
+	var pacer := StubAdvisor.new()
+	game.advisor = pacer
+	pacer.forced = 2
+	game.relaxed_hazards = false
+	game._choose_pacing()
+	check(game.director_band == "press" and game.director_approach() > 1.0, "a confident advisor can crowd a driver who is cruising")
+	pacer.forced = 0
+	game._choose_pacing()
+	check(game.director_band == "ease" and game.director_gap() > 1.0, "and give room to one who is struggling")
+	check(is_equal_approx(pacer.seen_floor, Advisor.CONSEQUENTIAL) and Advisor.CONSEQUENTIAL > Advisor.HARMLESS,
+		"pacing is asked at a higher floor than a line of dialogue, because the player feels it")
+
+	# EXTRA REACTION TIME is somebody's deliberate decision about this player.
+	game.relaxed_hazards = true
+	pacer.forced = 2
+	game._choose_pacing()
+	check(game.director_band == "hold", "the Director never presses against EXTRA REACTION TIME")
+	pacer.forced = 0
+	game._choose_pacing()
+	check(game.director_band == "ease", "but may still ease further with it on")
+	game.relaxed_hazards = false
+
+	pacer.forced = 99
+	game._choose_pacing()
+	check(game.director_band == "hold", "an answer off the end of the list leaves the shipped pace")
+	game.director_band = "nonsense_band"
+	check(game.director_gap() == 1.0 and game.director_approach() == 1.0, "and a band the game does not know is the shipped pace too")
+	pacer.forced = -1
+	game._choose_pacing()
+
+	var pacing_identity := ["name", "player", "user", "email", "id", "run_id", "key", "score"]
+	check(pacing_identity.all(func(field): return not pacer.seen_state.has(field)), "the pacing question carries no identity either")
+	check(pacer.seen_state.has("hull") and pacer.seen_state.has("hits_this_level") and pacer.seen_state.has("extra_reaction_time_on"),
+		"it carries how the run is going, including whether the player already asked for more room")
+	# Measured in the running game rather than read off the constants: a band
+	# has to reach the two levers, not just differ in a dictionary.
+	var gap_eased: float = gap_after(0)
+	var gap_held: float = gap_after(1)
+	var gap_pressed: float = gap_after(2)
+	print("PACING GAP  eased=", gap_eased, "  held=", gap_held, "  pressed=", gap_pressed)
+	check(gap_pressed < gap_held and gap_held < gap_eased, "PRESS really does leave less room before the next wave than HOLD, and HOLD less than EASE")
+	check(is_equal_approx(gap_eased / gap_held, float(game.DIRECTOR_BANDS[0].gap)) and is_equal_approx(gap_pressed / gap_held, float(game.DIRECTOR_BANDS[2].gap)),
+		"and by exactly the amount each band declares")
+
+	var rate_eased: float = approach_at(0)
+	var rate_held: float = approach_at(1)
+	var rate_pressed: float = approach_at(2)
+	print("PACING APPROACH  eased=", rate_eased, "  held=", rate_held, "  pressed=", rate_pressed)
+	check(rate_pressed > rate_held and rate_held > rate_eased, "PRESS sends the debris in faster, which is less time to read it, and EASE slower")
+	check(is_equal_approx(rate_eased / rate_held, float(game.DIRECTOR_BANDS[0].approach)) and is_equal_approx(rate_pressed / rate_held, float(game.DIRECTOR_BANDS[2].approach)),
+		"again by exactly what the band declares")
+
+	# The gate for the whole feature: unlinked is not merely close to HOLD, it is HOLD.
+	game.advisor = Advisor.new()
+	game.stage = 2; game.speed = game.CRUISE_SPEEDS[2]
+	game._choose_pacing()
+	var rate_unlinked: float = game.debris_rate()
+	var gap_unlinked: float = gap_after(1)
+	game.advisor = Advisor.new()
+	check(rate_unlinked == rate_held and is_equal_approx(gap_unlinked, gap_held), "a game with no storm link is bit-for-bit the game HOLD plays")
 
 	print("ADVISOR_TESTS ", checks, " checks; ", failures, " failures")
 	game.queue_free()
