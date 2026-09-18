@@ -168,7 +168,35 @@ health band. **Tune the grant, never the assertion.**
 non-decreasing order. Then **play it** — 12 minutes is the first time anyone
 feels whether level 3 drags.
 
-## Phase 5 — Career wallet (read-only, VPS-ready)
+## Phase 5 — Career wallet (read-only, VPS-ready) — DONE
+
+Shipped. Every run now banks its DATA, win or lose, and the wallet shows on the
+debrief and the base menu. Nothing spends it yet; that is Phase 6.
+
+All career reads and writes go through `scripts/career_store.gd`, whose local
+implementation keeps the `[career]` section in the same cfg. The store writes
+**after** `save_settings()` has replaced the file, loading it back first — which
+is what survives the fresh-ConfigFile trap this plan warned about, structurally
+rather than by remembering to add six `set_value` lines. `verify_career` proves
+it by deleting that write and watching four checks fail.
+
+A store returns an **empty** dictionary when no career has ever been stored,
+which is deliberately not the same as a career of zero: that is the signal a
+v0.18 save is being opened, and `_seed_career()` turns it into `banked = best`
+plus every non-stock part in the saved loadout. A career that has been *spent*
+down to zero is not re-seeded, because it is present.
+
+The farming exploit is closed by banking the **difference**: `last_run` and
+`last_amount` make a resumed run bank only what it beat itself by, mirroring the
+per-`run_id` rule `_record_score()` already applies to the scoreboard. The suite
+drives the real path — finish, `retry_checkpoint()`, finish again — rather than
+asserting on the helper.
+
+`banked` and `earned` are separate from `best` and `high_scores`, which banking
+never touches. Thirty-eight checks added (609 total across seventeen suites);
+each of the three guards was proven to fail against its bug reintroduced.
+
+### Original notes
 
 ```ini
 [career]

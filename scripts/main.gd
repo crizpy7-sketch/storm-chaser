@@ -17,6 +17,8 @@ const SAVE_PATH: = "user://storm_chaser.cfg"
 const Media := preload("res://scripts/media.gd")
 const STORM_FILM := "res://assets/cinematics/storm-film.ogv"
 const Loadout := preload("res://scripts/loadout.gd")
+const CareerStore := preload("res://scripts/career_store.gd")
+const CareerStoreLocal := preload("res://scripts/career_store_local.gd")
 const CHECKPOINT_FOOTAGE: = [1, 2, 3, 4, 5, 6, 7]
 const FINALE_FOOTAGE := 8
 var settings_path: = SAVE_PATH
@@ -170,6 +172,14 @@ var pause_resume_mode := Mode.RUNNING
 ## Mateo Garage loadout (cosmetic slots plus the optional chase setup).
 var loadout: Dictionary = Loadout.default_loadout()
 var garage: Control
+## The career: a spendable DATA balance, a lifetime total that only ever grows,
+## the parts owned and the badges earned. Nothing spends it yet -- this version
+## only fills the wallet -- but every run from here on is being banked.
+var career: Dictionary = CareerStore.blank()
+## Swap this for another implementation and the career lives somewhere else.
+var career_store = CareerStoreLocal.new(SAVE_PATH)
+## What the last finished run added, for the debrief line. Not persisted.
+var banked_this_run: = 0
 
 func _ready() -> void :
 	contacts.game=self
@@ -314,6 +324,8 @@ func play_sound(key: String) -> void :
 func _load_settings() -> void :
 	var config: = ConfigFile.new()
 	high_scores.clear();checkpoint.clear()
+	career = CareerStore.blank()
+	career_store.rebind(settings_path)
 	if config.load(settings_path) == OK:
 		best = int(config.get_value("records", "best", 0))
 		muted = bool(config.get_value("settings", "muted", false))
@@ -343,6 +355,22 @@ func _load_settings() -> void :
 			# A previous version checkpoint proves the earlier landmarks were reached.
 			for reached in CHECKPOINT_FOOTAGE:
 				if reached <= int(saved.stage) and reached not in footage_unlocked: footage_unlocked.append(reached)
+		# Read last: a save with no career at all is seeded from the rest of it.
+		var stored: Dictionary = career_store.read()
+		career = stored if not stored.is_empty() else _seed_career()
+
+## A save from before the wallet existed has no career. Seeding one is not a
+## formality: without it the child opens the garage and finds the parts they
+## are currently driving locked. Their best run becomes their opening balance,
+## which makes the wallet's first appearance a reward rather than a zero.
+func _seed_career() -> Dictionary:
+	var seeded: Dictionary = CareerStore.blank()
+	seeded.banked = maxi(0, best)
+	seeded.earned = maxi(0, best)
+	for slot in Loadout.SLOTS:
+		var id: = str(loadout.get(slot, "stock"))
+		if id != "stock": seeded.owned.append(slot + ":" + id)
+	return seeded
 
 func save_settings() -> void :
 	if not save_enabled: return
@@ -361,6 +389,11 @@ func save_settings() -> void :
 	config.set_value("settings", "auto_dodges", auto_dodges)
 	config.set_value("garage", "loadout", loadout)
 	config.save(settings_path)
+	# Written last, and through the store rather than into the ConfigFile above,
+	# because that one is built fresh every time: a key it does not set is gone.
+	# The store loads the file back before adding its own section.
+	career_store.rebind(settings_path)
+	career_store.write(career)
 
 func toggle_sound() -> void :
 	muted = not muted
@@ -1119,6 +1152,7 @@ func finish(won: bool, reason: String, after_crash: bool = false) -> void :
 	if won: score += health * 20.0
 	best = maxi(best, int(score))
 	_record_score(won)
+	_bank_run()
 	if won: checkpoint.clear()
 	save_settings()
 	_clear_touch()
@@ -1194,6 +1228,24 @@ func _record_score(won: bool) -> void :
 	high_scores.sort_custom( func(a, b): return a.score > b.score)
 	high_scores = high_scores.slice(0, 5)
 
+
+## Banks the run's DATA, win or lose, so a run that ends badly still pays for
+## something. It banks the difference rather than the total, which is what
+## closes the obvious exploit: bank, crash, retry_checkpoint() -- which restores
+## score -- and finish again. That is the same per-run_id rule _record_score()
+## already applies to the scoreboard: one run counts once, at its best.
+##
+## banked is the wallet and will shrink when there is something to spend it on.
+## earned is the lifetime total and never decreases, so buying a part can never
+## take a badge away or make the scoreboard look worse.
+func _bank_run() -> void:
+	var total: = maxi(0, int(score))
+	var already: int = int(career.last_amount) if str(career.last_run) == run_id else 0
+	banked_this_run = maxi(0, total - already)
+	career.banked = int(career.banked) + banked_this_run
+	career.earned = int(career.earned) + banked_this_run
+	career.last_run = run_id
+	career.last_amount = maxi(already, total)
 
 func is_breathing() -> bool:
 	if stage == 7 and route.orbit_progress() > 0.92: return true

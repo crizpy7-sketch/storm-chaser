@@ -37,6 +37,17 @@ func style(fill: Color, border: Color, radius: int = 8) -> StyleBoxFlat:
 func text_at(text: String, x: float, y: float, font_size: int = 16, color: Color = WHITE, font: Font = BODY) -> void :
 	draw_string(font, Vector2(x, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
+## DATA amounts in the wallet run to six figures, where 128450 is a number you
+## have to read twice and 128,450 is one you can say out loud. The score itself
+## keeps its zero-padded %06d telemetry look; this is for money.
+static func data_amount(value: int) -> String:
+	var digits: = str(absi(value))
+	var grouped: = ""
+	for i in range(digits.length()):
+		if i > 0 and (digits.length() - i) % 3 == 0: grouped += ","
+		grouped += digits[i]
+	return ("-" if value < 0 else "") + grouped
+
 func centered(text: String, x: float, y: float, font_size: int = 16, color: Color = WHITE, font: Font = BODY) -> void :
 	var width: = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	text_at(text, x - width * 0.5, y, font_size, color, font)
@@ -199,6 +210,7 @@ func _draw_menu() -> void :
 			if str(row.get("setup", "stock")) != "stock": run_label += " / " + game.Loadout.option("setup", str(row.setup)).name
 			text_at(run_label, 1147, y + 9, 8, MUTED, MONO)
 	text_at("BEST DATA   %06d" % game.best, 974, 617, 13, AMBER, MONO)
+	text_at("WALLET   %s DATA" % data_amount(int(game.career.banked)), 974, 641, 11, MINT, MONO)
 	var look: String = "STOCK LOOK" if game.Loadout.is_stock_look(game.loadout) else "CUSTOM LOOK"
 	panel(Rect2(1030, 526, 208, 24), Color(0.02, 0.045, 0.052, 0.82))
 	centered(look + "  /  " + game.Loadout.setup_name(game.loadout) + " SETUP", 1134, 542, 10, MINT if look == "CUSTOM LOOK" else MUTED, MONO)
@@ -357,10 +369,14 @@ func _draw_results() -> void :
 	centered("%06d" % int(game.score), 640, 402, 52, AMBER, MONO)
 	centered("FIELD DATA COLLECTED", 640, 427, 11, MUTED, MONO)
 	centered("PROBES %02d   /   NEAR MISSES %02d   /   HULL %03d%%" % [game.probes, game.near_misses, int(game.health)], 640, 461, 12, WHITE, MONO)
+	# Above the buttons, which start at y 489. A resumed run that did not beat
+	# itself banks nothing, and says so rather than printing a cheerful +0.
+	var banked: String = "+%s DATA BANKED" % data_amount(game.banked_this_run) if game.banked_this_run > 0 else "NO NEW DATA BANKED"
+	centered(banked, 640, 479, 11, MINT if game.banked_this_run > 0 else MUTED, MONO)
 	if game.can_retry_checkpoint():
 		centered("RETRY RESTORES LEVEL %02d / %06d DATA / %02d PROBES" % [int(game.checkpoint.stage) + 1, int(game.checkpoint.score), int(game.checkpoint.probes)], 640, 565, 10, MINT, MONO)
 	var setup_label: String = "" if str(game.loadout.get("setup", "stock")) == "stock" else game.Loadout.setup_name(game.loadout) + " SETUP  /  "
-	centered(("ASSISTED CHASE  /  " if game.run_assisted else "") + setup_label + "PERSONAL BEST   %06d" % game.best, 640, 591, 11, MUTED, MONO)
+	centered(("ASSISTED CHASE  /  " if game.run_assisted else "") + setup_label + "PERSONAL BEST   %06d" % game.best + "  /  WALLET   %s DATA" % data_amount(int(game.career.banked)), 640, 591, 11, MUTED, MONO)
 
 
 func open_settings() -> void:
