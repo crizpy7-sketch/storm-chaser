@@ -30,6 +30,10 @@ var stage: = 0
 var stage_seen: = 0
 ## How many SAVE_SPAN boundaries have been marked this run.
 var saves_marked: = 0
+## What `hits` stood at when the current level began, so IRON HULL can ask
+## whether a whole level went by without one. Carried in the snapshot, because
+## a resumed run must not be able to claim a level it only half drove.
+var stage_entry_hits: = 0
 var player_x: = 0.0
 var steer: = 0.0
 ## The steering column itself. Raw input is a demand; a loaded truck's wheel
@@ -358,6 +362,7 @@ func _load_settings() -> void :
 		# Read last: a save with no career at all is seeded from the rest of it.
 		var stored: Dictionary = career_store.read()
 		career = stored if not stored.is_empty() else _seed_career()
+		loadout = Loadout.owned_only(loadout, career.owned, career.badges)
 
 ## A save from before the wallet existed has no career. Seeding one is not a
 ## formality: without it the child opens the garage and finds the parts they
@@ -449,7 +454,7 @@ func start_chase(clear_checkpoint: bool = true) -> void :
 	speed = 112.0;powertrain.reset(speed);distance = 900.0;health = 100.0;boost = 100.0;boost_max = 100.0
 	boosting = false;braking = false;turbo_fx = 0.0;near_pulse = 0.0;near_side = 1.0
 	demo_boost_latched = false
-	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0
+	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0;stage_entry_hits = 0
 	invulnerable = 0.0;flash = 0.0;shake = 0.0;tires = 1.0
 	spawn_timer = 0.85;pickup_timer = 7.0;thunder_timer = 6.0;boost_locked = false
 	debris.clear();effects.clear();_clear_touch()
@@ -1153,6 +1158,7 @@ func finish(won: bool, reason: String, after_crash: bool = false) -> void :
 	best = maxi(best, int(score))
 	_record_score(won)
 	_bank_run()
+	_award_earned_badges(won)
 	if won: checkpoint.clear()
 	save_settings()
 	_clear_touch()
@@ -1187,7 +1193,7 @@ func _mark_save() -> void:
 	notify("SAVE FLAG  /  +15 HULL  /  +500 DATA", 2.5)
 
 func save_checkpoint() -> void :
-	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
+	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "stage_entry_hits": stage_entry_hits, "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
 	save_settings()
 
 func retry_checkpoint() -> void :
@@ -1202,6 +1208,9 @@ func retry_checkpoint() -> void :
 	saves_marked = int(elapsed / SAVE_SPAN)
 	for key in ["score", "health", "boost", "boost_max", "charge", "probes", "hits", "near_misses", "tires", "distance"]: set(key, saved[key])
 	run_id = str(saved.get("run_id", run_id))
+	# An older snapshot carries no mark, so the level counts from the resume
+	# point. A mark above the restored hits would claim a level never driven.
+	stage_entry_hits = clampi(int(saved.get("stage_entry_hits", hits)), 0, int(hits))
 	checkpoint_retry = true
 	run_assisted = bool(saved.get("assisted", false)) or steering_assist or relaxed_hazards
 	world.truck.apply_damage()
@@ -1283,6 +1292,57 @@ func unlock_footage(front: int) -> void:
 	footage_unlocked.append(front)
 	save_settings()
 
+## Badges are the other half of what is earned, and the half that cannot be
+## bought. Mirrors unlock_footage() deliberately: award once, say so, save.
+func award_badge(id: String) -> void:
+	if not Loadout.BADGE_TITLES.has(id) or id in career.badges: return
+	career.badges.append(id)
+	play_sound("pickup")
+	notify("BADGE EARNED  /  " + str(Loadout.BADGE_TITLES[id]), 3.2)
+	save_settings()
+
+## Every badge whose condition is a counter the run already keeps. Called from
+## the two moments a run has something to show for itself -- a checkpoint and
+## the debrief -- and from nowhere else.
+##
+## Known limit: dodge_ace reads `combo`, which a hit resets. A five-dodge combo
+## broken before the next checkpoint does not count. The combo caps at 5 and
+## only a hit clears it, so holding one to a checkpoint is ordinary; a
+## high-water mark would be a second new counter for a badge already reachable.
+func _award_earned_badges(won: bool = false) -> void:
+	if stage >= 1 or stage_seen >= 1: award_badge("first_light")
+	if CHECKPOINT_FOOTAGE.all(func(f): return f in footage_unlocked): award_badge("storm_veteran")
+	if probes >= 10: award_badge("probe_master")
+	if route.landings - route.hard_landings >= 10: award_badge("big_air")
+	if combo >= 5: award_badge("dodge_ace")
+	if won:
+		award_badge("vortex_recorded")
+		if not checkpoint_retry: award_badge("one_take")
+
+## Buys a part with banked DATA. The only thing that spends the wallet.
+## Idempotent -- a part already owned costs nothing and changes nothing -- and
+## it cannot drive the balance negative, because it refuses when short. A
+## badge-gated part is never for sale at any balance.
+func buy_part(slot: String, id: String) -> bool:
+	if slot not in Loadout.SLOTS or id == "stock": return false
+	if not Loadout.gate(slot, id).is_empty(): return false
+	var cost: = Loadout.price(slot, id)
+	if cost <= 0 or Loadout.part_id(slot, id) in career.owned: return false
+	if int(career.banked) < cost: return false
+	career.banked = int(career.banked) - cost
+	career.owned.append(Loadout.part_id(slot, id))
+	play_sound("pickup")
+	save_settings()
+	return true
+
+## Returns every part that has not been earned to stock. Called on the way out
+## of the garage, which is the one door into a chase, and again when a save is
+## loaded, so a session that ends inside the garage cannot leave a locked part
+## equipped for the next launch.
+func enforce_loadout() -> void:
+	var allowed: Dictionary = Loadout.owned_only(loadout, career.owned, career.badges)
+	if allowed != loadout: set_loadout(allowed)
+
 func setup_factor(key: String) -> float:
 	return Loadout.factor(loadout, key)
 
@@ -1314,6 +1374,9 @@ func leave_garage(start: bool) -> void:
 	if mode != Mode.GARAGE: return
 	garage.close()
 	mode = Mode.MENU
+	# A locked part can be browsed and seen on the truck; this is where the
+	# preview ends. Silent, because every locked row on that screen said so.
+	enforce_loadout()
 	save_settings()
 	hud.rebuild()
 	if start:

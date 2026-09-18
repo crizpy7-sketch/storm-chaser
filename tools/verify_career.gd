@@ -1,12 +1,12 @@
 extends SceneTree
-## The career wallet: what a run banks, what survives a save, and what a save
-## from before the wallet existed turns into.
+## The career: what a run banks, what a badge is earned by, what a part costs,
+## and what survives a save.
 ##
-## The wallet is deliberately read-only in this version -- nothing spends it
-## yet -- so these checks are about the two things that would be expensive to
-## get wrong later: money that vanishes on the next save, and money that can be
-## farmed. Both have a specific shape in this codebase, and both are checked
-## against the real save path rather than a mock.
+## Two of these would be expensive to get wrong and have a specific shape in
+## this codebase, so they are checked against the real save path rather than a
+## mock: money that vanishes on the next save, and money that can be farmed.
+## The rest is the economy -- prices, badges, and the single flow where an
+## unearned part is returned to stock.
 const MediaPack = preload("res://scripts/media.gd")
 const CareerStore = preload("res://scripts/career_store.gd")
 const CareerStoreLocal = preload("res://scripts/career_store_local.gd")
@@ -205,6 +205,155 @@ func run() -> void:
 	game.career_store = CareerStoreLocal.new(CFG)
 	game.save_enabled = false
 	wipe()
+
+	# --- what the catalog asks for ---------------------------------------------------
+	check(Loadout.SLOTS.all(func(slot): return Loadout.price(slot, "stock") == 0 and Loadout.gate(slot, "stock").is_empty()),
+		"the approved stock part is free in every slot, so a career can always drive")
+	check(Loadout.COSMETIC_SLOTS.all(func(slot): return Loadout.options(slot).slice(1).all(func(o): return Loadout.price(slot, str(o.id)) > 0 and Loadout.gate(slot, str(o.id)).is_empty())),
+		"every cosmetic beyond the approved one carries a price and no badge")
+	check(Loadout.options("setup").slice(1).all(func(o): return Loadout.price("setup", str(o.id)) == 0 and not Loadout.gate("setup", str(o.id)).is_empty()),
+		"every chase setup is badge-gated and none of them is for sale")
+	var gates_exist := true
+	var catalog_total := 0
+	var price_band := true
+	for slot in Loadout.SLOTS:
+		for entry in Loadout.options(slot):
+			var gate: String = Loadout.gate(slot, str(entry.id))
+			if not gate.is_empty(): gates_exist = gates_exist and Loadout.BADGE_TITLES.has(gate)
+			var cost: int = Loadout.price(slot, str(entry.id))
+			catalog_total += cost
+			if cost > 0: price_band = price_band and cost >= 12000 and cost <= 50000
+	check(gates_exist, "every badge a part is gated behind is a badge that exists")
+	check(price_band, "no single part costs less than 12,000 or more than 50,000 DATA")
+	# A finished run banks 80,000-140,000 for a child, so the whole catalog is
+	# three or four runs' work rather than a grind.
+	check(catalog_total == 456000, "the catalog totals 456,000 DATA, three or four runs")
+	check(Loadout.priced_parts().size() == 16, "sixteen parts are for sale")
+
+	# --- locking, which sanitize() and cycle() deliberately know nothing about --------
+	var locked_look := {"accent": "desert_bronze", "wheels": "stealth_black", "roof": "light_bar", "armor": "winch", "trim": "rally", "setup": "turbo"}
+	check(Loadout.sanitize(locked_look) == locked_look, "a saved loadout of locked parts is not silently reset on load")
+	var browsed := Loadout.default_loadout()
+	for i in range(3): browsed = Loadout.cycle(browsed, "wheels", 1)
+	check(browsed.wheels == "stealth_black", "a locked part can still be cycled to and worn in the preview")
+	check(Loadout.owned_only(locked_look, [], []) == Loadout.default_loadout(), "nothing unearned survives owned_only")
+	check(Loadout.owned_only(locked_look, ["wheels:stealth_black"], ["probe_master"]).wheels == "stealth_black", "a part that was bought survives it")
+	check(Loadout.owned_only(locked_look, ["wheels:stealth_black"], ["probe_master"]).setup == "turbo", "and a setup whose badge was earned survives it")
+	check(Loadout.owned_only(locked_look, ["wheels:stealth_black"], []).setup == "stock", "a setup without its badge does not, however the wallet looks")
+	check(not Loadout.unlocked("setup", "rally", [], []) and Loadout.unlocked("trim", "rally", ["trim:rally"], []),
+		"the same word in two slots is two different parts")
+
+	# --- buying ------------------------------------------------------------------------
+	wipe()
+	game.career = CareerStore.blank()
+	game.career.banked = 60000
+	game.career.earned = 60000
+	check(game.buy_part("wheels", "stealth_black"), "a part inside the balance is bought")
+	check(game.career.banked == 36000 and "wheels:stealth_black" in game.career.owned, "buying costs exactly the marked price")
+	check(not game.buy_part("wheels", "stealth_black"), "buying the same part twice is refused")
+	check(game.career.banked == 36000 and game.career.owned.count("wheels:stealth_black") == 1, "and it neither charges again nor owns it twice")
+	check(game.career.earned == 60000, "spending never reduces the lifetime total the badges are judged on")
+	check(not game.buy_part("trim", "desert_runner"), "a part beyond the balance is refused")
+	check(game.career.banked == 36000, "a refused purchase leaves the balance exactly where it was")
+	game.career.banked = 900000
+	check(not game.buy_part("setup", "turbo") and "setup:turbo" not in game.career.owned,
+		"a badge-gated setup cannot be bought with any amount of DATA")
+	check(not game.buy_part("wheels", "stock") and not game.buy_part("nonsense", "stealth_black"),
+		"stock parts and unknown slots are not for sale")
+	var balance_floor := true
+	game.career.banked = 0
+	for slot in Loadout.SLOTS:
+		for entry in Loadout.options(slot):
+			game.buy_part(slot, str(entry.id))
+			balance_floor = balance_floor and game.career.banked >= 0
+	check(balance_floor and game.career.banked == 0, "buying everything on an empty wallet never drives the balance negative")
+
+	# --- enforcement, which happens in exactly one flow --------------------------------
+	game.career = CareerStore.blank()
+	game.career.owned = ["wheels:stealth_black"]
+	game.set_loadout(locked_look)
+	check(game.loadout == locked_look, "the garage can put every locked part on the truck")
+	game.mode = game.Mode.GARAGE
+	game.leave_garage(false)
+	check(game.loadout.wheels == "stealth_black" and game.loadout.accent == "stock" and game.loadout.roof == "stock" and game.loadout.armor == "stock" and game.loadout.trim == "stock" and game.loadout.setup == "stock",
+		"leaving the garage keeps what was earned and returns the rest to stock")
+	game.save_enabled = true
+	game.set_loadout(locked_look)
+	game.save_settings()
+	game._load_settings()
+	check(game.loadout.wheels == "stealth_black" and Loadout.is_stock_look(game.loadout) == false and game.loadout.setup == "stock" and game.loadout.accent == "stock",
+		"a session that ended inside the garage cannot smuggle a locked part into the next launch")
+	game.save_enabled = false
+	wipe()
+
+	# --- badges ------------------------------------------------------------------------
+	game.career = CareerStore.blank()
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	check(game.career.badges.is_empty(), "a new career has earned no badges")
+	game._award_earned_badges()
+	check("first_light" not in game.career.badges, "the first checkpoint has not been reached at the start of a run")
+	game.probes = 9
+	game.route.landings = 12; game.route.hard_landings = 3
+	game.combo = 4
+	game._award_earned_badges()
+	check(game.career.badges.is_empty(), "nine probes, nine clean landings and a four-dodge combo earn nothing")
+	game.probes = 10; game.route.landings = 13; game.combo = 5; game.stage = 1
+	game._award_earned_badges()
+	check("probe_master" in game.career.badges and "big_air" in game.career.badges and "dodge_ace" in game.career.badges and "first_light" in game.career.badges,
+		"ten probes, ten clean landings, a five-dodge combo and a checkpoint each earn their badge")
+	var before_count: int = game.career.badges.size()
+	game._award_earned_badges()
+	check(game.career.badges.size() == before_count, "a badge already earned is not awarded twice")
+	for film in [1, 2, 3, 4, 5, 6, 7]: game.unlock_footage(film)
+	game._award_earned_badges()
+	check("storm_veteran" in game.career.badges, "all seven films earn STORM VETERAN")
+	check("vortex_recorded" not in game.career.badges and "one_take" not in game.career.badges, "the two finishing badges wait for a finish")
+
+	game.career = CareerStore.blank()
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	game.checkpoint_retry = true
+	game.health = 50.0
+	game.finish(true, "Won after a retry.")
+	check("vortex_recorded" in game.career.badges and "one_take" not in game.career.badges, "a win after a retry records the vortex but is not a one-take")
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	game.health = 50.0
+	game.finish(true, "Won outright.")
+	check("one_take" in game.career.badges, "a win with no retry earns ONE TAKE")
+
+	# IRON HULL is the one badge with a counter of its own, and it is asked at
+	# the checkpoint because that is the only place that knows a level ended.
+	game.career = CareerStore.blank()
+	game.start_chase()
+	game.set_process(false); game.world.set_process(false)
+	game.stage = 3; game.elapsed = 3.0 * game.STAGE_LENGTH; game.mode = game.Mode.UPGRADE
+	game.choose_upgrade(1)
+	game.hits = 0; game.stage_entry_hits = 0
+	game.checkpoints.complete()
+	check("iron_hull" in game.career.badges, "a whole level with no hits earns IRON HULL")
+	game.career.badges.clear()
+	game.stage = 4; game.elapsed = 4.0 * game.STAGE_LENGTH; game.mode = game.Mode.UPGRADE
+	game.choose_upgrade(1)
+	game.hits = 3; game.stage_entry_hits = 0
+	game.checkpoints.complete()
+	check("iron_hull" not in game.career.badges, "a level with hits does not")
+	check(game.stage_entry_hits == 3, "and the mark moves to the level starting now")
+	game.save_checkpoint()
+	check(int(game.checkpoint.get("stage_entry_hits", -1)) == 3, "the mark is carried in the snapshot")
+	game.hits = 9
+	game.retry_checkpoint()
+	await settle()
+	game.set_process(false); game.world.set_process(false)
+	check(game.stage_entry_hits == 3, "a resumed run keeps the mark, so it cannot claim a level it half drove")
+	var older: Dictionary = game.checkpoint.duplicate(true)
+	older.erase("stage_entry_hits")
+	game.checkpoint = older
+	game.retry_checkpoint()
+	await settle()
+	game.set_process(false); game.world.set_process(false)
+	check(game.stage_entry_hits == int(game.hits), "a snapshot from before the mark counts the level from the resume point")
 
 	# --- reading the number out loud -------------------------------------------------
 	check(game.hud.data_amount(0) == "0" and game.hud.data_amount(999) == "999", "small amounts are printed plainly")

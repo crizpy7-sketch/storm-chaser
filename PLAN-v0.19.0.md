@@ -236,7 +236,39 @@ No prices and no locks in this phase — the wallet just fills.
 **Gate:** all green; `verify_garage`'s catalog and sanitize checks untouched; a
 hand-written v0.18 cfg loads with the right parts already owned.
 
-## Phase 6 — Prices, badges, garage lock UI
+## Phase 6 — Prices, badges, garage lock UI — DONE
+
+Shipped. Sixteen cosmetics carry a `cost` totalling exactly 456,000 DATA; the
+three chase setups carry a `badge` instead and are never for sale, so a child
+cannot buy their way past a trade-off. `sanitize()` and `cycle()` were not
+touched: a locked part is still cycled to and still worn on the live preview,
+which is the carrot, and a saved loadout is never silently reset by a career
+that failed to load.
+
+Enforcement is `Loadout.owned_only()`, called from `leave_garage()` — and, one
+deviation from this plan, from `_load_settings()` as well. `leave_garage()`
+alone leaves a real hole: quit from inside the garage with a locked part
+selected and `set_loadout()` has already saved it, so the next launch goes
+START CHASING straight past the only check. The second call site closes that
+without touching the preview, since the preview lives in memory during the
+garage session. One implementation, two doors.
+
+Eight badges, awarded at the two moments this plan named and nowhere else. Only
+`iron_hull` needed a counter of its own: `stage_entry_hits`, which rides in the
+snapshot so a resumed run cannot claim a level it half drove, and which an
+older snapshot simply lacks — that level then counts from the resume point.
+
+**A limit worth stating:** `dodge_ace` reads `combo`, which a hit clears. A
+five-dodge combo broken before the next checkpoint does not count. The combo
+caps at 5 and only a hit clears it, so holding one to a checkpoint is ordinary;
+a high-water mark would be a second new counter for a badge already reachable.
+
+`verify_garage` needed no assertion changed — it is about parts and handling,
+so its harness now owns everything and says so. The economy is checked in
+`verify_career`, which grew from 38 to 80 checks: 651 total across seventeen
+suites.
+
+### Original notes
 
 `loadout.gd` catalog gains two optional fields (absent = free):
 `cost: int`, `badge: String`. **Do not touch `sanitize()` or `cycle()`** —

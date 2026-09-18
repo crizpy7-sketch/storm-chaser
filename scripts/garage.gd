@@ -1,11 +1,16 @@
 extends Control
 ## Mateo's Garage: a pre-chase screen over the live 3D truck.
 ##
-## Keyboard: Up/Down (W/S) select, Left/Right (A/D) change, Q/E orbit, R stock
-## look, Enter/Space start, Escape back. Controller: D-pad or left stick, A start,
-## B back, Start start, LB/RB orbit. Mouse/touch: click rows and arrows, drag the
-## truck to orbit. All buttons are mouse-only so directional input never fights
-## focus navigation.
+## Keyboard: Up/Down (W/S) select, Left/Right (A/D) change, B buy, Q/E orbit,
+## R stock look, Enter/Space start, Escape back. Controller: D-pad or left stick,
+## X buy, A start, B back, Start start, LB/RB orbit. Mouse/touch: click rows and
+## arrows, drag the truck to orbit. All buttons are mouse-only so directional
+## input never fights focus navigation.
+##
+## A locked part can still be selected and worn: the truck shows it, the row
+## says what it costs or what it is gated behind, and the price sits next to the
+## balance so nobody has to go hunting for their wallet. Nothing is enforced
+## here -- game.leave_garage() is what returns an unearned part to stock.
 
 const Loadout := preload("res://scripts/loadout.gd")
 const AMBER := Color("f4bc63")
@@ -123,6 +128,32 @@ func change(step: int) -> void:
 	game.play_sound("click")
 	_notify(Loadout.SLOT_TITLES[slot] + "  /  " + str(Loadout.option(slot, game.loadout[slot]).name))
 
+## What the focused part needs, as three states the drawing and the buy button
+## both read: "" when it is available, a badge title, or a price in DATA.
+func lock_on(slot: String, id: String) -> Dictionary:
+	if Loadout.unlocked(slot, id, game.career.owned, game.career.badges): return {}
+	var badge := Loadout.gate(slot, id)
+	if not badge.is_empty(): return {"badge": str(Loadout.BADGE_TITLES.get(badge, badge))}
+	return {"cost": Loadout.price(slot, id)}
+
+func buy() -> void:
+	var slot: String = Loadout.SLOTS[selected]
+	var id: String = str(game.loadout.get(slot, "stock"))
+	var entry: Dictionary = Loadout.option(slot, id)
+	var lock := lock_on(slot, id)
+	if lock.is_empty():
+		_notify(str(entry.name) + ("  /  ALREADY YOURS" if id != "stock" else "  /  ALWAYS YOURS"))
+		return
+	if lock.has("badge"):
+		_notify("EARN THE BADGE  /  " + str(lock.badge))
+		return
+	var cost: int = int(lock.cost)
+	if game.buy_part(slot, id):
+		_notify("BOUGHT  " + str(entry.name) + "  /  -" + game.hud.data_amount(cost) + " DATA")
+	else:
+		_notify("NEED  " + game.hud.data_amount(cost - int(game.career.banked)) + "  MORE DATA")
+	queue_redraw()
+
 func stock_look() -> void:
 	game.set_loadout(Loadout.with_stock_look(game.loadout))
 	game.play_sound("pickup")
@@ -151,6 +182,8 @@ func handle_input(event: InputEvent) -> void:
 			KEY_D, KEY_RIGHT: change(1)
 			KEY_Q: orbit_velocity = -1.6
 			KEY_E: orbit_velocity = 1.6
+			KEY_B:
+				if not event.echo: buy()
 			KEY_R:
 				if not event.echo: stock_look()
 			KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
@@ -169,6 +202,7 @@ func handle_input(event: InputEvent) -> void:
 			JOY_BUTTON_DPAD_RIGHT: change(1)
 			JOY_BUTTON_LEFT_SHOULDER: orbit_velocity = -1.6
 			JOY_BUTTON_RIGHT_SHOULDER: orbit_velocity = 1.6
+			JOY_BUTTON_X: buy()
 			JOY_BUTTON_Y: stock_look()
 			JOY_BUTTON_A, JOY_BUTTON_START: start()
 			JOY_BUTTON_B, JOY_BUTTON_BACK: back()
@@ -270,9 +304,19 @@ func _draw() -> void:
 		_text(Loadout.SLOT_TITLES[slot], r.position.x + 16, r.position.y + 22, 11, AMBER if focused else MUTED, hud.MONO)
 		_text("%d/%d" % [index + 1, count], r.end.x - 136, r.position.y + 22, 10, MUTED, hud.MONO)
 		_text(str(entry.name), r.position.x + 16, r.position.y + 46, 17, WHITE, hud.DISPLAY)
+		var name_width: float = hud.DISPLAY.get_string_size(str(entry.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
+		var tag_x: float = r.position.x + 26 + name_width
+		var lock := lock_on(slot, str(entry.id))
 		if entry.id == "stock":
-			var name_width: float = hud.DISPLAY.get_string_size(str(entry.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
-			_text("APPROVED" if slot != "setup" else "ORIGINAL TUNE", r.position.x + 26 + name_width, r.position.y + 45, 9, MINT, hud.MONO)
+			_text("APPROVED" if slot != "setup" else "ORIGINAL TUNE", tag_x, r.position.y + 45, 9, MINT, hud.MONO)
+		elif lock.has("badge"):
+			_text("LOCKED  " + str(lock.badge), tag_x, r.position.y + 45, 9, AMBER, hud.MONO)
+		elif lock.has("cost"):
+			# Red is for what the balance cannot reach today, amber for what it can.
+			var afford: bool = int(game.career.banked) >= int(lock.cost)
+			_text("LOCKED  " + hud.data_amount(int(lock.cost)), tag_x, r.position.y + 45, 9, AMBER if afford else RED, hud.MONO)
+		elif Loadout.price(slot, str(entry.id)) > 0:
+			_text("OWNED", tag_x, r.position.y + 45, 9, MINT, hud.MONO)
 	# Details for the focused row.
 	var focus_slot: String = Loadout.SLOTS[selected]
 	var detail: Dictionary = Loadout.option(focus_slot, str(game.loadout.get(focus_slot, "stock")))
@@ -285,11 +329,27 @@ func _draw() -> void:
 		_text(str(detail.effects), 846, stat_y, 11, MINT if detail.id == "stock" else AMBER, hud.MONO)
 	else:
 		_text("CHASE SETUP  /  " + Loadout.setup_name(game.loadout) + ("  /  ORIGINAL TUNE" if game.loadout.setup == "stock" else ""), 846, stat_y, 10, MUTED, hud.MONO)
+	# What the focused part needs, next to what the wallet holds, so the price
+	# and the balance are never on different screens.
+	var focus_lock := lock_on(focus_slot, str(detail.id))
+	var wallet: String = "WALLET  " + hud.data_amount(int(game.career.banked)) + " DATA"
+	if focus_lock.has("badge"):
+		_text("BADGE, NOT FOR SALE  /  EARN  " + str(focus_lock.badge), 846, stat_y + 22, 10, AMBER, hud.MONO)
+	elif focus_lock.has("cost"):
+		var afford: bool = int(game.career.banked) >= int(focus_lock.cost)
+		var buy_key: String = "X" if game.pad_connected() else "B"
+		var line: String = "%s  %s  /  %s" % [hud.data_amount(int(focus_lock.cost)) + " DATA", ("BUY  [" + buy_key + "]" if afford else "NOT ENOUGH"), wallet]
+		_text(line, 846, stat_y + 22, 10, MINT if afford else RED, hud.MONO)
+	else:
+		_text(wallet, 846, stat_y + 22, 10, MUTED, hud.MONO)
 	# Left-side labels over the live preview.
 	_text("INTERCEPTOR  /  LIVE PREVIEW", 40, 58, 12, AMBER, hud.MONO)
 	_text("Stock look" if Loadout.is_stock_look(game.loadout) else "Custom look", 40, 84, 18, WHITE, hud.BODY)
-	_text("UP / DOWN SELECT     LEFT / RIGHT CHANGE     Q / E  OR DRAG  ORBIT     R STOCK LOOK", 40, 672, 11, Color(0.68, 0.79, 0.78, 0.85), hud.MONO)
-	_text("ENTER  START     ESC  BACK TO BASE     CONTROLLER: D-PAD, A START, B BACK, LB / RB ORBIT", 40, 692, 11, Color(0.68, 0.79, 0.78, 0.85), hud.MONO)
+	_text("WALLET  " + hud.data_amount(int(game.career.banked)) + " DATA", 40, 114, 13, MINT, hud.MONO)
+	# The badge count is the sayable goal: "I have three of the eight."
+	_text("BADGES  %d / %d" % [game.career.badges.size(), Loadout.BADGE_TITLES.size()], 40, 138, 11, AMBER, hud.MONO)
+	_text("UP / DOWN SELECT   LEFT / RIGHT CHANGE   B BUY   Q / E OR DRAG ORBIT   R STOCK LOOK", 40, 672, 11, Color(0.68, 0.79, 0.78, 0.85), hud.MONO)
+	_text("ENTER  START     ESC  BACK     CONTROLLER: D-PAD, X BUY, A START, B BACK, LB / RB ORBIT", 40, 692, 11, Color(0.68, 0.79, 0.78, 0.85), hud.MONO)
 	if toast_time > 0.0:
 		var width: float = hud.MONO.get_string_size(toast, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 40.0
 		var alpha := clampf(toast_time / 0.3, 0.0, 1.0)

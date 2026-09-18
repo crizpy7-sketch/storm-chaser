@@ -364,6 +364,12 @@ func complete(pause_after: bool = false) -> void :
 	game.invulnerable = 2.0;game.spawn_timer = 1.25;game.sky_timer = 3.5;game.lens_timer = 7.0
 	game._clear_touch()
 	game.unlock_footage(game.stage)
+	# The level that just ended, and the badges it earned. IRON HULL is asked
+	# here because this is the one place that knows a whole level went by; the
+	# mark then moves to the level starting now.
+	if game.hits == game.stage_entry_hits: game.award_badge("iron_hull")
+	game.stage_entry_hits = game.hits
+	game._award_earned_badges()
 	game.save_checkpoint()
 	game.notify("CHECKPOINT %02d SAVED  /  %s" % [game.stage, (game.route.chapter_caption() if game.stage>=3 else CAPTIONS[game.stage]).to_upper()], 3.5)
 	game.hud.rebuild()
