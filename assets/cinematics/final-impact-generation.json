@@ -1,0 +1,23 @@
+{
+  "job_id": "592b78c6-e389-453c-a037-e0b7b9187083",
+  "status": "completed",
+  "source_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JFphf0mFWr17Xs8jiDw2pBk6zh/hf_20260914_115419_592b78c6-e389-453c-a037-e0b7b9187083.mp4",
+  "duration_seconds": 8.042,
+  "embedded_format": "1280x720 Theora/Vorbis, 30fps",
+  "params": {
+    "aspect_ratio": "16:9",
+    "duration": 8,
+    "generate_audio": true,
+    "medias": [
+      {
+        "role": "start_image",
+        "value": "cd146625-ac95-45f6-a272-4a25cabac18a"
+      }
+    ],
+    "model": "flux_3_video",
+    "prompt": "Eight-second cinematic vehicle crash for the ending of a storm-chaser game. Match the reference rugged orange research pickup with radar dish, giant tornado, rain-soaked prairie highway, dark teal storm light and warm amber beacons. One coherent action sequence with beautifully detailed realistic rain, sparks and metal. The camera stays low on the wheels and front fender, keeping occupants out of frame. First two seconds: a heavy windblown metal roofing panel slams into the moving truck's front fender. The fender crumples and orange sparks and glass fragments burst toward the camera with a powerful bass impact and metal crunch. Brief slow motion at contact, then a fast cinematic tracking move as the truck fishtails sideways through a huge spray of water, damaged wheel scraping sparks along the asphalt. In the last three seconds it skids to a complete stop on the roadside, upright, visibly dented and disabled, thin steam drifting from the damaged hood, beacons flashing through rain. End with a smooth dramatic low camera push toward the stopped truck and enormous tornado behind it. No recovery or driving away. No explosion, fire, injuries or people visible. Synchronized crash, skid, water and storm audio, no dialogue. No text, logos or game HUD. Beautiful polished action film quality.",
+    "resolution": "720p"
+  },
+  "failed_prior_job": "20a8a4f1-240c-4255-b5a4-2c71703ba00f",
+  "purpose": "Reusable terminal crash cinematic, not an exact collision replay"
+}

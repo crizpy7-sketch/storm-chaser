@@ -1,0 +1,41 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+WARNING: Storm Chaser: optional media is missing (first: res://assets/art/flying-cow.png). Built-in stand-ins are used; copy the full assets folders back to restore it.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _note_missing (res://scripts/media.gd:68)
+         [1] texture (res://scripts/media.gd:76)
+         [2] _ready (res://scripts/world3d.gd:72)
+         [3] _ready (res://scripts/main.gd:158)
+         [4] run (res://tools/verify_polish.gd:37)
+PASS: truck uses the original detailed orange artwork
+PASS: steering preserves the original truck mesh without warping
+PASS: visible 3D body and four wheels render with real shadows
+PASS: 3D suspension and body lean stay bounded
+PASS: low hull reveals wear on the original truck artwork
+PASS: hull repair also repairs visible damage
+PASS: optional recovery reduces lingering water slide
+PASS: reaction assist provides slower hazard arrival
+PASS: assisted score label remains after assists are switched off
+PASS: calm stretch holds new debris and water waves
+PASS: action resumes after the short calm stretch
+PASS: water plumes reuse a bounded pool
+PASS: reset clears all water plumes
+PASS: lighter graphics removes expensive shadow and MSAA passes
+PASS: standard graphics restores truck lighting shadows
+SKIP: both checkpoint movies are available to the footage gallery (media pack not installed)
+PASS: unearned checkpoint footage cannot play
+PASS: reaching checkpoint one unlocks only its movie
+PASS: earned checkpoint footage replays from pause
+PASS: gallery playback preserves mission, score, checkpoint and pause
+PASS: all four new settings survive a save/load
+PASS: earned footage survives a save/load
+PASS: Mateo reaction shows its caption
+SKIP: Mateo voice line and caption load together (media pack not installed)
+PASS: Mateo reactions respect their cooldown
+PASS: Escape closes settings without resuming the chase
+PASS: assisted chase reaches every checkpoint reward and the ending
+PASS: scoreboard records an assisted completion
+POLISH_TESTS 26 checks; 0 failures; 2 skipped
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)

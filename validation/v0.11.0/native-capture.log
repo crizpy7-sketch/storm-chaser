@@ -1,0 +1,21 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:364)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 5 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.2 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+
+Movie Maker mode enabled, recording movie in 1280×720 @ 30 FPS...
+COMPLETED_CAPTURE_START version=0.11.0 score=44891.1666666704 probes=17 hull=100.0 orbit=0.76048383677387
+COMPLETED_CAPTURE_RESULTS natural_end=true movie_seconds=17.8333333333336 score=49337.4166666704
+DODGE_FILM: final_transmission at chase 235.66s
+COMPLETED_CAPTURE_DONE {"hull":100.0,"movie_end":22.8250000000003,"movie_start":4.99166666666666,"natural_end":true,"orbit":1.0,"passed":true,"preview_end":28.3583333333339,"probes":17,"replay_natural_end":true,"score":49337.4166666704,"version":"0.11.0","wall":47.2249999999999}
+--------------------------------------------------------------------------------
+Done recording movie at path: /workspace/scratch/67b1f15ec186/review/completed-game-raw.avi
+1417 frames at 30 FPS (movie length: 00:00:47:07), recorded in 00:01:46 (44% of real-time speed).
+CPU render time: 56.02 seconds (average: 39.54 ms/frame)
+GPU render time: 62.64 seconds (average: 44.21 ms/frame)
+Encoding time: 17.47 seconds (average: 12.33 ms/frame)
+--------------------------------------------------------------------------------

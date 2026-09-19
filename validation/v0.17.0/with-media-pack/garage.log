@@ -1,0 +1,46 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: every garage slot offers the approved stock part first plus alternatives
+PASS: a fresh save starts with the complete stock loadout
+PASS: unknown or damaged loadout values fall back to stock
+PASS: option cycling wraps in both directions
+PASS: stock chase setup leaves every handling factor at exactly 1.0
+PASS: every alternative chase setup has both a benefit and a cost
+PASS: stock loadout shows only the approved truck
+PASS: each cosmetic option shows exactly its own part, finish and ride height
+PASS: returning to stock restores every original finish and hides all added parts
+PASS: garage parts never alter the approved 67,656-triangle truck mesh
+PASS: cosmetic parts produce identical handling, jumps, hull and boost
+PASS: armored setup takes 20% less collision damage
+PASS: rally setup adds dirt grip
+PASS: rally setup recovers from landings sooner
+PASS: turbo setup drains the boost tank more slowly
+PASS: armored setup accelerates more slowly
+PASS: turbo setup slides further on water
+PASS: garage loadout survives save and reload
+PASS: edited loadout saves are sanitized on load
+PASS: older saves without a garage section load with the stock loadout
+PASS: the garage cannot open during a chase
+PASS: garage opens from base over the live 3D truck
+PASS: garage preview shows a clean, repaired, parked truck
+PASS: preview camera frames the truck beside the garage panel
+PASS: keyboard Down selects the next garage row
+PASS: keyboard Right changes the selected part
+PASS: keyboard Left steps back to the approved part
+PASS: controller D-pad selects and changes parts
+PASS: R restores the stock look without touching the chase setup
+PASS: controller B returns to base
+PASS: Escape returns to base without starting a chase
+PASS: Enter starts a new chase with the chosen loadout
+PASS: checkpoint snapshot records the chase setup and stays valid
+PASS: garage offers to resume a saved checkpoint
+PASS: controller A resumes the checkpoint from the garage
+PASS: scoreboard row records the chase setup
+PASS: footage gallery shows the current loadout
+PASS: Mateo keeps the chase-camera look and turns toward side views while seated
+CAMPAIGN setup=stock stages=[1, 2, 3, 4, 5, 6, 7] result=INTO THE VORTEX health=77.9474410676546 score=50332
+CAMPAIGN setup=rally stages=[1, 2, 3, 4, 5, 6, 7] result=INTO THE VORTEX health=74.9122189406758 score=50373
+CAMPAIGN setup=armored stages=[1, 2, 3, 4, 5, 6, 7] result=INTO THE VORTEX health=85.6851225715087 score=51491
+CAMPAIGN setup=turbo stages=[1, 2, 3, 4, 5, 6, 7] result=INTO THE VORTEX health=77.935060218104 score=51829
+PASS: the automated driver completes the campaign with every chase setup and a custom look
+GARAGE_TESTS 39 checks; 0 failures

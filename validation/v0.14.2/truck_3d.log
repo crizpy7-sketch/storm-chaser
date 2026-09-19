@@ -1,0 +1,64 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+--Main Shader--
+    1 | shader_type spatial;
+    2 | render_mode diffuse_burley, specular_schlick_ggx;
+    3 | uniform sampler2D truck_art : source_color, filter_linear_mipmap;
+    4 | uniform vec3 paint_tint = vec3(.78,.80,.83);
+    5 | uniform float paint_roughness = .69;
+    6 | uniform float paint_metallic = .13;
+    7 | uniform float paint_clearcoat = 0.0;
+    8 | uniform float damage = 0.0;
+    9 | uniform float clock = 0.0;
+   10 | varying vec3 body_position;
+   11 | void vertex() {
+   12 |  body_position = VERTEX;
+   13 | }
+   14 | void fragment() {
+   15 |  vec3 paint = texture(truck_art, UV).rgb * paint_tint;
+   16 |  float speck = fract(sin(dot(floor(body_position*145.0),vec3(12.9898,78.233,37.719)))*43758.5453);
+   17 |  float chips = smoothstep(.84,.99,speck) * damage * .52;
+   18 |  ALBEDO = mix(paint,vec3(.10,.085,.065),chips);
+   19 |  ROUGHNESS = min(1.0, paint_roughness + damage*.17);
+   20 |  METALLIC = paint_metallic * (1.0-chips);
+   21 |  CLEARCOAT = paint_clearcoat;
+E  22->  CLEARCOAT_GLOSS = .75;
+   23 | }
+   24 | 
+PASS: truck has full front-to-rear geometry
+PASS: all 67656 generated triangles survive mesh batching
+PASS: four independent wheels are outside the sprung-body transform
+PASS: front and rear axles preserve the 3.54 metre wheelbase
+PASS: original paint and panel art is reused on the 3D body
+PASS: Mateo is attached inside the actual truck bed
+PASS: right input visibly turns both front wheels right
+PASS: rear wheels do not steer like the stock monster truck
+PASS: distance rotates the actual wheel meshes
+PASS: zero-time updates freeze wheel articulation
+PASS: airborne wheels extend with bounded suspension droop
+PASS: landing compresses the rigid body within its suspension stops
+PASS: steering, pitch, landings and yaw never change any mesh vertices
+PASS: chassis lean is bounded and never stretches the body
+PASS: hull damage reaches both original paint and new reference bodywork
+PASS: restart resets steering, spin and droop together
+TRUCK_3D_TESTS 16 checks; 0 failures; 67656 triangles
+SHADER ERROR: Unknown identifier in expression: 'CLEARCOAT_GLOSS'.
+          at: (null) (:22)
+          GDScript backtrace (most recent call first):
+              [0] build (res://scripts/truck_rig.gd:40)
+              [1] _build_vehicles (res://scripts/world3d.gd:209)
+              [2] _ready (res://scripts/world3d.gd:81)
+              [3] _ready (res://scripts/main.gd:150)
+              [4] run (res://tools/verify_truck_3d.gd:24)
+ERROR: Shader compilation failed.
+   at: shader_set_code (servers/rendering/dummy/storage/material_storage.cpp:190)
+   GDScript backtrace (most recent call first):
+       [0] build (res://scripts/truck_rig.gd:40)
+       [1] _build_vehicles (res://scripts/world3d.gd:209)
+       [2] _ready (res://scripts/world3d.gd:81)
+       [3] _ready (res://scripts/main.gd:150)
+       [4] run (res://tools/verify_truck_3d.gd:24)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 7 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

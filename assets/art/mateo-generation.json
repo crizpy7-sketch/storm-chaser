@@ -1,0 +1,18 @@
+{
+  "asset": "mateo-storm-camera.png",
+  "date": "2026-09-14",
+  "tool": "OpenAI built-in image generation",
+  "identity_reference": "User-supplied IMG_8570.jpeg (not bundled)",
+  "style_reference": "assets/art/truck.png",
+  "prompt": "Use case: identity-preserve / stylized-concept. Create ONE production game sprite atlas, square 2048x2048 PNG with REAL TRANSPARENT ALPHA, a precise 2 by 2 grid of four equally sized cells. No drawn grid lines, text, labels, backgrounds, floor or shadows. Image 1 is the identity reference: Mateo, the young boy with thick short dark hair, rounded face, dark eyes, teal T-shirt and bright blue shorts. Preserve his recognizable age, face, hair, skin tone and clothing. Image 2 is STYLE ONLY: match the detailed painterly-realistic orange storm truck game art, with cool blue storm light and a warm amber rim. Do not draw the truck. Each cell contains exactly one complete full-body isolated version of the SAME boy at the SAME scale, with feet on the same baseline and the same planted wide stance. Sneakers with good visible soles. Add a simple black chest safety harness over his teal shirt, and a compact professional BLACK VIDEO CAMCORDER in his hands with a flip-out screen and tiny red recording light. It must look like a camera, not a weapon. He is a storm-camera operator seen by a game chase camera behind and slightly above him. Most poses show his back and one profile, because he faces FORWARD away from the viewer toward the storm. Avoid giant baby proportions or chibi style; natural child proportions with a readable silhouette. Full body inside each cell with generous transparent margin. Four animation poses: TOP LEFT, the neutral filming pose, rear three-quarter view, both hands on the camcorder at eye/shoulder height aimed away and slightly to the boy's right, right facial profile visible. TOP RIGHT, same feet and body size, he tilts the camera slightly upward to track flying debris, shoulders braced, a little more right profile visible. BOTTOM LEFT, he briefly turns his head over his left shoulder toward the viewer with an excited grin, his body still facing away and camcorder held in front. BOTTOM RIGHT, a compact duck-and-brace pose, knees bent, crouching slightly with the camcorder protected against his chest, alert but unharmed; preserve his full body and keep the feet on the same baseline. Crisp smooth cutout edges and genuine alpha in all empty space, no checkerboard painted into the image, no duplicated limbs or cameras. The atlas is for animation in an actual Godot storm-chasing game, not a showcase poster.",
+  "edit_summary": "A second image-generation edit replaced the painted checkerboard with solid chroma green while preserving all four character poses. The PNG is unchanged; a runtime shader removes the matte.",
+  "original_generation": "exec-e0b6f555-aa87-41cb-9b3e-cffc51db0ba8",
+  "final_generation": "exec-24e4f8ba-94e3-442f-9c5e-319c4ef639c7",
+  "poses": [
+    "filming",
+    "tracking upward",
+    "look back",
+    "duck and brace"
+  ],
+  "runtime": "scripts/mateo.gd and shaders/mateo_camera.gdshader"
+}

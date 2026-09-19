@@ -1,0 +1,9 @@
+# Godot editor/import cache — regenerated on import
+.godot/
+# Export output
+build/
+*.exe
+*.pck
+
+# CI suite output
+.suite-logs/

@@ -1,0 +1,184 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: recovered Mateo actor is present
+PASS: all six existing dodge films load
+PASS: checkpoint 1 plays a movie
+PASS: checkpoint 1 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 2 plays a movie
+PASS: checkpoint 2 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 3 plays a movie
+PASS: checkpoint 3 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 4 plays a movie
+PASS: checkpoint 4 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 5 plays a movie
+PASS: checkpoint 5 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 6 plays a movie
+PASS: checkpoint 6 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: checkpoint 7 plays a movie
+PASS: checkpoint 7 selects matching movie
+PASS: game audio pauses under movie
+PASS: road and lens hazards clear before movie
+PASS: movie freezes mission and input scoring
+PASS: old scene timer does not end movie playback
+PASS: finished signal returns control once
+PASS: finished movie saves matching checkpoint
+PASS: game audio restores after movie
+PASS: return keeps safe-entry window
+PASS: movie completion fades gameplay in
+PASS: duplicate finish cannot overwrite checkpoint
+PASS: retry restores earned snapshot without failed-attempt gains
+PASS: retry does not replay film or repeat upgrade
+PASS: keyboard skip does not fire a probe
+PASS: controller skip exits movie
+PASS: touch skip button exits movie
+PASS: focus loss saves checkpoint and returns paused
+PASS: focus loss restores audio pause state
+PASS: stopped video falls back to in-engine destruction
+PASS: fallback restores live audio
+PASS: fallback still saves and returns control
+PASS: disabled video route preserves original Mateo scene
+PASS: decoder watchdog uses live fallback
+PASS: menu clears all checkpoint playback
+PASS: route movie is not cut off by the short terrain preview timer
+PASS: route movie preserves original truck proportions
+PASS: route decoder fallback previews the road without a warehouse
+PASS: route fallback safely saves and returns to driving
+PASS: disabled route movie retains the Mateo road preview
+PASS: new gallery movie is present but locked before earning it
+PASS: next page exposes the new route films
+PASS: expanded gallery controls fit on screen
+PASS: earned route movie replays from the footage gallery
+PASS: route replay preserves progress and paused state
+PASS: route footage survives save and reload
+PASS: an existing reached checkpoint restores the new film unlock
+PASS: route movie is not cut off by the short terrain preview timer
+PASS: route movie preserves original truck proportions
+PASS: route decoder fallback previews the road without a warehouse
+PASS: route fallback safely saves and returns to driving
+PASS: disabled route movie retains the Mateo road preview
+PASS: new gallery movie is present but locked before earning it
+PASS: next page exposes the new route films
+PASS: expanded gallery controls fit on screen
+PASS: earned route movie replays from the footage gallery
+PASS: route replay preserves progress and paused state
+PASS: route footage survives save and reload
+PASS: an existing reached checkpoint restores the new film unlock
+PASS: route movie is not cut off by the short terrain preview timer
+PASS: route movie preserves original truck proportions
+PASS: route decoder fallback previews the road without a warehouse
+PASS: route fallback safely saves and returns to driving
+PASS: disabled route movie retains the Mateo road preview
+PASS: new gallery movie is present but locked before earning it
+PASS: next page exposes the new route films
+PASS: expanded gallery controls fit on screen
+PASS: earned route movie replays from the footage gallery
+PASS: route replay preserves progress and paused state
+PASS: route footage survives save and reload
+PASS: an existing reached checkpoint restores the new film unlock
+PASS: route movie is not cut off by the short terrain preview timer
+PASS: route movie preserves original truck proportions
+PASS: route decoder fallback previews the road without a warehouse
+PASS: route fallback safely saves and returns to driving
+PASS: disabled route movie retains the Mateo road preview
+PASS: new gallery movie is present but locked before earning it
+PASS: next page exposes the new route films
+PASS: expanded gallery controls fit on screen
+PASS: earned route movie replays from the footage gallery
+PASS: route replay preserves progress and paused state
+PASS: route footage survives save and reload
+PASS: an existing reached checkpoint restores the new film unlock
+PASS: route movie is not cut off by the short terrain preview timer
+PASS: route movie preserves original truck proportions
+PASS: route decoder fallback previews the road without a warehouse
+PASS: route fallback safely saves and returns to driving
+PASS: disabled route movie retains the Mateo road preview
+PASS: new gallery movie is present but locked before earning it
+PASS: next page exposes the new route films
+PASS: expanded gallery controls fit on screen
+PASS: earned route movie replays from the footage gallery
+PASS: route replay preserves progress and paused state
+PASS: route footage survives save and reload
+PASS: an existing reached checkpoint restores the new film unlock
+PASS: full run reaches seven checkpoints in order
+PASS: recovered game remains winnable
+PASS: full run earns valid probe/data score
+PASS: victory retires checkpoint
+PASS: scoreboard records expedition
+RUN_RESULT score=47701.0000000038 probes=17 health=100.0
+CHECKPOINT_TESTS 176 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 20 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

@@ -1,0 +1,37 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: media availability distinguishes installed and absent files
+PASS: an .import file alone never counts as installed media
+WARNING: Storm Chaser: optional media is missing (first: res://assets/art/terrain/__absent__.png). Built-in stand-ins are used; copy the full assets folders back to restore it.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _note_missing (res://scripts/media.gd:68)
+         [1] texture (res://scripts/media.gd:76)
+         [2] run (res://tools/verify_runtime.gd:81)
+PASS: missing textures get generated in-memory stand-ins
+PASS: stand-ins are never written over asset paths
+PASS: missing sounds become separate short silent clips
+PASS: missing films report unavailable so the in-engine fallbacks run
+PASS: the approved truck scene loads with its reference bodywork texture
+PASS: the storm film button is disabled only when the film is absent
+PASS: optimized elevation field matches the original formula (worst 0.00001)
+PASS: shared road rows reproduce every road and shoulder vertex position
+PASS: hill grid is a single static mesh with a real culling height
+PASS: hills update shader inputs without rebuilding the grid
+PASS: hill grid is hidden outside the three hill levels
+PASS: roadside grass reads the same hill-field inputs as the hill grid
+PASS: cached grass positions match per-frame placement across scroll cycles
+PASS: grass follows the hill field only in the hill levels
+PASS: course frame refreshes whenever progress changes
+PASS: course frame refreshes when the level changes at the same progress
+PASS: a route hint is hidden only while a notice on the same topic is showing
+PASS: the debrief's footage button sits inside the results panel
+PASS: controller B or Start closes the title storm film
+JUMP_PEAK level=5 30fps=3.24 120fps=3.24
+JUMP_PEAK level=6 30fps=8.57 120fps=8.58
+PASS: big-hill jump height stays within 3% between 30 and 120 FPS
+RUNTIME_TESTS 22 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 9 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

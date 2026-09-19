@@ -1,0 +1,19 @@
+Suites on a clean extraction of this package (no .godot cache, media pack absent).
+Command per suite: godot --headless --path . --script res://tools/verify_<name>.gd -- --test
+
+  storm_art          pass    4  fail 0  skip 0  script errors 0
+  road_margin        pass   14  fail 0  skip 0  script errors 0
+  truck_3d           pass   16  fail 0  skip 0  script errors 0
+  weight             pass   13  fail 0  skip 1  script errors 0
+  driving            pass   20  fail 0  skip 3  script errors 0
+  landscape          pass   15  fail 0  skip 0  script errors 0
+  solid_impacts      pass   38  fail 0  skip 0  script errors 0
+  finale             pass   49  fail 0  skip 1  script errors 0
+  polish             pass   26  fail 0  skip 2  script errors 0
+  route              pass   71  fail 0  skip 0  script errors 0
+  checkpoints        pass  175  fail 0  skip 1  script errors 0
+  contact_campaign   pass    2  fail 0  skip 0  script errors 0
+  garage             pass   39  fail 0  skip 0  script errors 0
+  runtime            pass   22  fail 0  skip 0  script errors 0
+
+  total              pass  504  fail 0  skip 8

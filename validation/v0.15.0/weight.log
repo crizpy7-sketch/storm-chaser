@@ -1,0 +1,21 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: motor builds torque instead of jumping immediately
+ACCELERATION_METRICS { "speed": 221.510011080795, "rpm": 4532.46581163456, "shifts": 3 } { "speed": 221.510011080795, "rpm": 4532.46581163456, "shifts": 3 } { "speed": 221.510011080795, "rpm": 4532.46581163456, "shifts": 3 }
+PASS: 30/60/120 Hz powertrain agrees
+PASS: boost builds substantial speed through gear shifts
+PASS: airborne throttle revs without accelerating the truck
+PASS: braking remains useful before sharp corners
+PASS: straight landing does not invent a random sideways kick
+PASS: crooked hard landing preserves momentum and breaks grip
+PASS: heavy impact visibly compresses suspension within travel stops
+PASS: suspension settles rather than bouncing indefinitely
+PASS: weight uses bounded rigid body lean without stretching the truck
+PASS: brake and countersteer recover landing slide
+PASS: restart clears engine and transmission transients
+PASS: motor and landing body audio assets load
+WEIGHT_TESTS 13 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 9 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

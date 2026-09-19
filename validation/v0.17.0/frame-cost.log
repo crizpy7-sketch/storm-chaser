@@ -1,0 +1,43 @@
+tools/measure_frame_cost.gd, headless Godot 4.5.2, Linux x86_64 VM (2 cores), 240 simulated 60 Hz frames per level.
+"view update" is the GDScript cost of World3D._update_view (road, terrain, scenery, grass, camera). GPU rendering is not included.
+v0.16.0 code = the handoff source with only the optional-media loader added, so it runs without the media pack.
+
+== v0.17.0, run 1
+FRAME_COST level 1 PRAIRIE APPROACH   simulate  0.15 ms   view update  1.93 ms
+FRAME_COST level 4 CROSSWIND CURVES   simulate  0.20 ms   view update  4.99 ms
+FRAME_COST level 5 DIRT SHORTCUT      simulate  0.33 ms   view update  5.78 ms
+FRAME_COST level 6 RIDGELINE JUMPS    simulate  0.26 ms   view update  6.98 ms
+FRAME_COST level 7 WILD HILLS         simulate  0.24 ms   view update  7.33 ms
+FRAME_COST level 8 VORTEX RUN         simulate  0.25 ms   view update  2.50 ms
+
+== v0.17.0, run 2
+FRAME_COST level 1 PRAIRIE APPROACH   simulate  0.15 ms   view update  1.96 ms
+FRAME_COST level 4 CROSSWIND CURVES   simulate  0.23 ms   view update  4.81 ms
+FRAME_COST level 5 DIRT SHORTCUT      simulate  0.26 ms   view update  5.78 ms
+FRAME_COST level 6 RIDGELINE JUMPS    simulate  0.24 ms   view update  6.72 ms
+FRAME_COST level 7 WILD HILLS         simulate  0.23 ms   view update  7.24 ms
+FRAME_COST level 8 VORTEX RUN         simulate  0.20 ms   view update  2.42 ms
+
+== v0.17.0, run 3
+FRAME_COST level 1 PRAIRIE APPROACH   simulate  0.14 ms   view update  1.88 ms
+FRAME_COST level 4 CROSSWIND CURVES   simulate  0.19 ms   view update  4.66 ms
+FRAME_COST level 5 DIRT SHORTCUT      simulate  0.21 ms   view update  5.31 ms
+FRAME_COST level 6 RIDGELINE JUMPS    simulate  0.22 ms   view update  6.61 ms
+FRAME_COST level 7 WILD HILLS         simulate  0.24 ms   view update  6.54 ms
+FRAME_COST level 8 VORTEX RUN         simulate  0.24 ms   view update  2.42 ms
+
+== v0.16.0 code, run 1
+FRAME_COST level 1 PRAIRIE APPROACH   simulate  0.13 ms   view update  2.42 ms
+FRAME_COST level 4 CROSSWIND CURVES   simulate  0.20 ms   view update 11.21 ms
+FRAME_COST level 5 DIRT SHORTCUT      simulate  0.31 ms   view update 66.35 ms
+FRAME_COST level 6 RIDGELINE JUMPS    simulate  0.25 ms   view update 70.47 ms
+FRAME_COST level 7 WILD HILLS         simulate  0.24 ms   view update 75.13 ms
+FRAME_COST level 8 VORTEX RUN         simulate  0.25 ms   view update  9.00 ms
+
+== v0.16.0 code, run 2
+FRAME_COST level 1 PRAIRIE APPROACH   simulate  0.13 ms   view update  2.44 ms
+FRAME_COST level 4 CROSSWIND CURVES   simulate  0.18 ms   view update 11.35 ms
+FRAME_COST level 5 DIRT SHORTCUT      simulate  0.26 ms   view update 59.59 ms
+FRAME_COST level 6 RIDGELINE JUMPS    simulate  0.26 ms   view update 70.89 ms
+FRAME_COST level 7 WILD HILLS         simulate  0.26 ms   view update 76.15 ms
+FRAME_COST level 8 VORTEX RUN         simulate  0.22 ms   view update  7.79 ms

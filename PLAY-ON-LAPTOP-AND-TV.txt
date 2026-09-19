@@ -1,0 +1,67 @@
+STORM CHASER v0.17.0 — MATEO'S GARAGE
+
+START ON WINDOWS
+1. Extract the complete Storm-Chaser-Windows.zip.
+2. Open the extracted folder and double-click Storm-Chaser.exe.
+3. Choose START CHASING, or RESUME CHECKPOINT if you have a saved run.
+
+PLAY ON YOUR TV
+Connect the laptop to the TV using HDMI (or a compatible video adapter).
+On Windows, press Win+P and choose the TV display mode you prefer.
+Press F11 in the game for fullscreen. Enable the TV's Game Mode if available.
+The laptop runs the game; the TV displays it and can play its sound.
+
+CONTROLLER
+Connect a Windows-compatible controller by USB or pair it with Windows.
+Left stick or D-pad: steer. A: boost. B: brake. X: transmit a probe.
+Start: pause/resume. Use the D-pad and A to select menu options.
+A/B/X: skip the ending. Start pauses the ending without skipping it.
+Keyboard and mouse remain available.
+
+KEYBOARD
+A/D or arrows: steer. W/Up/Shift: boost. S/Down: brake.
+Space: transmit a charged probe. P/Escape: pause. M: mute. F11: fullscreen.
+Space/Enter: skip the ending. R on results: retry checkpoint or chase again.
+
+THE MISSION
+The truck drives forward automatically. Steer around debris, brake before
+curves, recover from puddles and land straight after big jumps.
+Send at least THREE probes when the probe indicator is ready.
+Complete eight levels and the full tornado lap to reach the ending film.
+Collect field data for your score and local top-five scoreboard.
+
+Seven checkpoints save level entrances after an upgrade and cinematic.
+A retry restores that checkpoint's hull, probes, upgrades and score.
+Failed-attempt points are not added again. Winning clears the checkpoint.
+The ending earns 2,000 data once; a complete survey also earns hull x 20.
+
+MATEO'S FOOTAGE
+Open the gallery from the base, pause menu or results. Select NEXT for
+later checkpoints and THE FINALE. Completing the lap earns the final film.
+Watching replays never changes your score or checkpoint.
+
+MATEO'S GARAGE
+Choose MATEO'S GARAGE at the base. Pick paint accents, wheels, roof
+equipment, bumper armor and suspension trim; these change the look only.
+CHASE SETUP is separate: STOCK keeps the original handling, while RALLY,
+ARMORED and TURBO each trade one strength for a weakness.
+Keyboard: Up/Down select, Left/Right change, Q/E or mouse drag to orbit,
+R restores the stock look, Enter starts, Escape returns to base.
+Controller: D-pad or left stick select and change, LB/RB orbit,
+Y stock look, A or Start starts, B returns to base.
+Your loadout is saved and shown in Mateo's Footage. A non-stock setup
+is labeled on the scoreboard.
+
+LAPTOP SETTINGS
+DRIVING & DISPLAY offers LIGHTER GRAPHICS, CALM EFFECTS, steering recovery
+and extra reaction time. Start with LIGHTER GRAPHICS if motion is uneven.
+Assisted runs can earn every film and are marked on the scoreboard.
+
+YOUR SAVES
+Keep the existing Windows user account to retain saved progress.
+Extract new versions into a fresh folder; the game uses the same save
+location for records, checkpoints and settings.
+
+This package is the playable game. The cinematic scenes are prerecorded
+movies triggered by gameplay. Physical Galaxy Book2, TV and controller
+performance still requires a test on your setup. Mobile is a separate build.

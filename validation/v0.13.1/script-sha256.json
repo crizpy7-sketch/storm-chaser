@@ -1,0 +1,8 @@
+{
+  "scripts/truck_rig.gd": "99d6e1f356928c37f7e83dfb0370776708144837a003294d054a1d4c5edfba98",
+  "scripts/mateo.gd": "6eb22eae9ca9e4f2e5b8287b75c1df44eba896432c0dacbc548e238bea8c5385",
+  "shaders/classic_truck.gdshader": "842c1305bb6c1e8d98c7acdbe78b4bd303f12926b5deb0780853c90e090a2536",
+  "tools/verify_rigid_truck.gd": "84a1e5583acf120093b0be1603478460b41463a393a037c832c9e57008a9d560",
+  "tools/verify_storm_art.gd": "242f96609721de21c82b7b6d0e103b7d8c0bf0e8de3864058cb6804bf32ad799",
+  "tools/record_rigid_swerves.gd": "856f6e4f2f319632bef75d129140120180bb703e00258527794123a8fe3b23cb"
+}

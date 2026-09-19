@@ -1,0 +1,7 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: storm has physical lifting objects and dust layers
+PASS: storm animation freezes with scene time
+PASS: storm carries objects across ground and upward
+PASS: lighter graphics halves suction objects
+STORM_ART_TESTS 4 checks; 0 failures

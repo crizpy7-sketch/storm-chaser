@@ -1,0 +1,45 @@
+Godot Engine v4.5.2.stable.official.6ce3de25a - https://godotengine.org
+
+PASS: collision bounds come from visible hazard geometry
+PASS: front bumper takes contact before debris reaches the truck center
+PASS: physical strike removes hull and forward speed
+PASS: rendered object stops at its swept contact transform
+PASS: impact effects originate at the actual front contact
+PASS: debris deflects away from the front instead of crossing the chassis
+PASS: the same impact never damages twice
+PASS: a second solid object still strikes during recovery
+PASS: contact compresses suspension and moves the body as a rigid unit
+PASS: impact preserves the approved truck proportions
+PASS: rigid recoil settles without permanent offset
+PASS: vortex camera view and physical truck use the same heading
+PASS: a visible side clearance causes no phantom damage
+PASS: continuous contact catches a large step that crosses the whole vehicle
+PASS: a genuinely high jump clears low debris
+PASS: airborne truck still collides when its body intersects debris
+PASS: collision hull rotates with the steered vehicle
+PASS: truck lateral movement can sweep into a stationary object
+PASS: supply uses physical contact but repairs the truck
+PASS: falling sheet starts at exactly the torn semi roof position and orientation
+PASS: original roof disappears when its physical hazard takes over
+PASS: semi sheds only one collidable roof sheet
+PASS: torn semi roof follows a real damaging flight through the driving corridor
+PASS: all cosmetic semi sections stay clear of truck at center and both road edges
+PASS: repeated impacts reuse a bounded fragment pool
+PASS: pause freezes impacted debris
+PASS: restart clears fragments and rigid recoil
+PASS: four ground shelters each have three articulated civilians
+PASS: nearby shelter evacuation starts as the truck approaches
+PASS: civilian travels toward entrance with running legs
+PASS: civilian motion uses simulation time and freezes when paused
+PASS: civilian paths remain well outside the road and truck envelope
+PASS: all civilians disappear down the shelter entrance
+PASS: shelter hatch closes only after everyone is inside
+PASS: streaming a shelter to the distance resets its evacuation
+PASS: shelter foundations follow the off-road hill surface
+PASS: shortcut junction stays clear of shelter sites
+PASS: civilians are absent from the tornado finale
+SOLID_IMPACTS_TESTS 38 checks; 0 failures
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+     at: cleanup (core/object/object.cpp:2514)
+ERROR: 14 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:804)

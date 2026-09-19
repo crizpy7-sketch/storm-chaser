@@ -1,0 +1,63 @@
+name: Verify
+
+# Runs the full check harness on every push and pull request. The project has
+# 520 checks across 15 suites; before this they only ran when someone
+# remembered to run them by hand.
+on:
+  # Branch pushes are covered by pull_request once a PR is open, so push is
+  # limited to the default branch; otherwise every commit runs the suite twice.
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suites:
+    name: Godot check suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: 4.5.1-stable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p $HOME/godot
+          url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -sSfL --retry 3 -o /tmp/godot.zip "$url"
+          unzip -q -o /tmp/godot.zip -d $HOME/godot
+          chmod +x $HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64
+
+      - name: Import project
+        run: |
+          set -uo pipefail
+          # First import always reports missing optional media; the suites skip
+          # those checks rather than fail, so a non-zero status here is not fatal.
+          $HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64 --headless --path . --import || true
+
+      - name: Run check suites
+        run: GODOT=$HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64 tools/run_suites.sh
+
+      - name: Upload suite logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-logs
+          path: .suite-logs/
+          retention-days: 14
+          # .suite-logs is a dotfile; without this the upload silently finds nothing.
+          include-hidden-files: true

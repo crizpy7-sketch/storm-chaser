@@ -1,0 +1,15 @@
+{
+  "poses": {
+    "compression": 10,
+    "descent": 60,
+    "drift-left": 4,
+    "drift-right": 4,
+    "steer-left-soft": 101,
+    "steer-right-soft": 132,
+    "straight": 478,
+    "takeoff": 22
+  },
+  "seconds": 27.0250000000005,
+  "stage_selection": "showcase; actual game logic, scripted steering and automated driver",
+  "suction_objects": 24
+}
