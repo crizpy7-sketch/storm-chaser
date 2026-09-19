@@ -168,7 +168,35 @@ health band. **Tune the grant, never the assertion.**
 non-decreasing order. Then **play it** — 12 minutes is the first time anyone
 feels whether level 3 drags.
 
-## Phase 5 — Career wallet (read-only, VPS-ready)
+## Phase 5 — Career wallet (read-only, VPS-ready) — DONE
+
+Shipped. Every run now banks its DATA, win or lose, and the wallet shows on the
+debrief and the base menu. Nothing spends it yet; that is Phase 6.
+
+All career reads and writes go through `scripts/career_store.gd`, whose local
+implementation keeps the `[career]` section in the same cfg. The store writes
+**after** `save_settings()` has replaced the file, loading it back first — which
+is what survives the fresh-ConfigFile trap this plan warned about, structurally
+rather than by remembering to add six `set_value` lines. `verify_career` proves
+it by deleting that write and watching four checks fail.
+
+A store returns an **empty** dictionary when no career has ever been stored,
+which is deliberately not the same as a career of zero: that is the signal a
+v0.18 save is being opened, and `_seed_career()` turns it into `banked = best`
+plus every non-stock part in the saved loadout. A career that has been *spent*
+down to zero is not re-seeded, because it is present.
+
+The farming exploit is closed by banking the **difference**: `last_run` and
+`last_amount` make a resumed run bank only what it beat itself by, mirroring the
+per-`run_id` rule `_record_score()` already applies to the scoreboard. The suite
+drives the real path — finish, `retry_checkpoint()`, finish again — rather than
+asserting on the helper.
+
+`banked` and `earned` are separate from `best` and `high_scores`, which banking
+never touches. Thirty-eight checks added (609 total across seventeen suites);
+each of the three guards was proven to fail against its bug reintroduced.
+
+### Original notes
 
 ```ini
 [career]
@@ -208,7 +236,39 @@ No prices and no locks in this phase — the wallet just fills.
 **Gate:** all green; `verify_garage`'s catalog and sanitize checks untouched; a
 hand-written v0.18 cfg loads with the right parts already owned.
 
-## Phase 6 — Prices, badges, garage lock UI
+## Phase 6 — Prices, badges, garage lock UI — DONE
+
+Shipped. Sixteen cosmetics carry a `cost` totalling exactly 456,000 DATA; the
+three chase setups carry a `badge` instead and are never for sale, so a child
+cannot buy their way past a trade-off. `sanitize()` and `cycle()` were not
+touched: a locked part is still cycled to and still worn on the live preview,
+which is the carrot, and a saved loadout is never silently reset by a career
+that failed to load.
+
+Enforcement is `Loadout.owned_only()`, called from `leave_garage()` — and, one
+deviation from this plan, from `_load_settings()` as well. `leave_garage()`
+alone leaves a real hole: quit from inside the garage with a locked part
+selected and `set_loadout()` has already saved it, so the next launch goes
+START CHASING straight past the only check. The second call site closes that
+without touching the preview, since the preview lives in memory during the
+garage session. One implementation, two doors.
+
+Eight badges, awarded at the two moments this plan named and nowhere else. Only
+`iron_hull` needed a counter of its own: `stage_entry_hits`, which rides in the
+snapshot so a resumed run cannot claim a level it half drove, and which an
+older snapshot simply lacks — that level then counts from the resume point.
+
+**A limit worth stating:** `dodge_ace` reads `combo`, which a hit clears. A
+five-dodge combo broken before the next checkpoint does not count. The combo
+caps at 5 and only a hit clears it, so holding one to a checkpoint is ordinary;
+a high-water mark would be a second new counter for a badge already reachable.
+
+`verify_garage` needed no assertion changed — it is about parts and handling,
+so its harness now owns everything and says so. The economy is checked in
+`verify_career`, which grew from 38 to 80 checks: 651 total across seventeen
+suites.
+
+### Original notes
 
 `loadout.gd` catalog gains two optional fields (absent = free):
 `cost: int`, `badge: String`. **Do not touch `sanitize()` or `cycle()`** —

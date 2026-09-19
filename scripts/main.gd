@@ -13,10 +13,35 @@ const DEBRIS_BASE_RATE: = 0.2
 const DEBRIS_SPEED_RATE: = 0.0024
 const STAGE_NAMES: = ["PRAIRIE APPROACH", "BARN BREAKOUT", "WAREHOUSE COLLAPSE", "CROSSWIND CURVES", "DIRT SHORTCUT", "RIDGELINE JUMPS", "WILD HILLS", "VORTEX RUN"]
 const DEBRIS_MULTIPLIERS: = [1.0, 1.16, 1.32, 1.20, 1.10, 1.12, 1.20, 1.08]
+## The pacing the Storm Director chooses between before each wave of debris.
+##
+## Every band is a pace this game already plays at. HOLD is today's tune to the
+## last decimal and is always the fallback, so with no storm link the campaign
+## is byte-identical to the one that shipped. The other two move the same two
+## levers EXTRA REACTION TIME already moves, and by about as much: the space
+## between waves, and how fast the debris flies at the driver, which is how long
+## they get to read it. That is a range this game is known to play well at.
+## PRESS is the milder of the two, because making a ten-year-old's game harder
+## deserves more caution than making it easier.
+##
+## "info" is what the Director is shown. It describes when a band is right, and
+## is never displayed to anyone.
+const DIRECTOR_BANDS: = [
+	{"id": "ease", "gap": 1.18, "approach": 0.80,
+		"info": "The driver is struggling: taking hits, low on hull, or has just lost a run. Give them more space between waves and more time to read each one."},
+	{"id": "hold", "gap": 1.0, "approach": 1.0,
+		"info": "The chase is going as intended -- some pressure, some success. Change nothing. Correct whenever the run is unremarkable or hard to read."},
+	{"id": "press", "gap": 0.86, "approach": 1.15,
+		"info": "The driver is cruising: clean, fast, stringing dodges together and taking no damage. Close the gap between waves and send the debris in faster, so the chase stays exciting."},
+]
 const SAVE_PATH: = "user://storm_chaser.cfg"
 const Media := preload("res://scripts/media.gd")
 const STORM_FILM := "res://assets/cinematics/storm-film.ogv"
 const Loadout := preload("res://scripts/loadout.gd")
+const Advisor := preload("res://scripts/advisor.gd")
+const AdvisorJev := preload("res://scripts/advisor_jev.gd")
+const CareerStore := preload("res://scripts/career_store.gd")
+const CareerStoreLocal := preload("res://scripts/career_store_local.gd")
 const CHECKPOINT_FOOTAGE: = [1, 2, 3, 4, 5, 6, 7]
 const FINALE_FOOTAGE := 8
 var settings_path: = SAVE_PATH
@@ -28,6 +53,12 @@ var stage: = 0
 var stage_seen: = 0
 ## How many SAVE_SPAN boundaries have been marked this run.
 var saves_marked: = 0
+## The pacing band in force. Always "hold" unless a storm link is up and sure.
+var director_band: = "hold"
+## What `hits` stood at when the current level began, so IRON HULL can ask
+## whether a whole level went by without one. Carried in the snapshot, because
+## a resumed run must not be able to claim a level it only half drove.
+var stage_entry_hits: = 0
 var player_x: = 0.0
 var steer: = 0.0
 ## The steering column itself. Raw input is a demand; a loaded truck's wheel
@@ -170,6 +201,21 @@ var pause_resume_mode := Mode.RUNNING
 ## Mateo Garage loadout (cosmetic slots plus the optional chase setup).
 var loadout: Dictionary = Loadout.default_loadout()
 var garage: Control
+## The career: a spendable DATA balance, a lifetime total that only ever grows,
+## the parts owned and the badges earned. Nothing spends it yet -- this version
+## only fills the wallet -- but every run from here on is being banked.
+var career: Dictionary = CareerStore.blank()
+## Swap this for another implementation and the career lives somewhere else.
+var career_store = CareerStoreLocal.new(SAVE_PATH)
+## What the last finished run added, for the debrief line. Not persisted.
+var banked_this_run: = 0
+## Who decides the judgement calls the game makes about the moment -- which of
+## Mateo's recorded lines fits what just happened, and more later. The base
+## class is the game deciding for itself, which is what runs unless a key is in
+## the environment. Nothing here can change what is in the game, only which of
+## the things already in it happens next.
+var advisor = Advisor.new()
+var storm_ai: = true
 
 func _ready() -> void :
 	contacts.game=self
@@ -179,6 +225,7 @@ func _ready() -> void :
 	_setup_input()
 	light_graphics = OS.has_feature("mobile")
 	_load_settings()
+	build_advisor()
 	if "--test" in OS.get_cmdline_user_args(): auto_dodges = false
 	touch_controls = OS.has_feature("mobile")
 	route = preload("res://scripts/route.gd").new()
@@ -314,6 +361,8 @@ func play_sound(key: String) -> void :
 func _load_settings() -> void :
 	var config: = ConfigFile.new()
 	high_scores.clear();checkpoint.clear()
+	career = CareerStore.blank()
+	career_store.rebind(settings_path)
 	if config.load(settings_path) == OK:
 		best = int(config.get_value("records", "best", 0))
 		muted = bool(config.get_value("settings", "muted", false))
@@ -323,6 +372,7 @@ func _load_settings() -> void :
 		relaxed_hazards = bool(config.get_value("settings", "relaxed_hazards", false))
 		light_graphics = bool(config.get_value("settings", "light_graphics", light_graphics))
 		mateo_voice = bool(config.get_value("settings", "mateo_voice", true))
+		storm_ai = bool(config.get_value("settings", "storm_ai", true))
 		footage_unlocked.clear()
 		var films = config.get_value("records", "footage", [])
 		if films is Array:
@@ -343,6 +393,23 @@ func _load_settings() -> void :
 			# A previous version checkpoint proves the earlier landmarks were reached.
 			for reached in CHECKPOINT_FOOTAGE:
 				if reached <= int(saved.stage) and reached not in footage_unlocked: footage_unlocked.append(reached)
+		# Read last: a save with no career at all is seeded from the rest of it.
+		var stored: Dictionary = career_store.read()
+		career = stored if not stored.is_empty() else _seed_career()
+		loadout = Loadout.owned_only(loadout, career.owned, career.badges)
+
+## A save from before the wallet existed has no career. Seeding one is not a
+## formality: without it the child opens the garage and finds the parts they
+## are currently driving locked. Their best run becomes their opening balance,
+## which makes the wallet's first appearance a reward rather than a zero.
+func _seed_career() -> Dictionary:
+	var seeded: Dictionary = CareerStore.blank()
+	seeded.banked = maxi(0, best)
+	seeded.earned = maxi(0, best)
+	for slot in Loadout.SLOTS:
+		var id: = str(loadout.get(slot, "stock"))
+		if id != "stock": seeded.owned.append(slot + ":" + id)
+	return seeded
 
 func save_settings() -> void :
 	if not save_enabled: return
@@ -353,6 +420,7 @@ func save_settings() -> void :
 	config.set_value("settings", "relaxed_hazards", relaxed_hazards)
 	config.set_value("settings", "light_graphics", light_graphics)
 	config.set_value("settings", "mateo_voice", mateo_voice)
+	config.set_value("settings", "storm_ai", storm_ai)
 	config.set_value("records", "scores", high_scores)
 	config.set_value("checkpoint", "snapshot", checkpoint)
 	config.set_value("settings", "muted", muted)
@@ -361,6 +429,11 @@ func save_settings() -> void :
 	config.set_value("settings", "auto_dodges", auto_dodges)
 	config.set_value("garage", "loadout", loadout)
 	config.save(settings_path)
+	# Written last, and through the store rather than into the ConfigFile above,
+	# because that one is built fresh every time: a key it does not set is gone.
+	# The store loads the file back before adding its own section.
+	career_store.rebind(settings_path)
+	career_store.write(career)
 
 func toggle_sound() -> void :
 	muted = not muted
@@ -416,7 +489,7 @@ func start_chase(clear_checkpoint: bool = true) -> void :
 	speed = 112.0;powertrain.reset(speed);distance = 900.0;health = 100.0;boost = 100.0;boost_max = 100.0
 	boosting = false;braking = false;turbo_fx = 0.0;near_pulse = 0.0;near_side = 1.0
 	demo_boost_latched = false
-	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0
+	charge = 0.0;probes = 0;score = 0.0;combo = 0;near_misses = 0;hits = 0;stage_entry_hits = 0;director_band = "hold"
 	invulnerable = 0.0;flash = 0.0;shake = 0.0;tires = 1.0
 	spawn_timer = 0.85;pickup_timer = 7.0;thunder_timer = 6.0;boost_locked = false
 	debris.clear();effects.clear();_clear_touch()
@@ -634,6 +707,7 @@ func _simulate(dt: float) -> void :
 	contacts.begin_step()
 	elapsed += dt
 	cinematic_return = maxf(0.0,cinematic_return-dt*0.7)
+	advisor.step(dt)
 	mateo_caption_time = maxf(0.0,mateo_caption_time-dt)
 	mateo_cooldown = maxf(0.0,mateo_cooldown-dt)
 	stage = mini(7, int(elapsed / STAGE_LENGTH))
@@ -734,8 +808,9 @@ func _simulate(dt: float) -> void :
 	else: score += dt * 5.0
 	spawn_timer -= dt
 	if spawn_timer <= 0.0 and not is_breathing():
+		_choose_pacing()
 		_spawn_wave()
-		spawn_timer = (rng.randf_range(1.50, 1.90) if route.active else rng.randf_range(1.22, 1.52) - stage * 0.10) * (1.18 if relaxed_hazards else 1.0)
+		spawn_timer = (rng.randf_range(1.50, 1.90) if route.active else rng.randf_range(1.22, 1.52) - stage * 0.10) * (1.18 if relaxed_hazards else 1.0) * director_gap()
 	pickup_timer -= dt
 	if pickup_timer <= 0.0:
 		_spawn_item(4, rng.randf_range(-0.8, 0.8))
@@ -968,8 +1043,57 @@ func _spawn_wave() -> void :
 		var second: = first + 1 if first < 3 else 2
 		_spawn_item(rng.randi_range(0, 3), lanes[second], -0.06)
 
+## The band in force, by id. An unknown id is HOLD, so nothing outside this
+## list can change the pace.
+func director_pacing() -> Dictionary:
+	for band in DIRECTOR_BANDS:
+		if str(band.id) == director_band: return band
+	return DIRECTOR_BANDS[1]
+
+## How much longer the gap between waves is. 1.0 is the shipped game.
+func director_gap() -> float:
+	return float(director_pacing().gap)
+
+## How much faster debris flies at the driver, which is how long they get to
+## read it. 1.0 is the shipped game.
+func director_approach() -> float:
+	return float(director_pacing().approach)
+
+## Chooses the pacing for the wave about to spawn.
+##
+## The fallback is always HOLD, which is the tune the game shipped with, so an
+## advisor that is absent, offline, slow or unsure leaves the campaign exactly
+## as it was -- and that is what every check suite runs against.
+func _choose_pacing() -> void:
+	var hold: = 1
+	var picked: int = advisor.choose("storm_pacing", "A ten-year-old is driving a storm chase. Given how this run is going, should the next wave of flying debris ease off, hold as it is, or press them a little harder?", DIRECTOR_BANDS, _pacing_state(), hold, Advisor.CONSEQUENTIAL)
+	if picked < 0 or picked >= DIRECTOR_BANDS.size(): picked = hold
+	# EXTRA REACTION TIME is switched on deliberately, by someone who decided
+	# this player needs more room. The Director may ease further; it never
+	# presses against that decision. Policy stays here in the game, not in the
+	# question, so it holds however the answer comes back.
+	if relaxed_hazards and str(DIRECTOR_BANDS[picked].id) == "press": picked = hold
+	director_band = str(DIRECTOR_BANDS[picked].id)
+
+## How the run is going, in numbers the game already keeps. No identity of any
+## kind, and nothing the player typed.
+func _pacing_state() -> Dictionary:
+	return {
+		"hull": int(health),
+		"level": stage + 1,
+		"seconds_in": int(elapsed),
+		"speed_mph": int(speed),
+		"hits_taken": hits,
+		"hits_this_level": maxi(0, hits - stage_entry_hits),
+		"near_misses": near_misses,
+		"dodge_combo": combo,
+		"probes_sent": probes,
+		"resumed_after_a_crash": checkpoint_retry,
+		"extra_reaction_time_on": relaxed_hazards,
+	}
+
 func debris_rate() -> float:
-	return (DEBRIS_BASE_RATE + speed * DEBRIS_SPEED_RATE) * DEBRIS_MULTIPLIERS[stage] * (0.78 if relaxed_hazards else 1.0)
+	return (DEBRIS_BASE_RATE + speed * DEBRIS_SPEED_RATE) * DEBRIS_MULTIPLIERS[stage] * (0.78 if relaxed_hazards else 1.0) * director_approach()
 
 func _shed_semi_roof(piece: Dictionary) -> void:
 	if piece.get("shed",false):return
@@ -1119,6 +1243,8 @@ func finish(won: bool, reason: String, after_crash: bool = false) -> void :
 	if won: score += health * 20.0
 	best = maxi(best, int(score))
 	_record_score(won)
+	_bank_run()
+	_award_earned_badges(won)
 	if won: checkpoint.clear()
 	save_settings()
 	_clear_touch()
@@ -1153,7 +1279,7 @@ func _mark_save() -> void:
 	notify("SAVE FLAG  /  +15 HULL  /  +500 DATA", 2.5)
 
 func save_checkpoint() -> void :
-	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
+	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "stage_entry_hits": stage_entry_hits, "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
 	save_settings()
 
 func retry_checkpoint() -> void :
@@ -1168,6 +1294,9 @@ func retry_checkpoint() -> void :
 	saves_marked = int(elapsed / SAVE_SPAN)
 	for key in ["score", "health", "boost", "boost_max", "charge", "probes", "hits", "near_misses", "tires", "distance"]: set(key, saved[key])
 	run_id = str(saved.get("run_id", run_id))
+	# An older snapshot carries no mark, so the level counts from the resume
+	# point. A mark above the restored hits would claim a level never driven.
+	stage_entry_hits = clampi(int(saved.get("stage_entry_hits", hits)), 0, int(hits))
 	checkpoint_retry = true
 	run_assisted = bool(saved.get("assisted", false)) or steering_assist or relaxed_hazards
 	world.truck.apply_damage()
@@ -1195,6 +1324,24 @@ func _record_score(won: bool) -> void :
 	high_scores = high_scores.slice(0, 5)
 
 
+## Banks the run's DATA, win or lose, so a run that ends badly still pays for
+## something. It banks the difference rather than the total, which is what
+## closes the obvious exploit: bank, crash, retry_checkpoint() -- which restores
+## score -- and finish again. That is the same per-run_id rule _record_score()
+## already applies to the scoreboard: one run counts once, at its best.
+##
+## banked is the wallet and will shrink when there is something to spend it on.
+## earned is the lifetime total and never decreases, so buying a part can never
+## take a badge away or make the scoreboard look worse.
+func _bank_run() -> void:
+	var total: = maxi(0, int(score))
+	var already: int = int(career.last_amount) if str(career.last_run) == run_id else 0
+	banked_this_run = maxi(0, total - already)
+	career.banked = int(career.banked) + banked_this_run
+	career.earned = int(career.earned) + banked_this_run
+	career.last_run = run_id
+	career.last_amount = maxi(already, total)
+
 func is_breathing() -> bool:
 	if stage == 7 and route.orbit_progress() > 0.92: return true
 	var front_time := fposmod(elapsed, SAVE_SPAN)
@@ -1218,11 +1365,12 @@ func is_fullscreen() -> bool:
 	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 
 func toggle_option(key: String) -> void:
-	if key not in ["steering_assist", "relaxed_hazards", "light_graphics", "mateo_voice"]: return
+	if key not in ["steering_assist", "relaxed_hazards", "light_graphics", "mateo_voice", "storm_ai"]: return
 	set(key, not bool(get(key)))
 	if key in ["steering_assist", "relaxed_hazards"] and mode == Mode.PAUSED:
 		run_assisted = run_assisted or steering_assist or relaxed_hazards
 	if key == "mateo_voice" and not mateo_voice and is_instance_valid(mateo_audio): mateo_audio.stop()
+	if key == "storm_ai": build_advisor()
 	save_settings()
 	hud.rebuild()
 
@@ -1230,6 +1378,73 @@ func unlock_footage(front: int) -> void:
 	if (front not in CHECKPOINT_FOOTAGE and front != FINALE_FOOTAGE) or front in footage_unlocked: return
 	footage_unlocked.append(front)
 	save_settings()
+
+## Badges are the other half of what is earned, and the half that cannot be
+## bought. Mirrors unlock_footage() deliberately: award once, say so, save.
+func award_badge(id: String) -> void:
+	if not Loadout.BADGE_TITLES.has(id) or id in career.badges: return
+	career.badges.append(id)
+	play_sound("pickup")
+	notify("BADGE EARNED  /  " + str(Loadout.BADGE_TITLES[id]), 3.2)
+	save_settings()
+
+## Every badge whose condition is a counter the run already keeps. Called from
+## the two moments a run has something to show for itself -- a checkpoint and
+## the debrief -- and from nowhere else.
+##
+## Known limit: dodge_ace reads `combo`, which a hit resets. A five-dodge combo
+## broken before the next checkpoint does not count. The combo caps at 5 and
+## only a hit clears it, so holding one to a checkpoint is ordinary; a
+## high-water mark would be a second new counter for a badge already reachable.
+func _award_earned_badges(won: bool = false) -> void:
+	if stage >= 1 or stage_seen >= 1: award_badge("first_light")
+	if CHECKPOINT_FOOTAGE.all(func(f): return f in footage_unlocked): award_badge("storm_veteran")
+	if probes >= 10: award_badge("probe_master")
+	if route.landings - route.hard_landings >= 10: award_badge("big_air")
+	if combo >= 5: award_badge("dodge_ace")
+	if won:
+		award_badge("vortex_recorded")
+		if not checkpoint_retry: award_badge("one_take")
+
+## Buys a part with banked DATA. The only thing that spends the wallet.
+## Idempotent -- a part already owned costs nothing and changes nothing -- and
+## it cannot drive the balance negative, because it refuses when short. A
+## badge-gated part is never for sale at any balance.
+func buy_part(slot: String, id: String) -> bool:
+	if slot not in Loadout.SLOTS or id == "stock": return false
+	if not Loadout.gate(slot, id).is_empty(): return false
+	var cost: = Loadout.price(slot, id)
+	if cost <= 0 or Loadout.part_id(slot, id) in career.owned: return false
+	if int(career.banked) < cost: return false
+	career.banked = int(career.banked) - cost
+	career.owned.append(Loadout.part_id(slot, id))
+	play_sound("pickup")
+	save_settings()
+	return true
+
+## Returns every part that has not been earned to stock. Called on the way out
+## of the garage, which is the one door into a chase, and again when a save is
+## loaded, so a session that ends inside the garage cannot leave a locked part
+## equipped for the next launch.
+func enforce_loadout() -> void:
+	var allowed: Dictionary = Loadout.owned_only(loadout, career.owned, career.badges)
+	if allowed != loadout: set_loadout(allowed)
+
+## Builds the advisor from the environment.
+##
+## The key is read from TYPESAFE_API_KEY (or JEV_API_KEY), never from the save
+## file and never from anything that ships. An exported build has no such
+## variable to read, so it runs the local advisor -- which is to say, it runs
+## exactly as this game always has. The demo driver and the check suites are
+## excluded outright, so nothing measured or asserted anywhere depends on a
+## network.
+func build_advisor() -> void:
+	advisor = Advisor.new()
+	if not storm_ai or demo or "--test" in OS.get_cmdline_user_args(): return
+	var key: = OS.get_environment("TYPESAFE_API_KEY")
+	if key.is_empty(): key = OS.get_environment("JEV_API_KEY")
+	if key.is_empty(): return
+	advisor = AdvisorJev.new(key, self)
 
 func setup_factor(key: String) -> float:
 	return Loadout.factor(loadout, key)
@@ -1262,6 +1477,9 @@ func leave_garage(start: bool) -> void:
 	if mode != Mode.GARAGE: return
 	garage.close()
 	mode = Mode.MENU
+	# A locked part can be browsed and seen on the truck; this is where the
+	# preview ends. Silent, because every locked row on that screen said so.
+	enforce_loadout()
 	save_settings()
 	hud.rebuild()
 	if start:

@@ -29,6 +29,15 @@ func pad(button: JoyButton) -> InputEventJoypadButton:
 	e.pressed = true
 	return e
 
+## This suite is about the catalog, the parts and the handling, not about the
+## economy, so it drives a career that has earned everything. What has to be
+## earned, and what happens when it has not been, is checked in verify_career.
+## _load_settings() reads the career back from the file, so this is called again
+## after any reload that later checks depend on.
+func own_everything() -> void:
+	game.career.owned = Loadout.priced_parts()
+	game.career.badges = Loadout.BADGE_TITLES.keys()
+
 func quiet(level: int) -> void:
 	game.start_chase()
 	game.set_process(false); game.world.set_process(false)
@@ -103,6 +112,7 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.save_enabled = false
+	own_everything()
 	var rig = game.world.truck
 	var kit = rig.kit
 
@@ -220,6 +230,7 @@ func run() -> void:
 
 	# --- Saves ----------------------------------------------------------------------
 	game.save_enabled = true
+	own_everything()
 	var custom := {"accent": "glacier_teal", "wheels": "polished_alloy", "roof": "light_bar", "armor": "ram_plate", "trim": "rally", "setup": "rally"}
 	game.set_loadout(custom)
 	game.loadout = Loadout.default_loadout()
@@ -238,6 +249,7 @@ func run() -> void:
 	game._load_settings()
 	check(game.loadout == Loadout.default_loadout() and game.best == 4200, "older saves without a garage section load with the stock loadout")
 	game.save_enabled = false
+	own_everything()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(cfg))
 
 	# --- Garage flow and input -------------------------------------------------------
