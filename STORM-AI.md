@@ -51,13 +51,21 @@ Two consequences worth stating:
 3. If not, the game's own decision is used **right now**, and the question is
    queued to fill the gap for next time.
 
-Queued questions leave together. Once a frame, everything waiting goes out as a
-**single request**: independent questions over the same state are answered in
-parallel, so two judgements cost one round trip. The round trip is the smaller
-half of the reason — the larger one is starvation. The Director asks before
-every wave and Mateo asks at most once every thirteen seconds, so with one
-question per request the frequent question takes the slot almost every time and
-the rare one, the one a child actually hears, is left to the game.
+Queued questions leave together, once a frame. Independent questions **about the
+same state** are answered in parallel, so two judgements cost one round trip.
+The round trip is the smaller half of the reason — the larger one is starvation.
+The Director asks before every wave and Mateo asks at most once every thirteen
+seconds, so with one question per request the frequent question takes the slot
+almost every time and the rare one, the one a child actually hears, is left to
+the game. Queued, it always goes.
+
+**A request carries exactly one state**, because an answer is cached under the
+signature of the state its question was asked about. So only questions raised
+about the same moment travel together: the one that has waited longest sets the
+state, and anything about a different moment goes in the next request with its
+own. Merging them instead would send one topic's numbers while filing the answer
+under the other's — a decision made for a healthy truck stored as the policy for
+a wrecked one. The two states share eight fields, so that is not a corner case.
 
 One request is ever in flight, rate limited, with a 4 s timeout on a threaded
 `HTTPRequest`. Each answer is judged on its own, so one topic answered badly,

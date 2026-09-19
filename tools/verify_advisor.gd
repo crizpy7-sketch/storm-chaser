@@ -54,6 +54,14 @@ func deliver(jev, cache_key: String, ids: Array, body: PackedByteArray, code: in
 	jev.inflight = {topic: {"cache_key": cache_key, "ids": PackedStringArray(ids), "floor": floor, "question": {}, "state": {}}}
 	jev._on_answer(result, code, PackedStringArray(), body)
 
+## Frees the HTTP node and clears the way for a send. These checks run without
+## awaiting, so a request started by one would leave the node busy for the next
+## and every flush after it would report ERR_BUSY rather than what it tests.
+func ready(jev) -> void:
+	if is_instance_valid(jev.http): jev.http.cancel_request()
+	jev.inflight.clear()
+	jev.cooldown = 0.0
+
 ## One question in flight, built the way _flush() builds it.
 func in_flight(cache_key: String, ids: Array, floor: float) -> Dictionary:
 	return {"cache_key": cache_key, "ids": PackedStringArray(ids), "floor": floor, "question": {}, "state": {}}
@@ -115,7 +123,14 @@ func run() -> void:
 
 	# --- the Jev advisor, without a network --------------------------------------------
 	var jev = AdvisorJev.new("test-key", game)
+	# Nothing in a check suite may reach the network. build_advisor() excludes
+	# --test outright, but this suite builds an advisor directly to exercise it,
+	# so its endpoint is pointed at a closed port on the loopback: a flush here
+	# can only ever fail to connect.
+	jev.endpoint = "http://127.0.0.1:9/storm-chaser-tests-never-reach-a-network"
 	await settle()
+	check(jev.endpoint != AdvisorJev.ENDPOINT and not jev.endpoint.begins_with("https://api."),
+		"the advisor these checks drive is not pointed at anybody's real service")
 	check(jev.live() and jev.describe() == "JEV", "a key and a host make it live")
 	check(AdvisorJev.new("", game).live() == false, "an empty key does not")
 	var three := options(["mateo_cow", "mateo_dodge", "mateo_recording"])
@@ -164,11 +179,13 @@ func run() -> void:
 	check(Advisor.new().choose("t", "q", three, moment, 2, 0.99) == 2, "the local advisor ignores the floor, having nothing to be unsure about")
 
 	# --- one request carries every question the frame raised ---------------------------
-	jev.decisions.clear(); jev.queued.clear(); jev.inflight.clear(); jev.cooldown = 0.0
+	jev.decisions.clear(); jev.queued.clear(); ready(jev)
 	var pacing := options(["ease", "hold", "press"])
-	var pacing_moment := {"hull": 82, "hits_this_level": 0}
-	check(jev.choose("mateo_line", "q", three, moment, 1) == 1 and jev.choose("storm_pacing", "q", pacing, pacing_moment, 1) == 1,
-		"two different questions in one frame both answer from the game while they wait")
+	# Both questions are about the same moment, which is what lets them share a
+	# request: one request carries one state. Questions about different moments
+	# go one after another instead, which is checked further down.
+	check(jev.choose("mateo_line", "q", three, moment, 1) == 1 and jev.choose("storm_pacing", "q", pacing, moment.duplicate(), 1) == 1,
+		"two different questions about one moment both answer from the game while they wait")
 	check(jev.queued.size() == 2, "and both are waiting, neither having displaced the other")
 	var before_requests: int = jev.requests
 	jev.step(1.0 / 60.0)
@@ -177,7 +194,7 @@ func run() -> void:
 	check(jev.queued.is_empty() and jev.inflight.size() == 2, "and nothing is left queued once they are in flight")
 
 	var line_key: String = jev.signature("mateo_line", moment) + "#" + "+".join(PackedStringArray(["mateo_cow", "mateo_dodge", "mateo_recording"]))
-	var pacing_key: String = jev.signature("storm_pacing", pacing_moment) + "#" + "+".join(PackedStringArray(["ease", "hold", "press"]))
+	var pacing_key: String = jev.signature("storm_pacing", moment) + "#" + "+".join(PackedStringArray(["ease", "hold", "press"]))
 	var both := {"mateo_line": {"type": "choice", "choice": "mateo_cow", "confidence": 0.9},
 		"storm_pacing": {"type": "choice", "choice": "press", "confidence": 0.9}}
 	jev._on_answer(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), JSON.stringify({"answers": both}).to_utf8_buffer())
@@ -212,13 +229,63 @@ func run() -> void:
 	jev.inflight.clear()
 
 	before_requests = jev.requests
-	jev.queued.clear()
+	jev.queued.clear(); jev.inflight.clear()
 	jev.choose("mateo_line", "q", three, moment, 1)
 	jev.cooldown = 99.0
 	jev.step(1.0 / 60.0)
-	check(jev.requests == before_requests, "questions are rate limited even with nothing in flight")
+	check(jev.requests == before_requests and jev.queued.size() == 1,
+		"questions are rate limited even with nothing in flight, and keep their place in the queue")
+	# Cleared first, so what is measured is the rate limit rather than a flush.
+	jev.queued.clear()
 	jev.step(100.0)
 	check(is_zero_approx(jev.cooldown), "the rate limit expires on its own")
+
+	# --- a request carries one state, because an answer is filed under one -------------
+	jev.queued.clear(); jev.decisions.clear(); ready(jev)
+	var early := {"hull": 95, "speed_mph": 180}
+	var later := {"hull": 20, "speed_mph": 120}
+	jev.choose("mateo_line", "q", three, early, 1)
+	jev.choose("storm_pacing", "q", pacing, later, 1)
+	check(jev.queued.size() == 2, "two questions about different moments both wait")
+	jev.step(1.0 / 60.0)
+	check(jev.last_batch == 1 and jev.queued.size() == 1 and jev.inflight.size() == 1,
+		"but only one of them goes, because a request carries a single state")
+	check(jev.inflight.has("mateo_line") and jev.queued.has("storm_pacing"),
+		"the question that has waited longest is the one that sets the state")
+	ready(jev)
+	jev.step(1.0 / 60.0)
+	check(jev.last_batch == 1 and jev.inflight.has("storm_pacing"),
+		"and the other follows in the next request, with its own state")
+	jev.queued.clear(); ready(jev)
+	var shared := {"hull": 70, "speed_mph": 150}
+	jev.choose("mateo_line", "q", three, shared, 1)
+	jev.choose("storm_pacing", "q", pacing, shared.duplicate(), 1)
+	jev.step(1.0 / 60.0)
+	check(jev.last_batch == 2, "two questions about the same moment still travel together")
+
+	# --- a send that cannot start must not be retried every frame ----------------------
+	# The node is deliberately left busy here: that is the condition under test.
+	jev.queued.clear(); jev.inflight.clear(); jev.cooldown = 0.0
+	jev.choose("mateo_line", "q", three, moment, 1)
+	jev.step(1.0 / 60.0)
+	jev.queued.clear(); jev.inflight.clear(); jev.cooldown = 0.0
+	jev.choose("storm_pacing", "q", pacing, {"hull": 44}, 1)
+	before_requests = jev.requests
+	jev.step(1.0 / 60.0)
+	check(jev.requests == before_requests and jev.cooldown > 0.0,
+		"a frame that cannot send backs off instead of retrying sixty times a second")
+	check(jev.queued.size() == 1, "and the question it could not send keeps its place in the queue")
+	jev.queued.clear(); jev.inflight.clear(); jev.decisions.clear(); jev.cooldown = 0.0
+
+	# --- one batch, one slate ----------------------------------------------------------
+	jev.last_error = "stale"
+	jev.inflight = {"mateo_line": in_flight(line_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], Advisor.HARMLESS),
+		"storm_pacing": in_flight(pacing_key, ["ease", "hold", "press"], Advisor.HARMLESS)}
+	var one_wrong := {"mateo_line": {"type": "choice", "choice": "mateo_sings", "confidence": 0.9},
+		"storm_pacing": {"type": "choice", "choice": "press", "confidence": 0.9}}
+	jev._on_answer(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), JSON.stringify({"answers": one_wrong}).to_utf8_buffer())
+	check(jev.decisions.get(pacing_key, -1) == 2 and "mateo_line" in jev.last_error,
+		"a topic that succeeds does not erase why its sibling failed")
 	jev.queued.clear(); jev.inflight.clear(); jev.decisions.clear()
 
 	check(jev.signature("mateo_line", {"hull": 82, "speed_mph": 190}) == jev.signature("mateo_line", {"hull": 78, "speed_mph": 196}),

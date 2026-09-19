@@ -129,23 +129,38 @@ func _queue(topic: String, cache_key: String, question: String, options: Array, 
 ## request the frequent question takes the slot almost every time and the rare
 ## one -- the one a child actually hears -- is left to the game.
 func _flush() -> void:
-	var questions := {}
+	# A request carries exactly one state, and an answer is cached under the
+	# signature of the state its question was asked about. So only questions
+	# raised about the *same* state may travel together: the one that has waited
+	# longest sets the state, and anything about a different moment waits for the
+	# next request, where its own state is the one that goes.
+	#
+	# Merging them instead would send one topic's numbers while caching the
+	# answer under the other's -- a decision made for a healthy truck filed as
+	# the policy for a wrecked one. The two states share eight fields, so this
+	# is not a corner case.
 	var state := {}
+	var batch := {}
 	for topic in queued:
-		questions[topic] = queued[topic].question
-		# The questions describe the same run a fraction of a second apart, so
-		# their states merge. Where two name the same field the one that has
-		# been waiting longest wins, since dictionaries keep insertion order.
-		for field in queued[topic].state:
-			if not state.has(field): state[field] = queued[topic].state[field]
+		if batch.is_empty():
+			state = queued[topic].state
+			batch[topic] = queued[topic]
+		elif queued[topic].state == state:
+			batch[topic] = queued[topic]
+	var questions := {}
+	for topic in batch: questions[topic] = batch[topic].question
 	var body := {"model": MODEL, "state": state, "questions": questions}
 	var headers: PackedStringArray = ["Content-Type: application/json", "Authorization: Bearer " + key]
 	var sent := http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 	if sent != OK:
+		# Back off rather than retrying from step() on the next frame: this runs
+		# once a frame now, so a node that is busy or a request that will not
+		# start would otherwise be retried sixty times a second.
 		last_error = "request failed to start: %d" % sent
+		cooldown = MIN_INTERVAL
 		return
-	inflight = queued
-	queued = {}
+	for topic in batch: queued.erase(topic)
+	inflight = batch
 	last_batch = inflight.size()
 	cooldown = MIN_INTERVAL
 	requests += 1
@@ -154,6 +169,9 @@ func _on_answer(result: int, code: int, _headers: PackedStringArray, body: Packe
 	var asked := inflight
 	inflight = {}
 	if asked.is_empty(): return
+	# One batch, one slate. Cleared here rather than on each accepted topic, so
+	# a topic that succeeds cannot erase the reason a sibling failed.
+	last_error = ""
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		last_error = "http %d (result %d)" % [code, result]
 		discards += asked.size()
@@ -198,4 +216,3 @@ func _accept(topic: String, entry: Dictionary, answer) -> void:
 	if decisions.size() >= CACHE_LIMIT: decisions.clear()
 	decisions[str(entry.cache_key)] = index
 	answers += 1
-	last_error = ""
