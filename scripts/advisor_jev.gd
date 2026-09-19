@@ -36,14 +36,17 @@ var key := ""
 var endpoint := ENDPOINT
 var http: HTTPRequest
 var decisions := {}
-var pending := ""
-var pending_options: Array = []
-var pending_floor := HARMLESS
+## Questions waiting for the next request, and the ones already gone, both keyed
+## by topic. One entry per topic: a newer question about the same topic replaces
+## an older one, whose moment has passed.
+var queued := {}
+var inflight := {}
 var cooldown := 0.0
 ## Counters the check suite and the HUD read; no behaviour depends on them.
 var requests := 0
 var answers := 0
 var discards := 0
+var last_batch := 0
 var last_error := ""
 
 func _init(api_key: String, host: Node) -> void:
@@ -62,8 +65,12 @@ func live() -> bool:
 func describe() -> String:
 	return "JEV" if live() else "LOCAL"
 
+## Called once a frame by the game. Nothing is sent from choose() itself: the
+## questions a frame raises are gathered first and leave together.
 func step(dt: float) -> void:
 	cooldown = maxf(0.0, cooldown - dt)
+	if queued.is_empty() or not inflight.is_empty() or cooldown > 0.0: return
+	_flush()
 
 ## A moment, coarsely. Two near misses at 190 and 197 mph with a dented hull are
 ## the same situation, and asking Jev about each of them separately would warm
@@ -95,59 +102,83 @@ func choose(topic: String, question: String, options: Array, state: Dictionary, 
 		# The option list can change between moments; an index that no longer
 		# addresses the same thing is worth nothing.
 		if remembered >= 0 and remembered < options.size(): return remembered
-	_ask(cache_key, topic, question, options, state, floor)
+	_queue(topic, cache_key, question, options, state, floor)
 	return fallback
 
-## Queues one question. Returns quietly when another is in flight -- the moment
-## has passed by the time an answer could arrive, and the next one like it will
-## be served from the cache.
-func _ask(cache_key: String, topic: String, question: String, options: Array, state: Dictionary, floor: float = HARMLESS) -> void:
-	if not pending.is_empty() or cooldown > 0.0: return
-	pending_floor = floor
+## Holds a question for the next request. Asking again about a topic that is
+## already in flight would only duplicate it, and a second question about a
+## topic still queued is about a newer moment, so it replaces the first.
+func _queue(topic: String, cache_key: String, question: String, options: Array, state: Dictionary, floor: float) -> void:
+	if inflight.has(topic): return
 	var criteria := {}
 	for option in options: criteria[str(option.get("id", ""))] = str(option.get("info", ""))
-	var body := {
-		"model": MODEL,
+	queued[topic] = {
+		"cache_key": cache_key,
+		"ids": _ids(options),
+		"floor": floor,
+		"question": {"type": "choice", "instructions": question, "criteria": criteria},
 		"state": state,
-		"questions": {topic: {"type": "choice", "instructions": question, "criteria": criteria}},
 	}
+
+## Sends every queued question in one request.
+##
+## Independent questions over the same state are answered in parallel, so two
+## judgements cost one round trip rather than two. That is the smaller half of
+## the reason. The larger one is starvation: the Director asks before every wave
+## and Mateo asks at most once every thirteen seconds, so with one question per
+## request the frequent question takes the slot almost every time and the rare
+## one -- the one a child actually hears -- is left to the game.
+func _flush() -> void:
+	var questions := {}
+	var state := {}
+	for topic in queued:
+		questions[topic] = queued[topic].question
+		# The questions describe the same run a fraction of a second apart, so
+		# their states merge. Where two name the same field the one that has
+		# been waiting longest wins, since dictionaries keep insertion order.
+		for field in queued[topic].state:
+			if not state.has(field): state[field] = queued[topic].state[field]
+	var body := {"model": MODEL, "state": state, "questions": questions}
 	var headers: PackedStringArray = ["Content-Type: application/json", "Authorization: Bearer " + key]
 	var sent := http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 	if sent != OK:
 		last_error = "request failed to start: %d" % sent
 		return
-	pending = cache_key
-	pending_options = _ids(options)
+	inflight = queued
+	queued = {}
+	last_batch = inflight.size()
 	cooldown = MIN_INTERVAL
 	requests += 1
 
 func _on_answer(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	var cache_key := pending
-	var asked := pending_options
-	pending = ""
-	pending_options = []
-	if cache_key.is_empty(): return
+	var asked := inflight
+	inflight = {}
+	if asked.is_empty(): return
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		last_error = "http %d (result %d)" % [code, result]
-		discards += 1
+		discards += asked.size()
 		return
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if not parsed is Dictionary:
 		last_error = "body was not an object"
-		discards += 1
+		discards += asked.size()
 		return
-	# The API returns {model, answers, usage} with answers keyed by the question
-	# ids sent. Reading a bare map too costs one expression and means a body
-	# that arrives unwrapped is still understood. The single question is taken
-	# back out by position, since this only ever asks one.
+	# The API returns {model, answers, usage} with answers keyed by the topics
+	# sent. Reading a bare map too costs one expression and means a body that
+	# arrives unwrapped is still understood.
 	var answer_map = parsed.get("answers", parsed)
 	if not answer_map is Dictionary or answer_map.is_empty():
 		last_error = "no answers in body"
-		discards += 1
+		discards += asked.size()
 		return
-	var answer = answer_map.values()[0]
+	# Each question is judged on its own: one topic answered badly, unsurely or
+	# not at all must not cost the others their answers.
+	for topic in asked:
+		_accept(str(topic), asked[topic], answer_map.get(topic, null))
+
+func _accept(topic: String, entry: Dictionary, answer) -> void:
 	if not answer is Dictionary:
-		last_error = "answer was not an object"
+		last_error = "no answer for " + topic
 		discards += 1
 		return
 	# Choice and Score answers carry a confidence derived from the probability
@@ -155,16 +186,16 @@ func _on_answer(result: int, code: int, _headers: PackedStringArray, body: Packe
 	# clear winner, and the game's own decision is what that should leave
 	# standing. It is not an error -- an honest "I am not sure" is a useful
 	# answer, and the floor scales with what the question decides.
-	if float(answer.get("confidence", 0.0)) < pending_floor:
+	if float(answer.get("confidence", 0.0)) < float(entry.floor):
 		discards += 1
 		return
-	var picked := str(answer.get("choice", ""))
-	var index := asked.find(picked)
+	var offered: PackedStringArray = entry.ids
+	var index := offered.find(str(answer.get("choice", "")))
 	if index < 0:
-		last_error = "answer named an option that was not offered"
+		last_error = "answer to " + topic + " named an option that was not offered"
 		discards += 1
 		return
 	if decisions.size() >= CACHE_LIMIT: decisions.clear()
-	decisions[cache_key] = index
+	decisions[str(entry.cache_key)] = index
 	answers += 1
 	last_error = ""

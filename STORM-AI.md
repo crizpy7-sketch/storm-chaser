@@ -48,13 +48,23 @@ Two consequences worth stating:
    bucketed, what just happened — not the exact numbers.
 2. If Jev has already answered *that kind of moment*, the remembered answer is
    used immediately.
-3. If not, the game's own decision is used **right now**, and one request is
+3. If not, the game's own decision is used **right now**, and the question is
    queued to fill the gap for next time.
 
-At most one request is ever in flight, rate limited, with a 4 s timeout on a
-threaded `HTTPRequest`. A cold cache plays exactly like no advisor at all. This
-is a warm policy cache, not a request-response loop: the answer improves the
-*next* moment of its kind, never the current frame.
+Queued questions leave together. Once a frame, everything waiting goes out as a
+**single request**: independent questions over the same state are answered in
+parallel, so two judgements cost one round trip. The round trip is the smaller
+half of the reason — the larger one is starvation. The Director asks before
+every wave and Mateo asks at most once every thirteen seconds, so with one
+question per request the frequent question takes the slot almost every time and
+the rare one, the one a child actually hears, is left to the game.
+
+One request is ever in flight, rate limited, with a 4 s timeout on a threaded
+`HTTPRequest`. Each answer is judged on its own, so one topic answered badly,
+unsurely or not at all never costs the others theirs. A cold cache plays exactly
+like no advisor at all. This is a warm policy cache, not a request-response
+loop: the answer improves the *next* moment of its kind, never the current
+frame.
 
 ## Turning it on
 
@@ -141,15 +151,6 @@ setting, never against that setting, and reconsidered at the very next wave.
   when they are cruising, ease off after a bad stretch. It is the same seam and
   the same rules, and it is the one with real engagement upside. It touches what
   the campaign suites guard, so it is its own piece of work.
-
-  **Not done, and it matters:** the two questions are asked separately, and one
-  request is in flight at a time. The Director asks every wave, roughly twice a
-  second at pace; Mateo asks at most once every thirteen. So the Director wins
-  the slot almost every time and Mateo's question is usually dropped, falling
-  back to the game's own choice. The fix is the one the docs point at —
-  **independent questions over the same state go in one request and are answered
-  in parallel** — which means batching both into a single call rather than
-  racing them. Until that is built, the line selection is mostly running local.
 
   On `Score`: an earlier note here called it the right primitive for the
   Director. It is not, and `Choice` is. What the game needs is a bounded action

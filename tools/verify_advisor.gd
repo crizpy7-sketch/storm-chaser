@@ -49,10 +49,14 @@ func answer_body(choice: String, confidence: float, wrapped: bool = false) -> Pa
 	var body := {"mateo_line": answer}
 	return JSON.stringify({"answers": body} if wrapped else body).to_utf8_buffer()
 
-func deliver(jev, cache_key: String, ids: Array, body: PackedByteArray, code: int = 200, result: int = HTTPRequest.RESULT_SUCCESS) -> void:
-	jev.pending = cache_key
-	jev.pending_options = PackedStringArray(ids)
+## Puts one question in flight and hands it a body, as the HTTP node would.
+func deliver(jev, cache_key: String, ids: Array, body: PackedByteArray, code: int = 200, result: int = HTTPRequest.RESULT_SUCCESS, floor: float = 0.5, topic: String = "mateo_line") -> void:
+	jev.inflight = {topic: {"cache_key": cache_key, "ids": PackedStringArray(ids), "floor": floor, "question": {}, "state": {}}}
 	jev._on_answer(result, code, PackedStringArray(), body)
+
+## One question in flight, built the way _flush() builds it.
+func in_flight(cache_key: String, ids: Array, floor: float) -> Dictionary:
+	return {"cache_key": cache_key, "ids": PackedStringArray(ids), "floor": floor, "question": {}, "state": {}}
 
 ## Spawns exactly one wave at a forced pacing band and returns the gap the game
 ## sets before the next one. The rng is reseeded per call and the reset draws
@@ -150,28 +154,72 @@ func run() -> void:
 	# The floor scales with what the question decides, so it travels with the
 	# question rather than being one number for the whole game.
 	jev.decisions.clear()
-	jev.pending_floor = Advisor.HARMLESS
-	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52))
+	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52), 200, HTTPRequest.RESULT_SUCCESS, Advisor.HARMLESS)
 	check(jev.choose("mateo_line", "q", three, moment, 1) == 0,
 		"a spread distribution between several acceptable options is still used for a harmless choice")
 	jev.decisions.clear()
-	jev.pending_floor = 0.9
-	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52))
+	deliver(jev, cache_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], answer_body("mateo_cow", 0.52), 200, HTTPRequest.RESULT_SUCCESS, 0.9)
 	check(jev.decisions.is_empty() and jev.choose("mateo_line", "q", three, moment, 1) == 1,
 		"the same answer is refused when the question carries a higher floor")
-	jev.pending_floor = Advisor.HARMLESS
 	check(Advisor.new().choose("t", "q", three, moment, 2, 0.99) == 2, "the local advisor ignores the floor, having nothing to be unsure about")
 
+	# --- one request carries every question the frame raised ---------------------------
+	jev.decisions.clear(); jev.queued.clear(); jev.inflight.clear(); jev.cooldown = 0.0
+	var pacing := options(["ease", "hold", "press"])
+	var pacing_moment := {"hull": 82, "hits_this_level": 0}
+	check(jev.choose("mateo_line", "q", three, moment, 1) == 1 and jev.choose("storm_pacing", "q", pacing, pacing_moment, 1) == 1,
+		"two different questions in one frame both answer from the game while they wait")
+	check(jev.queued.size() == 2, "and both are waiting, neither having displaced the other")
 	var before_requests: int = jev.requests
-	jev.pending = "something in flight"
-	jev._ask("another", "mateo_line", "q", three, moment)
-	check(jev.requests == before_requests, "only one question is ever in flight")
-	jev.pending = ""
+	jev.step(1.0 / 60.0)
+	check(jev.requests == before_requests + 1 and jev.last_batch == 2,
+		"the frame's questions leave together, in one request rather than two")
+	check(jev.queued.is_empty() and jev.inflight.size() == 2, "and nothing is left queued once they are in flight")
+
+	var line_key: String = jev.signature("mateo_line", moment) + "#" + "+".join(PackedStringArray(["mateo_cow", "mateo_dodge", "mateo_recording"]))
+	var pacing_key: String = jev.signature("storm_pacing", pacing_moment) + "#" + "+".join(PackedStringArray(["ease", "hold", "press"]))
+	var both := {"mateo_line": {"type": "choice", "choice": "mateo_cow", "confidence": 0.9},
+		"storm_pacing": {"type": "choice", "choice": "press", "confidence": 0.9}}
+	jev._on_answer(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), JSON.stringify({"answers": both}).to_utf8_buffer())
+	check(jev.decisions.get(line_key, -1) == 0 and jev.decisions.get(pacing_key, -1) == 2,
+		"each answer lands against the question that asked it")
+
+	# One topic going wrong must not cost the other its answer.
+	jev.decisions.clear()
+	jev.inflight = {"mateo_line": in_flight(line_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], Advisor.HARMLESS),
+		"storm_pacing": in_flight(pacing_key, ["ease", "hold", "press"], Advisor.CONSEQUENTIAL)}
+	var one_unsure := {"mateo_line": {"type": "choice", "choice": "mateo_cow", "confidence": 0.9},
+		"storm_pacing": {"type": "choice", "choice": "press", "confidence": 0.3}}
+	jev._on_answer(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), JSON.stringify({"answers": one_unsure}).to_utf8_buffer())
+	check(jev.decisions.get(line_key, -1) == 0 and not jev.decisions.has(pacing_key),
+		"an unsure answer to one question does not cost the other its answer")
+
+	jev.decisions.clear()
+	jev.inflight = {"mateo_line": in_flight(line_key, ["mateo_cow", "mateo_dodge", "mateo_recording"], Advisor.HARMLESS),
+		"storm_pacing": in_flight(pacing_key, ["ease", "hold", "press"], Advisor.HARMLESS)}
+	jev._on_answer(HTTPRequest.RESULT_SUCCESS, 200, PackedStringArray(), JSON.stringify({"answers": {"mateo_line": {"type": "choice", "choice": "mateo_cow", "confidence": 0.9}}}).to_utf8_buffer())
+	check(jev.decisions.get(line_key, -1) == 0 and not jev.decisions.has(pacing_key),
+		"nor does a topic the answer simply left out")
+
+	jev.decisions.clear(); jev.queued.clear(); jev.inflight.clear(); jev.cooldown = 0.0
+	jev.choose("mateo_line", "q", three, moment, 1)
+	jev.choose("mateo_line", "q", three, {"hull": 10, "speed_mph": 40}, 1)
+	check(jev.queued.size() == 1, "a newer question about a topic replaces the older one, whose moment has passed")
+	jev.queued.clear()
+	jev.inflight = {"mateo_line": in_flight("x", [], 0.5)}
+	jev.choose("mateo_line", "q", three, moment, 1)
+	check(jev.queued.is_empty(), "and a topic already in flight is not asked again")
+	jev.inflight.clear()
+
+	before_requests = jev.requests
+	jev.queued.clear()
+	jev.choose("mateo_line", "q", three, moment, 1)
 	jev.cooldown = 99.0
-	jev._ask("another", "mateo_line", "q", three, moment)
-	check(jev.requests == before_requests, "and they are rate limited even when nothing is in flight")
+	jev.step(1.0 / 60.0)
+	check(jev.requests == before_requests, "questions are rate limited even with nothing in flight")
 	jev.step(100.0)
 	check(is_zero_approx(jev.cooldown), "the rate limit expires on its own")
+	jev.queued.clear(); jev.inflight.clear(); jev.decisions.clear()
 
 	check(jev.signature("mateo_line", {"hull": 82, "speed_mph": 190}) == jev.signature("mateo_line", {"hull": 78, "speed_mph": 196}),
 		"two moments that are the same kind of moment share one cached decision")
