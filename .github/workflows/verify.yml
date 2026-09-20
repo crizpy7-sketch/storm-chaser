@@ -1,8 +1,7 @@
 name: Verify
 
-# Runs the full check harness on every push and pull request. The project has
-# 520 checks across 15 suites; before this they only ran when someone
-# remembered to run them by hand.
+# Run gameplay, rendered transparency, and release-tooling regressions on main
+# and pull requests.
 on:
   # Branch pushes are covered by pull_request once a PR is open, so push is
   # limited to the default branch; otherwise every commit runs the suite twice.
@@ -16,6 +15,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  tooling:
+    name: Release tooling (${{ matrix.os }})
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check release packaging
+        run: python -B tools/test_package_release.py
+      - name: Check suite runner
+        if: runner.os == 'Linux'
+        run: bash tools/test_run_suites.sh
+
   suites:
     name: Godot check suites
     runs-on: ubuntu-latest
@@ -51,6 +67,16 @@ jobs:
 
       - name: Run check suites
         run: GODOT=$HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64 tools/run_suites.sh
+
+      - name: Check tornado transparency
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set -euo pipefail
+          timeout 60 xvfb-run -a "$HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64" --path . --rendering-method gl_compatibility --audio-driver Dummy --script res://tools/check_storm_render.gd > .suite-logs/check_storm_render.log 2>&1
+          cat .suite-logs/check_storm_render.log
+          grep -q 'STORM_RENDER_TESTS 4 checks; 0 failures' .suite-logs/check_storm_render.log
+          ! grep -qE 'SCRIPT ERROR|Parse Error' .suite-logs/check_storm_render.log
 
       - name: Upload suite logs
         if: always()

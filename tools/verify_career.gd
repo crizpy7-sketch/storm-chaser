@@ -165,9 +165,22 @@ func run() -> void:
 		"an older save opens the wallet with its best run as the balance")
 	check(game.career.owned.size() == 3 and "accent:rescue_red" in game.career.owned and "wheels:polished_alloy" in game.career.owned and "setup:rally" in game.career.owned,
 		"the parts the player is already driving are owned, not locked")
+	check(game.loadout.setup == "rally" and game.career.badges.is_empty(),
+		"a legacy RALLY setup remains equipped without inventing its badge")
 	game.save_settings()
 	game._load_settings()
 	check(game.career.banked == 37500, "the seeded career is written once and then read back, not re-seeded")
+	check(game.loadout.setup == "rally", "the migrated RALLY setup stays equipped after save and reload")
+	for setup_id in ["armored", "turbo"]:
+		wipe()
+		write_legacy_save(37500, {"setup": setup_id})
+		game._load_settings()
+		check(game.loadout.setup == setup_id and game.career.badges.is_empty(),
+			"a legacy %s setup remains equipped without its badge" % setup_id.to_upper())
+		game.save_settings()
+		game._load_settings()
+		check(game.loadout.setup == setup_id,
+			"the migrated %s setup survives save and reload" % setup_id.to_upper())
 
 	wipe()
 	write_legacy_save(1200, Loadout.default_loadout())
@@ -322,6 +335,26 @@ func run() -> void:
 	game.health = 50.0
 	game.finish(true, "Won outright.")
 	check("one_take" in game.career.badges, "a win with no retry earns ONE TAKE")
+
+	# The normal stage transition resets route counters before the checkpoint
+	# film ends. Eligibility must be captured while the completed route remains.
+	for clean_landings in [9, 10]:
+		game.career = CareerStore.blank()
+		game.start_chase()
+		game.set_process(false); game.world.set_process(false)
+		game.route.enter(5)
+		game.route.landings = clean_landings + 2
+		game.route.hard_landings = 2
+		game.stage = 6; game.stage_seen = 5
+		game.elapsed = 6.0 * game.STAGE_LENGTH; game.mode = game.Mode.UPGRADE
+		game.choose_upgrade(0)
+		check(("big_air" in game.career.badges) == (clean_landings >= 10),
+			"%d clean landings are judged before the upgrade resets the route" % clean_landings)
+		check(game.route.level == 6 and game.route.landings == 0,
+			"the next stage starts with fresh landing counters")
+		game.checkpoints.complete()
+		check(Loadout.unlocked("setup", "rally", game.career.owned, game.career.badges) == (clean_landings >= 10),
+			"RALLY availability after the checkpoint preserves the ten-clean-landing threshold")
 
 	# IRON HULL is the one badge with a counter of its own, and it is asked at
 	# the checkpoint because that is the only place that knows a level ended.

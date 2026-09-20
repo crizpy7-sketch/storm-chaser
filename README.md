@@ -1,4 +1,12 @@
-# Storm Chaser v0.18.1 — Storm Grade
+# Storm Chaser
+
+The current source adds a persistent DATA wallet, cosmetic purchases, eight badges, and earned chase setups to the Storm Grade game. Completed and failed runs both bank DATA; retrying the same run banks only its additional score. Existing saves keep their equipped parts and setups.
+
+Timed stages last 90 seconds, with save flags every 30 seconds. A flag preserves its repair and DATA reward as well as progress along the road. Controller buttons and triggers work with any connected device ID. The optional Storm Link chooses among existing recorded voice lines and falls back to local decisions when unavailable; see `STORM-AI.md`.
+
+Run the Godot checks with `GODOT=/path/to/godot tools/run_suites.sh`, packaging regressions with `python -m unittest discover -s tools -p 'test_package_release.py'`, and runner regressions with `bash tools/test_run_suites.sh`. The GPU transparency check requires a graphical renderer: `godot --path . --script res://tools/check_storm_render.gd`.
+
+## v0.18.1 — Storm Grade
 
 The 3D chase now has a storm-grade look: lower ambient so the truck plants a real contact shadow, lightning that actually lights the world, a crossed tornado with a dust foot, wet asphalt and prairie grass tiles, and rain that recedes down the road. Handling, campaign and films are unchanged from v0.18.0 Weight.
 
@@ -23,7 +31,7 @@ v0.16.0 added swept solid debris impacts and the roadside shelter corridor (`REA
 | 7 | Wild Hills | Large jumps and curves together, with less grip | 148 mph |
 | 8 | Vortex Run | Follow a full circle around the tornado, then get pulled into it | 112 mph |
 
-The first seven levels last 30 seconds of active driving each. Upgrades, checkpoint previews and celebration videos freeze progression. The final level advances by actual route distance: approach the tornado and complete the circle at your own speed. It has no countdown that can end the lap early.
+The first seven levels last 90 seconds of active driving each, with a save flag every 30 seconds. Upgrades, checkpoint previews and celebration videos freeze progression. The final level advances by actual route distance: approach the tornado and complete the circle at your own speed. It has no countdown that can end the lap early.
 
 Survive to the vortex and transmit at least **three probes** for a completed survey. The suction finale still plays if you arrive with fewer probes; the debrief then reports an incomplete survey and offers a checkpoint retry. Mateo stays with the truck and braces during jumps and landings in gameplay. The finale is the approved prerecorded sequence, which plays before the survey results. If video playback fails, the existing in-engine suction sequence completes the run.
 

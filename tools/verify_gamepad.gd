@@ -15,8 +15,9 @@ func check(value: bool, label: String) -> void:
 	if not value: failures += 1
 	print("PASS: " if value else "FAIL: ", label)
 
-func pad_button(index: int, pressed: bool = true) -> InputEventJoypadButton:
+func pad_button(index: int, pressed: bool = true, device: int = 0) -> InputEventJoypadButton:
 	var event := InputEventJoypadButton.new()
+	event.device = device
 	event.button_index = index
 	event.pressed = pressed
 	return event
@@ -57,6 +58,18 @@ func run() -> void:
 	check(action_has_key("mute"), "mute is still reachable from the keyboard")
 	check(InputMap.action_get_events("boost").any(func(e): return e is InputEventJoypadMotion and e.axis == JOY_AXIS_TRIGGER_RIGHT),
 		"the right trigger accelerates, not only the A button")
+	var actions := {"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT, "boost": JOY_BUTTON_A, "brake": JOY_BUTTON_B, "probe": JOY_BUTTON_X, "pause_game": JOY_BUTTON_START, "mute": JOY_BUTTON_RIGHT_STICK}
+	for device in [1, 2]:
+		for action in actions:
+			check(pad_button(actions[action], true, device).is_action_pressed(action), "controller device %d can press %s" % [device, action])
+			check(pad_button(actions[action], false, device).is_action_released(action), "controller device %d can release %s" % [device, action])
+		var trigger := InputEventJoypadMotion.new()
+		trigger.device = device
+		trigger.axis = JOY_AXIS_TRIGGER_RIGHT
+		trigger.axis_value = 1.0
+		check(trigger.is_action_pressed("boost"), "controller device %d can boost with its right trigger" % device)
+		trigger.axis_value = 0.0
+		check(trigger.is_action_released("boost"), "controller device %d can release its right trigger" % device)
 
 	# --- mute is global, so no screen has to hand-roll its own key check ---
 	var muted_before: bool = game.muted

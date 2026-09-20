@@ -124,18 +124,20 @@ static func gate(slot: String, id: String) -> String:
 static func part_id(slot: String, id: String) -> String:
 	return slot + ":" + id
 
-## Whether a part may be driven. Stock is always available, a badge-gated part
-## needs its badge and can never be bought, and a priced part needs to have been
-## bought. Note what this deliberately is not wired into: sanitize() stays
+## Whether a part may be driven. Stock and previously owned parts stay available,
+## including setups migrated from saves written before badges existed. New
+## badge-gated setups need their badge and cannot be bought. A priced part must
+## be owned. Note what this deliberately is not wired into: sanitize() stays
 ## ownership-blind, so a saved loadout is never silently reset by a career that
 ## failed to load, and cycle() stays unconditional, so a locked part can be
 ## browsed and seen on the truck. That preview is the whole carrot.
 static func unlocked(slot: String, id: String, owned: Array, badges: Array) -> bool:
 	if id == "stock": return true
+	if part_id(slot, id) in owned: return true
 	var badge := gate(slot, id)
 	if not badge.is_empty(): return badge in badges
 	if price(slot, id) <= 0: return true
-	return part_id(slot, id) in owned
+	return false
 
 ## The loadout with every part that has not been earned returned to stock. This
 ## is the only enforcement in the game.

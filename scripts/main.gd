@@ -288,11 +288,13 @@ func _setup_input() -> void :
 	var pads: = {"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT, "boost": JOY_BUTTON_A, "brake": JOY_BUTTON_B, "probe": JOY_BUTTON_X, "pause_game": JOY_BUTTON_START, "mute": JOY_BUTTON_RIGHT_STICK}
 	for action in pads:
 		var event: = InputEventJoypadButton.new()
+		event.device = -1
 		event.button_index = pads[action]
 		InputMap.action_add_event(action, event)
 	# The right trigger also boosts; holding A to accelerate is not the idiom
 	# anyone brings to a controller.
 	var trigger: = InputEventJoypadMotion.new()
+	trigger.device = -1
 	trigger.axis = JOY_AXIS_TRIGGER_RIGHT
 	trigger.axis_value = 1.0
 	InputMap.action_add_event("boost", trigger)
@@ -643,6 +645,7 @@ func choose_upgrade(choice: int) -> void :
 	stage_seen = stage
 	_clear_touch()
 	play_sound("pickup")
+	_award_earned_badges()
 	route.enter(stage)
 	world.reset_motion()
 	checkpoints.begin(stage)
@@ -1261,6 +1264,12 @@ func valid_checkpoint(data: Dictionary) -> bool:
 		if not data.has("elapsed") or not (data.elapsed is float or data.elapsed is int): return false
 		if not is_finite(float(data.elapsed)): return false
 		if float(data.elapsed) < 0.0 or float(data.elapsed) > 8.0 * STAGE_LENGTH: return false
+	# Older snapshots have no course distance. New saves must remain on the
+	# generated road, whose length includes a full stage at the maximum speed.
+	if data.has("route_progress"):
+		if not (data.route_progress is float or data.route_progress is int): return false
+		if not is_finite(float(data.route_progress)): return false
+		if float(data.route_progress) < 0.0 or float(data.route_progress) > STAGE_LENGTH * TURBO_SPEED * 0.25: return false
 	for key in ["score", "health", "boost", "boost_max", "charge", "probes", "hits", "near_misses", "tires", "distance"]:
 		if not data.has(key) or not (data[key] is float or data[key] is int): return false
 		if not is_finite(float(data[key])): return false
@@ -1272,14 +1281,14 @@ func can_retry_checkpoint() -> bool:
 ## A silent mid-stage save. Deliberately grants no upgrade, so the boost_max and
 ## tires bounds in valid_checkpoint() stay derived from exactly seven upgrades.
 func _mark_save() -> void:
-	save_checkpoint()
 	health = minf(100.0, health + 15.0)
 	score += 500.0
+	save_checkpoint()
 	play_sound("pickup")
 	notify("SAVE FLAG  /  +15 HULL  /  +500 DATA", 2.5)
 
 func save_checkpoint() -> void :
-	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "stage_entry_hits": stage_entry_hits, "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
+	checkpoint = {"version": 3, "stage": stage, "elapsed": elapsed, "route_progress": route.progress, "score": score, "health": health, "boost": boost, "boost_max": boost_max, "charge": charge, "probes": probes, "hits": hits, "near_misses": near_misses, "tires": tires, "distance": clampf(distance, 500.0, 1100.0), "stage_entry_hits": stage_entry_hits, "run_id": run_id, "retry": checkpoint_retry, "assisted": run_assisted, "films": dodges.played_this_run, "last_film": dodges.last_play_time, "film_times": dodges.last_kind_times.duplicate(), "setup": str(loadout.get("setup", "stock"))}
 	save_settings()
 
 func retry_checkpoint() -> void :
@@ -1303,6 +1312,12 @@ func retry_checkpoint() -> void :
 	speed = CRUISE_SPEEDS[stage]
 	powertrain.reset(speed)
 	route.enter(stage)
+	# Reset motion at the saved point, including the ground beneath the tyres.
+	# Old snapshots retain their entrance-position fallback.
+	if route.active:
+		route.progress = float(saved.get("route_progress", 0.0))
+		route.dirt = route.dirt_at(route.progress)
+		route.body_y = route.height_at(route.progress)
 	world.reset_motion()
 	dodges.played_this_run = int(saved.get("films", 0))
 	dodges.last_play_time = float(saved.get("last_film", -1000.0))
