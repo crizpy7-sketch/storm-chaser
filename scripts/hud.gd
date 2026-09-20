@@ -17,6 +17,11 @@ var probe_button: Button
 var audio_button: Button
 var settings_open := false
 var settings_focus := 0
+var touch_buttons: Dictionary = {}
+## Each finger owns its hold independently, even when two share one button.
+## Index -1 is the optional desktop mouse; real touch indices are nonnegative.
+var touch_points: Dictionary = {}
+var touch_taps: Dictionary = {}
 
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -81,6 +86,8 @@ func button(label: String, r: Rect2, callback: Callable, primary: bool = false) 
 	return b
 
 func rebuild() -> void :
+	game._clear_touch()
+	touch_buttons.clear()
 	for b in buttons: b.hide(); b.queue_free()
 	buttons.clear()
 	probe_button = null
@@ -91,7 +98,7 @@ func rebuild() -> void :
 		return
 	settings_open = false
 	if game.mode == game.Mode.MENU:
-		var start: = button("RESUME CHECKPOINT   >" if game.can_retry_checkpoint() else "START CHASING   >", Rect2(72, 470, 302, 60), game.retry_checkpoint if game.can_retry_checkpoint() else game.start_chase, true)
+		var start: = button("RESUME CHECKPOINT   >" if game.can_retry_checkpoint() else "START CHASING   >", Rect2(72, 470, 302, 80 if game.touch_controls else 60), game.retry_checkpoint if game.can_retry_checkpoint() else game.start_chase, true)
 		start.grab_focus()
 		if game.can_retry_checkpoint(): button("NEW CHASE", Rect2(75, 550, 190, 38), game.start_chase)
 		button("DRIVING & DISPLAY", Rect2(390, 478, 188, 44), open_settings)
@@ -102,22 +109,14 @@ func rebuild() -> void :
 
 		audio_button = button("SOUND", Rect2(1107, 642, 108, 42), game.toggle_sound)
 	elif game.mode == game.Mode.RUNNING:
-		button("II", Rect2(1200, 23, 42, 34), game.pause_chase)
-		audio_button = button("SND", Rect2(1148, 23, 42, 34), game.toggle_sound)
-		probe_button = button("TRANSMIT PROBE", Rect2(1009, 631, 233, 39), game.deploy_probe, true)
+		button("PAUSE" if game.touch_controls else "II", Rect2(1162, 88, 90, 80) if game.touch_controls else Rect2(1200, 23, 42, 34), game.pause_chase)
+		audio_button = button("SND", Rect2(1060, 88, 90, 80) if game.touch_controls else Rect2(1148, 23, 42, 34), game.toggle_sound)
+		probe_button = button("TRANSMIT PROBE", Rect2(1009, 608, 243, 80) if game.touch_controls else Rect2(1009, 631, 233, 39), game.deploy_probe, true)
 		if game.touch_controls:
-			var left: = button("<", Rect2(24, 422, 83, 65), func(): pass)
-			var right: = button(">", Rect2(116, 422, 83, 65), func(): pass)
-			var brake: = button("BRAKE", Rect2(1076, 422, 84, 65), func(): pass)
-			var turbo: = button("BOOST", Rect2(1170, 422, 84, 65), func(): pass, true)
-			left.button_down.connect( func(): game.touch_left = true)
-			left.button_up.connect( func(): game.touch_left = false)
-			right.button_down.connect( func(): game.touch_right = true)
-			right.button_up.connect( func(): game.touch_right = false)
-			brake.button_down.connect( func(): game.touch_brake = true)
-			brake.button_up.connect( func(): game.touch_brake = false)
-			turbo.button_down.connect( func(): game.touch_boost = true)
-			turbo.button_up.connect( func(): game.touch_boost = false)
+			_touch_button("left", "<", Rect2(24, 412, 112, 104))
+			_touch_button("right", ">", Rect2(148, 412, 112, 104))
+			_touch_button("brake", "BRAKE", Rect2(1016, 412, 112, 104))
+			_touch_button("boost", "BOOST", Rect2(1140, 412, 112, 104), true)
 	elif game.mode == game.Mode.PAUSED:
 		var resume: = button("RESUME CHASE", Rect2(434, 341, 412, 53), game.resume_chase, true)
 		resume.grab_focus()
@@ -127,7 +126,7 @@ func rebuild() -> void :
 		button("MATEO'S FOOTAGE", Rect2(434, 535, 412, 40), game.dodges.show_gallery)
 	elif game.mode == game.Mode.UPGRADE:
 		for i in range(3):
-			var b: = button("SELECT UPGRADE", Rect2(285 + i * 244, 451, 222, 48), game.choose_upgrade.bind(i), i == 0)
+			var b: = button("SELECT UPGRADE", Rect2(285 + i * 244, 451, 222, 80 if game.touch_controls else 48), game.choose_upgrade.bind(i), i == 0)
 			if i == 0: b.grab_focus()
 	elif game.mode == game.Mode.RESULTS:
 		if game.can_retry_checkpoint():
@@ -142,16 +141,96 @@ func rebuild() -> void :
 		button("MATEO'S FOOTAGE",Rect2(524, 614, 232, 36),game.dodges.show_gallery)
 	queue_redraw()
 
+func _touch_button(action: String, label: String, area: Rect2, primary: bool = false) -> void:
+	var control := button(label, area, func(): pass, primary)
+	# Driving reads real screen events, not the single emulated mouse pointer.
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control.toggle_mode = true
+	control.add_theme_font_size_override("font_size", 23)
+	touch_buttons[action] = control
+
+func clear_touch_points() -> void:
+	touch_points.clear()
+	touch_taps.clear()
+	for control in touch_buttons.values():
+		if is_instance_valid(control): control.set_pressed_no_signal(false)
+
+func _touch_action_at(point: Vector2) -> String:
+	for action in touch_buttons:
+		if touch_buttons[action].get_global_rect().has_point(point): return action
+	return ""
+
+func _touch_tap_at(point: Vector2) -> Button:
+	for control in buttons:
+		if control.visible and not control.disabled and control not in touch_buttons.values() and control.get_global_rect().has_point(point): return control
+	return null
+
+func _sync_touch_points() -> void:
+	var held: Array = touch_points.values()
+	game.touch_left = "left" in held
+	game.touch_right = "right" in held
+	game.touch_brake = "brake" in held
+	game.touch_boost = "boost" in held
+	for action in touch_buttons:
+		touch_buttons[action].set_pressed_no_signal(action in held)
+
+func handle_touch_input(event: InputEvent) -> bool:
+	if not game.touch_controls or game.mode != game.Mode.RUNNING or settings_open: return false
+	var index := -1
+	var point := Vector2.ZERO
+	var released := false
+	var dragged := false
+	if event is InputEventScreenTouch:
+		index = event.index; point = event.position
+		released = not event.pressed or event.canceled
+		if touch_taps.has(index):
+			if released:
+				var control: Button = touch_taps[index]
+				touch_taps.erase(index)
+				if not event.canceled and is_instance_valid(control) and not control.disabled and control.get_global_rect().has_point(point): control.pressed.emit()
+			return true
+		if not released and _touch_action_at(point).is_empty():
+			var control := _touch_tap_at(point)
+			if control != null:
+				touch_taps[index] = control
+				return true
+	elif event is InputEventScreenDrag:
+		index = event.index; point = event.position; dragged = true
+		if touch_taps.has(index): return true
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		# Godot can mirror finger zero as a mouse. It must not own a second hold.
+		if event.device == -1: return not _touch_action_at(event.position).is_empty() or _touch_tap_at(event.position) != null
+		point = event.position; released = not event.pressed
+	elif event is InputEventMouseMotion:
+		if event.device == -1: return not _touch_action_at(event.position).is_empty() or _touch_tap_at(event.position) != null
+		point = event.position; dragged = true
+		released = not (event.button_mask & MOUSE_BUTTON_MASK_LEFT)
+	else:
+		return false
+	if released:
+		if not touch_points.has(index): return false
+		touch_points.erase(index)
+	elif dragged:
+		if not touch_points.has(index): return false
+		touch_points[index] = _touch_action_at(point)
+	else:
+		var action := _touch_action_at(point)
+		if action.is_empty(): return false
+		touch_points[index] = action
+	_sync_touch_points()
+	return true
+
 func _process(_dt: float) -> void :
-	visible = game.mode not in [game.Mode.CELEBRATION, game.Mode.CRASH, game.Mode.CHECKPOINT, game.Mode.VORTEX, game.Mode.GARAGE] and not (game.cinema_view and game.mode == game.Mode.RUNNING)
+	visible = game.mode not in [game.Mode.CELEBRATION, game.Mode.CRASH, game.Mode.CHECKPOINT, game.Mode.VORTEX, game.Mode.GARAGE] and not (game.cinema_view and game.mode == game.Mode.RUNNING and not game.touch_controls)
 	if is_instance_valid(probe_button):
 		var ready: bool = game.charge >= 99.99 and game.in_sampling_range()
 		probe_button.disabled = not ready
-		probe_button.text = "SEND PROBE   [SPACE / X]" if ready else "PROBE CHARGING   %d%%" % int(game.charge)
+		probe_button.text = ("SEND PROBE" if game.touch_controls else "SEND PROBE   [SPACE / X]") if ready else "PROBE CHARGING   %d%%" % int(game.charge)
 	if is_instance_valid(audio_button):
 		audio_button.text = ("OFF" if game.muted else "SND") if game.mode == game.Mode.RUNNING else ("SOUND OFF" if game.muted else "SOUND ON")
 
 func _draw() -> void :
+	if game.cinema_view and game.touch_controls and game.mode == game.Mode.RUNNING: return
 	if settings_open:
 		if game.mode == game.Mode.MENU: draw_texture_rect(COVER, Rect2(0,0,1280,720),false)
 		_draw_settings()
@@ -179,9 +258,9 @@ func _draw_menu() -> void :
 	text_at("Follow the vortex.", 75, 391, 26, WHITE, BODY)
 	text_at("Dodge the debris. Bring the data home.", 75, 426, 19, Color("c6d3cd"), BODY)
 	text_at("8 LEVELS.  7 FILMS.  14 SAVE FLAGS.  REACH THE VORTEX.", 75, 454, 11, AMBER, MONO)
-	text_at("A / D   STEER     W / SHIFT   BOOST", 75, 605, 13, WHITE, MONO)
-	text_at("S       BRAKE     SPACE       PROBE", 75, 630, 13, WHITE, MONO)
-	text_at("Controller: stick steer  /  A boost  /  B brake  /  X probe", 75, 672, 12, MUTED, BODY)
+	text_at("HOLD THE ARROWS TO STEER" if game.touch_controls else "A / D   STEER     W / SHIFT   BOOST", 75, 605, 13, WHITE, MONO)
+	text_at("USE YOUR OTHER THUMB FOR BOOST OR BRAKE" if game.touch_controls else "S       BRAKE     SPACE       PROBE", 75, 630, 13, WHITE, MONO)
+	text_at("Tap SEND PROBE when charged. Turn your phone sideways." if game.touch_controls else "Controller: stick steer  /  A boost  /  B brake  /  X probe", 75, 672, 12, MUTED, BODY)
 	panel(Rect2(942, 42, 296, 145), Color(0.025, 0.055, 0.065, 0.72))
 	text_at("CHASE BRIEF", 962, 70, 12, AMBER, MONO)
 	text_at("01  Track the moving tornado", 962, 101, 14, WHITE)
@@ -218,7 +297,7 @@ func _draw_menu() -> void :
 	panel(Rect2(1030, 526, 208, 24), Color(0.02, 0.045, 0.052, 0.82))
 	centered(look + "  /  " + game.Loadout.setup_name(game.loadout) + " SETUP", 1134, 542, 10, MINT if look == "CUSTOM LOOK" else MUTED, MONO)
 	if not game.Media.media_complete():
-		text_at("MEDIA PACK INCOMPLETE  /  COPY assets/audio + assets/cinematics FROM THE FULL PROJECT", 75, 700, 10, AMBER, MONO)
+		text_at("BROWSER EDITION  /  IN-GAME CHECKPOINT PREVIEWS" if OS.has_feature("web") else "MEDIA PACK INCOMPLETE  /  COPY assets/audio + assets/cinematics FROM THE FULL PROJECT", 75, 700, 10, AMBER, MONO)
 
 func _draw_dashboard() -> void :
 	panel(Rect2(18, 16, 1244, 48), Color(0.025, 0.055, 0.063, 0.76))
@@ -294,7 +373,7 @@ func _draw_dashboard() -> void :
 		var rec_alpha: float = 0.7 + 0.3 * sin(game.elapsed * 5.0)
 		draw_circle(Vector2(559, 676), 3.0, Color(1.0, 0.28, 0.22, rec_alpha))
 		text_at("MATEO / STORM CAM", 571, 680, 10, MUTED, MONO)
-		var hint: String = "STICK STEER   A BOOST   B BRAKE   X PROBE   START PAUSE" if game.pad_connected() else "A/D STEER   W BOOST   S BRAKE   SPACE PROBE   C CINEMA   P PAUSE"
+		var hint: String = "HOLD ARROWS TO STEER   /   BOOST OR BRAKE WITH YOUR OTHER THUMB" if game.touch_controls else ("STICK STEER   A BOOST   B BRAKE   X PROBE   START PAUSE" if game.pad_connected() else "A/D STEER   W BOOST   S BRAKE   SPACE PROBE   C CINEMA   P PAUSE")
 		centered(hint, 640, 701, 10, Color(0.68, 0.79, 0.78, 0.8), MONO)
 	if game.mateo_caption_time > 0.0 and game.mode == game.Mode.RUNNING:
 		var subtitle: String = "MATEO:  " + game.mateo_caption
