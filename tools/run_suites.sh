@@ -20,15 +20,28 @@ printf -- '-------------------------------------------\n'
 for path in "$ROOT"/tools/verify_*.gd; do
 	name="$(basename "$path" .gd)"
 	log="$LOGS/$name.log"
-	timeout 600 "$GODOT" --headless --path "$ROOT" --script "res://tools/$name.gd" -- --test >"$log" 2>&1
-	# The suites report their own tally. A missing tally means the suite crashed
-	# or hung before finishing, which is a failure even if the exit code is 0.
-	summary="$(grep -oE '[A-Z_]+_TESTS [0-9]+ checks; [0-9]+ failures' "$log" | head -1)"
-	if [[ -z "$summary" ]]; then
-		printf '%-26s %8s %9s\n' "$name" "-" "NO SUMMARY"
+	status=0
+	timeout 600 "$GODOT" --headless --path "$ROOT" --script "res://tools/$name.gd" -- --test >"$log" 2>&1 || status=$?
+	if ((status != 0)); then
+		printf '%-26s %8s %9s\n' "$name" "-" "EXIT $status"
 		broken+=("$name")
 		continue
 	fi
+	# Godot can report script failures while still exiting successfully.
+	if grep -qE 'SCRIPT ERROR|Parse Error' "$log"; then
+		printf '%-26s %8s %9s\n' "$name" "-" "SCRIPT ERROR"
+		broken+=("$name")
+		continue
+	fi
+	# The suites report their own tally. A missing tally means the suite crashed
+	# or hung before finishing, which is a failure even if the exit code is 0.
+	mapfile -t summaries < <(grep -oE '^[A-Z0-9_]+_TESTS [0-9]+ checks; [0-9]+ failures' "$log")
+	if ((${#summaries[@]} != 1)); then
+		printf '%-26s %8s %9s\n' "$name" "-" "${#summaries[@]} SUMMARIES"
+		broken+=("$name")
+		continue
+	fi
+	summary="${summaries[0]}"
 	checks="$(sed -E 's/.*TESTS ([0-9]+) checks.*/\1/' <<<"$summary")"
 	fails="$(sed -E 's/.*; ([0-9]+) failures.*/\1/' <<<"$summary")"
 	printf '%-26s %8s %9s\n' "$name" "$checks" "$fails"

@@ -35,6 +35,73 @@ func enter_checkpoint(stage: int, choice: int = 1) -> void:
 	game.set_process(false)
 	game.checkpoints.set_process(false)
 
+func quiet_road() -> void:
+	game.spawn_timer = 99.0; game.pickup_timer = 99.0; game.puddle_timer = 99.0
+	game.sky_timer = 99.0; game.lens_timer = 99.0; game.thunder_timer = 99.0
+
+func verify_flag_resume() -> void:
+	game.start_chase()
+	game.elapsed = game.SAVE_SPAN - 0.01
+	game.health = 50.0; game.score = 1000.0
+	quiet_road()
+	game._simulate(0.02)
+	var flag: Dictionary = game.checkpoint.duplicate(true)
+	check(flag.health == 65.0 and flag.score == 1500.0, "save flag banks its repair and data before taking the snapshot")
+	for attempt in [1, 2]:
+		game.health = 1.0; game.score += 900.0
+		game.retry_checkpoint()
+		check(game.health == flag.health and game.score == flag.score, "flag retry %d retains rewards and discards failed-attempt gains" % attempt)
+		quiet_road()
+		game._simulate(0.01)
+		check(game.checkpoint == flag and game.health == flag.health and game.score < flag.score + 1.0, "flag retry %d cannot award the same repair or data twice" % attempt)
+
+	for level in [3, 4, 5, 6, 7]:
+		game.start_chase()
+		game.stage = level; game.stage_seen = level
+		game.elapsed = level * game.STAGE_LENGTH + game.SAVE_SPAN
+		game.route.enter(level)
+		game.route.progress = 300.0 if level == 7 else 1000.0
+		game.route.grounded = false; game.route.air_height = 5.0; game.route.vertical_velocity = 4.0
+		game.stage_entry_hits = 2; game.hits = 3
+		game.save_checkpoint()
+		var point: Dictionary = game.checkpoint.duplicate(true)
+		check(game.valid_checkpoint(point), "level %d mid-stage course snapshot is valid" % (level + 1))
+		game.retry_checkpoint()
+		check(game.elapsed == point.elapsed and game.route.progress == point.route_progress, "level %d retry restores both time and road position" % (level + 1))
+		check(game.route.grounded and game.route.air_height == 0.0 and game.route.vertical_velocity == 0.0 and is_equal_approx(game.route.body_y, game.route.height_at(game.route.progress)) and is_equal_approx(game.route.dirt, game.route.dirt_at(game.route.progress)), "level %d retry places the settled truck on the saved road surface" % (level + 1))
+		check(game.stage_entry_hits == 2, "level %d retry preserves the career hit counter" % (level + 1))
+
+	# The same field must survive the actual ConfigFile persistence path.
+	game.save_enabled = true
+	game.save_settings()
+	game.checkpoint.clear()
+	game._load_settings()
+	game.save_enabled = false
+	game.retry_checkpoint()
+	check(game.stage == 7 and game.route.progress == 300.0, "saved road position survives a settings reload")
+	var valid: Dictionary = game.checkpoint.duplicate(true)
+	for invalid in [NAN, INF, -INF, -1.0, game.STAGE_LENGTH * game.TURBO_SPEED * 0.25 + 1.0, "300", null]:
+		var broken: Dictionary = valid.duplicate(true)
+		broken.route_progress = invalid
+		check(not game.valid_checkpoint(broken), "invalid course distance is rejected: %s" % str(invalid))
+	for valid_distance in [0, 300.0, game.STAGE_LENGTH * game.TURBO_SPEED * 0.25]:
+		var bounded: Dictionary = valid.duplicate(true)
+		bounded.route_progress = valid_distance
+		check(game.valid_checkpoint(bounded), "finite course distance within the generated road is accepted: %s" % str(valid_distance))
+	for version in [1, 2, 3]:
+		var legacy: Dictionary = valid.duplicate(true)
+		legacy.version = version
+		legacy.stage = 2 if version == 1 else 4
+		legacy.erase("route_progress")
+		if version < 3: legacy.erase("elapsed")
+		else: legacy.elapsed = 4.0 * game.STAGE_LENGTH + game.SAVE_SPAN
+		check(game.valid_checkpoint(legacy), "version %d checkpoint without road position remains compatible" % version)
+		game.checkpoint = legacy
+		game.retry_checkpoint()
+		var expected_elapsed: float = float(legacy.get("elapsed", legacy.stage * game.STAGE_LENGTH))
+		check(game.elapsed == expected_elapsed and game.route.progress == 0.0, "version %d checkpoint retains its legacy entrance-position fallback" % version)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(game.settings_path))
+
 func run() -> void:
 	if not MediaPack.media_complete(): MediaPack.stand_in_film = "res://tools/test_media/stand_in_film.ogv"
 	game = load("res://main.tscn").instantiate()
@@ -43,6 +110,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.checkpoints.set_process(false)
+	verify_flag_resume()
 	check(game.world.mateo != null, "recovered Mateo actor is present")
 	media_check(game.dodges.streams.keys().filter(func(kind): return kind < 6).size() == 6, "all six existing dodge films load")
 	for stage in [1, 2, 3, 4, 5, 6, 7]:
