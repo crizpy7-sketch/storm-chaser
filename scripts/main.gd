@@ -223,11 +223,11 @@ func _ready() -> void :
 	demo = "--demo" in OS.get_cmdline_user_args()
 	save_enabled = not demo and not ("--test" in OS.get_cmdline_user_args())
 	_setup_input()
-	light_graphics = OS.has_feature("mobile")
+	light_graphics = _touchscreen_available()
 	_load_settings()
 	build_advisor()
 	if "--test" in OS.get_cmdline_user_args(): auto_dodges = false
-	touch_controls = OS.has_feature("mobile")
+	touch_controls = _touchscreen_available()
 	route = preload("res://scripts/route.gd").new()
 	route.game = self
 	route.enter(0)
@@ -499,9 +499,21 @@ func start_chase(clear_checkpoint: bool = true) -> void :
 	sky_timer = 5.0;sky_sequence = 0;flyby_pressure = 0.0
 	lens_timer = 9.6;lens_sequence = 0;lens_hits = 0;lens_kick = 0.0
 	world.reset_motion()
-	notify("CHASE IS LIVE.  /  W TO FLOOR IT.  SPACE TO SEND PROBES.", 3.2)
+	notify("CHASE IS LIVE.  /  HOLD BOOST.  TAP SEND PROBE WHEN CHARGED." if touch_controls else "CHASE IS LIVE.  /  W TO FLOOR IT.  SPACE TO SEND PROBES.", 3.2)
 	hud.rebuild()
 	play_sound("click")
+
+func _touchscreen_available() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("web_ios") or OS.has_feature("web_android") or DisplayServer.is_touchscreen_available()
+
+func _input(event: InputEvent) -> void:
+	# Web exports do not always advertise the native "mobile" feature. A real
+	# touch is also sufficient, including a touchscreen attached after launch.
+	if event is InputEventScreenTouch and event.pressed and not event.canceled and not touch_controls:
+		touch_controls = true
+		if is_instance_valid(hud): hud.rebuild()
+	if touch_controls and is_instance_valid(hud) and hud.handle_touch_input(event):
+		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void :
 	# Mute is global. Handling it once here, before every early return, is what
@@ -551,6 +563,7 @@ func _unhandled_input(event: InputEvent) -> void :
 	if event.is_action_pressed("probe") and mode == Mode.RUNNING: deploy_probe()
 
 func _notification(what: int) -> void :
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT: _clear_touch()
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and mode == Mode.CHECKPOINT and not demo:
 		checkpoints.complete(true)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT and mode == Mode.CRASH and not demo:
@@ -562,6 +575,7 @@ func _notification(what: int) -> void :
 
 func _clear_touch() -> void :
 	touch_left = false;touch_right = false;touch_boost = false;touch_brake = false
+	if is_instance_valid(hud): hud.clear_touch_points()
 
 func pause_chase() -> void :
 	if mode not in [Mode.RUNNING,Mode.VORTEX]: return

@@ -51,12 +51,15 @@ DATA remains the score. Probes, close dodges, supplies and tracking earn data as
 
 ## Install
 
+- **iPhone browser build:** open the hosted Web build in Safari, turn the phone sideways, and tap **START CHASING**. Touch controls appear automatically: hold an arrow to steer and use a second finger for boost or brake. Tap **SEND PROBE** when charged. If the phone stays upright, turn off Portrait Orientation Lock. Progress saves in that browser; private browsing or clearing website data can remove it.
 - **Windows / Galaxy Book2:** extract the entire Windows ZIP and open `Storm-Chaser.exe`.
 - **Linux:** extract the Linux ZIP and run `./Storm-Chaser.x86_64`.
 - **Godot:** extract the project ZIP and import `project.godot` with Godot 4.5.2. Install official export templates to export on your own machine. The v0.17.0 source package omits the large audio and film files; extract it over a copy of your complete project (see `README-v0.17.0.md`).
 - **Web:** serve the complete Web folder over HTTP(S); opening `index.html` directly from disk is not supported.
 
-The driving/display menu retains optional steering recovery, extra hazard reaction time, lighter graphics, reduced camera effects and Mateo voice controls. Touch controls and vibration hooks remain available, subject to device/browser support. No Android or iOS package is included. Cristian playtested the prior Windows release on his laptop. This new handling tune, physical controller vibration, browser/mobile performance and multitouch still need device feedback. Supported gamepads receive brief impact pulses when haptics are enabled.
+The driving/display menu retains optional steering recovery, extra hazard reaction time, lighter graphics, reduced camera effects and Mateo voice controls. Mobile browsers start with lighter graphics unless a saved preference overrides it. Independent touch inputs support steering, boost/brake, probes, sound and pause; cancellation and loss of focus clear held controls. No native Android or iOS package is included. Physical iPhone performance and Safari device behavior still need device feedback. Supported gamepads receive brief impact pulses when haptics are enabled.
+
+The Web preset uses a single thread, mobile-compatible textures and `web/shell.html`. Install Godot 4.5.1 export templates, import the complete project, then export with `godot --headless --path . --export-release Web /absolute/path/to/output/index.html`. Serve the entire output folder over HTTPS. The shell preserves a 16:9 play area inside Safari's safe area and shows a portrait-orientation prompt. The optional large cinematic files can be omitted; the game uses its existing in-engine checkpoint and finale fallbacks. Run `tools/verify_touch.gd` or the complete suite runner to check simultaneous touch inputs.
 
 ## Preview and implementation
 
