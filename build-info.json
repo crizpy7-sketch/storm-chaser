@@ -1,0 +1,8 @@
+{
+  "source_commit": "408197457cd747facc8eb371fe1b0b0bc77fea86",
+  "engine": "Godot 4.5.1",
+  "target": "Web, single-thread",
+  "audio": "Original project audio restored for this build",
+  "cinematics": "In-engine fallbacks",
+  "built_utc": "2026-09-20T03:06:47.2298454Z"
+}

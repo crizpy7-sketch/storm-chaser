@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08171d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Storm Chaser">
+  <title>Storm Chaser</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #08171d; color: #edf2ec; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+    #viewport { position: fixed; inset: 0; display: grid; place-items: center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    #frame { position: relative; width: 100%; height: 100%; }
+    canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; -webkit-user-select: none; user-select: none; }
+    .overlay { position: absolute; inset: 0; display: grid; place-content: center; padding: 24px; background: #08171d; text-align: center; }
+    .overlay[hidden] { display: none; }
+    h1 { margin: 0 0 16px; font-size: clamp(28px, 6vw, 46px); letter-spacing: -.04em; }
+    p { color: #b9cbd0; font-size: 16px; line-height: 1.5; max-width: 34em; margin: 0 auto 16px; }
+    progress { width: min(320px, 72vw); height: 8px; margin: 4px auto 20px; accent-color: #f4bc63; }
+    button { margin: 8px auto; min-height: 48px; padding: 12px 24px; border: 0; border-radius: 8px; font: inherit; font-weight: 700; background: #f4bc63; color: #12262d; cursor: pointer; }
+    #rotate { display: none; z-index: 3; }
+    @media (orientation: portrait) and (pointer: coarse) { #rotate { display: grid; position: fixed; } }
+  </style>
+  <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+
+</head>
+<body>
+  <main id="viewport">
+    <div id="frame">
+      <canvas id="canvas" width="1280" height="720" tabindex="0" aria-label="Storm Chaser game. Use the on-screen steering, brake, boost, and probe controls.">Your browser needs canvas support to play Storm Chaser.</canvas>
+      <section id="loading" class="overlay" aria-live="polite">
+        <h1>STORM CHASER</h1>
+        <p id="status">Loading the chase…</p>
+        <progress id="progress" aria-label="Game download progress"></progress>
+        <p id="hint">Turn your phone sideways to play.</p>
+        <button id="retry" hidden>Try again</button>
+      </section>
+    </div>
+  </main>
+  <section id="rotate" class="overlay" aria-label="Landscape orientation needed">
+    <h1>Turn your iPhone sideways</h1>
+    <p>The chase plays in landscape. Turn off Portrait Orientation Lock if needed.</p>
+  </section>
+  <noscript><section class="overlay"><h1>Storm Chaser</h1><p>Enable JavaScript in Safari to play.</p></section></noscript>
+  <script src="index.js"></script>
+  <script>
+    const viewport = document.getElementById('viewport');
+    const frame = document.getElementById('frame');
+    const canvas = document.getElementById('canvas');
+    const loading = document.getElementById('loading');
+    const status = document.getElementById('status');
+    const progress = document.getElementById('progress');
+    const hint = document.getElementById('hint');
+    const retry = document.getElementById('retry');
+
+    // Keep the game's fixed dashboard inside Safari's safe area and browser bars.
+    function fitGame() {
+      const style = getComputedStyle(viewport);
+      const width = viewport.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const height = viewport.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const scale = Math.min(width / 1280, height / 720);
+      const gameWidth = Math.floor(1280 * scale);
+      const gameHeight = Math.floor(720 * scale);
+      frame.style.width = `${gameWidth}px`;
+      frame.style.height = `${gameHeight}px`;
+      // Godot's adaptive policy fills the entire browser, ignoring this frame.
+      // Manage the drawing buffer here so touch coordinates and the safe area agree.
+      const density = Math.min(window.devicePixelRatio || 1, 1.5, 1280 / gameWidth);
+      canvas.width = Math.max(1, Math.round(gameWidth * density));
+      canvas.height = Math.max(1, Math.round(gameHeight * density));
+    }
+    new ResizeObserver(fitGame).observe(viewport);
+    window.visualViewport?.addEventListener('resize', fitGame);
+    fitGame();
+    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    retry.addEventListener('click', () => location.reload());
+
+    function showError(error) {
+      console.error('Storm Chaser failed to start:', error);
+      loading.hidden = false;
+      status.textContent = 'The chase couldn’t load.';
+      hint.textContent = 'Check your connection and open this page in Safari, then try again.';
+      progress.hidden = true;
+      retry.hidden = false;
+    }
+
+    const config = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":48968136,"index.wasm":38034280},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+    const engine = new Engine(config);
+    const missing = Engine.getMissingFeatures({ threads: false });
+    if (missing.length) {
+      showError(missing.join(', '));
+      hint.textContent = 'Update iOS and open this page in Safari to play.';
+    } else {
+      engine.startGame({
+        canvas,
+        canvasResizePolicy: 0,
+        onProgress(current, total) {
+          if (total > 0) {
+            progress.max = total;
+            progress.value = current;
+            status.textContent = current >= total ? 'Starting the chase…' : `Loading the chase… ${Math.round(current / total * 100)}%`;
+          }
+        },
+        onExit() { showError('The game stopped.'); }
+      }).then(() => { loading.hidden = true; canvas.focus(); }).catch(showError);
+    }
+  </script>
+</body>
+</html>
+
