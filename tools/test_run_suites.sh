@@ -18,6 +18,7 @@ cat >"$temp_root/fake-godot" <<'FAKE'
 #!/usr/bin/env bash
 case "$PROBE_CASE" in
 	pass) echo 'PROBE_TESTS 4 checks; 0 failures; 2 skipped' ;;
+	pass_digits) echo 'TRUCK_3D_TESTS 4 checks; 0 failures; 67656 triangles' ;;
 	crash) echo 'PROBE_TESTS 4 checks; 0 failures'; exit 23 ;;
 	timeout) echo 'PROBE_TESTS 4 checks; 0 failures'; exit 124 ;;
 	script_error) echo 'SCRIPT ERROR: Invalid call'; echo 'PROBE_TESTS 4 checks; 0 failures' ;;
@@ -30,10 +31,10 @@ FAKE
 chmod +x "$temp_root/fake-godot"
 
 checks=0
-for probe in pass crash timeout script_error parse_error no_summary failed_check multiple; do
+for probe in pass pass_digits crash timeout script_error parse_error no_summary failed_check multiple; do
 	status=0
 	PROBE_CASE="$probe" GODOT="$temp_root/fake-godot" bash "$temp_root/tools/run_suites.sh" >"$temp_root/result" 2>&1 || status=$?
-	if [[ "$probe" == pass ]]; then
+	if [[ "$probe" == pass || "$probe" == pass_digits ]]; then
 		if ((status != 0)) || ! grep -q 'All suites passed.' "$temp_root/result"; then
 			cat "$temp_root/result"
 			echo 'FAIL: a successful suite must pass'

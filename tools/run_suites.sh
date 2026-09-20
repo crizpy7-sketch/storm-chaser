@@ -35,7 +35,7 @@ for path in "$ROOT"/tools/verify_*.gd; do
 	fi
 	# The suites report their own tally. A missing tally means the suite crashed
 	# or hung before finishing, which is a failure even if the exit code is 0.
-	mapfile -t summaries < <(grep -oE '^[A-Z_]+_TESTS [0-9]+ checks; [0-9]+ failures' "$log")
+	mapfile -t summaries < <(grep -oE '^[A-Z0-9_]+_TESTS [0-9]+ checks; [0-9]+ failures' "$log")
 	if ((${#summaries[@]} != 1)); then
 		printf '%-26s %8s %9s\n' "$name" "-" "${#summaries[@]} SUMMARIES"
 		broken+=("$name")
