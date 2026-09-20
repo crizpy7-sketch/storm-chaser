@@ -51,7 +51,7 @@ DATA remains the score. Probes, close dodges, supplies and tracking earn data as
 
 ## Install
 
-- **iPhone browser build:** open the hosted Web build in Safari, turn the phone sideways, and tap **START CHASING**. Touch controls appear automatically: hold an arrow to steer and use a second finger for boost or brake. Tap **SEND PROBE** when charged. If the phone stays upright, turn off Portrait Orientation Lock. Progress saves in that browser; private browsing or clearing website data can remove it.
+- **iPhone browser build:** [play Storm Chaser](https://crizpy7-sketch.github.io/storm-chaser/) in Safari, turn the phone sideways, and tap **START CHASING**. Touch controls appear automatically: hold an arrow to steer and use a second finger for boost or brake. Tap **SEND PROBE** when charged. If the phone stays upright, turn off Portrait Orientation Lock. Progress saves in that browser; private browsing or clearing website data can remove it.
 - **Windows / Galaxy Book2:** extract the entire Windows ZIP and open `Storm-Chaser.exe`.
 - **Linux:** extract the Linux ZIP and run `./Storm-Chaser.x86_64`.
 - **Godot:** extract the project ZIP and import `project.godot` with Godot 4.5.2. Install official export templates to export on your own machine. The v0.17.0 source package omits the large audio and film files; extract it over a copy of your complete project (see `README-v0.17.0.md`).
